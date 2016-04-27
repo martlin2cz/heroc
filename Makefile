@@ -9,9 +9,11 @@ STD=c99
 #název binráky
 BIN=uc
 
-interpret:
+
+
+all:
 	flex flex.l
-	bison bison.yy
+#	bison bison.yy
 	gcc -std=${STD} -o ${BIN} main.c
 
 clean:
