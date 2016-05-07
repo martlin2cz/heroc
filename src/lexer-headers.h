@@ -1,12 +1,9 @@
-#ifndef _LEXER_HEADERS_H
-#define _LEXER_HEADERS_H
+#ifndef _LEXER_HEADERS_H_
+#define _LEXER_HEADERS_H_
 
-/**
- Martin Jašek
- KMI UP
- LS 2015
- */
+#include "../src/token.h"
 #include "../src/ast.h"
+#include "../gen/syntaxer.h"
 
 int yylex(void);
 int fileno(FILE* file);

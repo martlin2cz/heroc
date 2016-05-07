@@ -1,7 +1,8 @@
-#ifndef BISON_HEADERS_H
-#define BISON_HEADERS_H
+#ifndef _SYNTAXER_HEADERS_H_
+#define _SYNTAXER_HEADERS_H_
+
 #include <stdio.h>
-#include "lexer-headers.h"
+#include "token.h"
 
 void yyerror(char *s);
 

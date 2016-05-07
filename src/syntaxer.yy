@@ -1,34 +1,37 @@
 %{
 #include <stdio.h>
 #include "../src/syntaxer-headers.h"
-//TODO rly?
 #include "../gen/syntaxer.h"
+
+
 %}
 
 %output "gen/syntaxer.c"
 %defines "gen/syntaxer.h"
 
-%define api.value.type {int}
 
-%token<number>	TK_NUMBER	'N'
-%token<string> TK_VARIABLE	'V'
-%token<string> TK_OPERATOR	'O'
+
+
+
+%token	TK_NUMBER	'N'
+%token TK_VARIABLE	'V'
+%token TK_OPERATOR	'O'
 
 %start expr
 
 %%
 expr:
 	value TK_OPERATOR value {
-		SYNTAXER_LOG("SNT: operation \n");	
+		SYNTAXER_LOG("operation %s", $2->str);	
 	} 
 ;
 
 value:
 	TK_NUMBER {
-		SYNTAXER_LOG("SNT: number \n");
+		SYNTAXER_LOG("number %s", $1->str);
 	}
 |	TK_VARIABLE {
-		SYNTAXER_LOG("SNT: variable \n");
+		SYNTAXER_LOG("variable %s", $1->str);
 	}
 ;	
 
