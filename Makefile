@@ -10,8 +10,10 @@ CC	 = gcc
 LEX	 = flex
 YACC = bison
 
-MACROS  = -D LEXER_VERBOSE -D SYNTAXER_VERBOSE
-CFLAGS	= -Wall -ansi -pedantic -std=c11 $(MACROS)
+#-D LEXER_VERBOSE 
+MACROS  = -D SYNTAXER_VERBOSE
+#-Wall 
+CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 LIBS	= -lfl -lm
 
 
@@ -20,8 +22,8 @@ LIBS	= -lfl -lm
 
 GRAMMAR	= src/syntaxer.y
 LEXER	= src/lexer.l
-SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c #src/main.c
-OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o #obj/main.o
+SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c #src/main.c
+OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o #obj/main.o
 TARGET	= bin/compiler
 
 TESTSRC = test/test-lexer.c 
@@ -82,6 +84,12 @@ obj/lexer.o: gen/lexer.c
 
 
 obj/token.o: src/token.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+obj/ast.o: src/ast.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+obj/tokens.o: src/tokens.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
 #obj/main.o: src/main.c

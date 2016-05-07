@@ -5,34 +5,58 @@
 %option outfile="gen/lexer.c" header-file="gen/lexer.h"
 %option noyywrap
 
-DIGIT     [0-9]
-FIXNUM    {DIGIT}{1,20}
-DIGITS    {DIGIT}+
-EXP       [eE][+-]?{DIGITS}
-FRAC      ({DIGITS}?"."{DIGITS})|{DIGITS}"."
-FLOAT     ({FRAC}{EXP}?)|({DIGITS}{EXP})
-OPER	  [\(\)\+\-\*\/\^]
+DIGIT	[0-9]
+HEXDIGIT	[0-9a-fA-F]
+ALPHA	[a-zA-Z]
+ALNUM	DIGIT|ALPHA
+IDCHAR	[_a-zA-Z]
+OPER	  [\+\-\*\/\^]
+BRACKET	  [\(\)\{\}\[\]]
 
 %%
 
-{FIXNUM}|{FLOAT} {
-    yylval = make_double (atof (yytext));
-    LEXER_LOG("double: %s" , yytext);
-    return NUMBER;
+{DIGIT}+ {
+	LEXER_LOG("decimal number: %s" , yytext);
+    yylval.number = parse_dec(yytext);
+    return NT_NUMBER;
+}
+
+0x{HEXDIGIT}+ {
+	LEXER_LOG("hex number: %s" , yytext);
+    yylval.number = parse_hex(yytext);
+    return NT_NUMBER;
+}
+
+{ALPHA}{IDCHAR}* {
+	LEXER_LOG("identifier: %s" , yytext);
+	yylval.string = parse_identifier(yytext);
+    return NT_IDENTIFIER;
 }
 
 {OPER} {
 	LEXER_LOG("operator: %s" , yytext);
-    return yytext [0];
+	int oper = str_to_oper(yytext);
+	yylval.oper = oper;
+    return oper;
+}
+
+{BRACKET} {
+	LEXER_LOG("bracket: %s" , yytext);
+	int bra = str_to_bracket(yytext);
+    return bra;
 }
 
 ";" {
 	LEXER_LOG("end of statement");
-    return ENDSTMT;
+    return NT_SEMICOLON;
 }
 
 [ \t\n]+ {
-    /* ignore whitespace */
+	LEXER_LOG("just whitespace: %s", yytext);
+}
+
+. {
+	fprintf(stderr, "Lexical error. Unknown token starting by %s at line %d. Skipping. \n", yytext, yylineno);
 }
 
 %%

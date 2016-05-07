@@ -1,12 +1,18 @@
 #ifndef _LEXER_HEADERS_H_
 #define _LEXER_HEADERS_H_
 
-#include "../src/token.h"
+//#include "../src/token.h"
+//#define YYSTYPE ast_node_t*
+#include "../src/ast.h"
+#include "../src/tokens.h"
+
 #include "../gen/syntaxer.h"
+
 
 int yylex(void);
 int fileno(FILE* file);
 //int yywrap(void);
+
 
 #ifdef LEXER_VERBOSE
 #define LEXER_LOG(...) \
@@ -20,9 +26,11 @@ int fileno(FILE* file);
 #endif
 
 
+long parse_dec(char* yylval);
+long parse_hex(char* yylval);
+long parse_oct(char* yylval);
+char* parse_identifier(char* yylval);
 
-YYSTYPE
-make_double (double value);
-
+char* duplicate_str(char* yylval);
 
 #endif
