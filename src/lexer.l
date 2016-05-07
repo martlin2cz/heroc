@@ -1,52 +1,40 @@
 %{
-	
-	
-	#include "../src/lexer-headers.h"
-	
-	#include <stdlib.h>
-	#include <string.h>
-	
+#include "../src/lexer-headers.h"
 %}
 
 %option outfile="gen/lexer.c" header-file="gen/lexer.h"
+%option noyywrap
+
+DIGIT     [0-9]
+FIXNUM    {DIGIT}{1,20}
+DIGITS    {DIGIT}+
+EXP       [eE][+-]?{DIGITS}
+FRAC      ({DIGITS}?"."{DIGITS})|{DIGITS}"."
+FLOAT     ({FRAC}{EXP}?)|({DIGITS}{EXP})
+OPER	  [\(\)\+\-\*\/\^]
 
 %%
-[0-9]+	{
-	LEXER_LOG("Number : %s", yytext);
-	yylval = malloc(sizeof(YYSTYPE));
-	yylval->str = malloc(10000);
-	strcpy(yytext, yylval->str);
-	return TK_NUMBER;
+
+{FIXNUM}|{FLOAT} {
+    yylval = make_double (atof (yytext));
+    LEXER_LOG("double: %s" , yytext);
+    return NUMBER;
 }
 
-
-[_a-zA-Z]+	{
-	LEXER_LOG("Identifier : %s", yytext);
-	yylval = malloc(sizeof(YYSTYPE));
-	yylval->str = malloc(10000);
-	strcpy(yytext, yylval->str);
-	return TK_VARIABLE;
+{OPER} {
+	LEXER_LOG("operator: %s" , yytext);
+    return yytext [0];
 }
 
-"+"|"-"|"*"|"/"	{
-	LEXER_LOG("Operator : %s", yytext);
-	yylval = malloc(sizeof(YYSTYPE));
-	yylval->str = malloc(10000);
-	strcpy(yytext, yylval->str);
-	return TK_OPERATOR;
+";" {
+	LEXER_LOG("end of statement");
+    return ENDSTMT;
 }
 
-. {
-	fprintf(stderr, "LEX: Unknown : %s\n", yytext);
+[ \t\n]+ {
+    /* ignore whitespace */
 }
 
-<<EOF>> {
-	printf("LEX: EOF.\n");
-	yyterminate();
-}
 %%
 
-
-int yywrap() {
-	return 0;	//TODO what here?
-}
+#include "../src/lexer-impl.c"

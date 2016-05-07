@@ -1,5 +1,5 @@
-#ifndef _AST_H
-#define _AST_H
+#ifndef _AST_H_
+#define _AST_H_
 
 typedef int operator_t;
 

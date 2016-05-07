@@ -1,87 +1,94 @@
-# Martin Jašek
-# KMI UP, inf.upol.cz
-# summer semmester 2016
+## heroc
+## Martin Jasek
+## IV - V 2016
+## KMI UP, inf.upol.cz
+## vychodil.inf.upol.cz
+
+
+## programs and params
+CC	 = gcc
+LEX	 = flex
+YACC = bison
+
+MACROS  = -D LEXER_VERBOSE -D SYNTAXER_VERBOSE
+CFLAGS	= -Wall -ansi -pedantic -std=c11 $(MACROS)
+LIBS	= -lfl -lm
+
+
+
+## files specification
+
+GRAMMAR	= src/syntaxer.y
+LEXER	= src/lexer.l
+SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c #src/main.c
+OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o #obj/main.o
+TARGET	= bin/compiler
+
+TESTSRC = test/test-lexer.c 
+TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o
+TESTTGT	= bin/test-lexer text-syntaxer
+  
+
+####### vzory
 #
-# compiler of heroc language
-# see vychodil.inf.upol.cz for more info
+#.SUFFIXES: .y
+#.y.c:
+#	$(YACC) $(YFLAGS) -o $@ $<
+#
+#.SUFFIXES: .l
+#.l.c:
+#	$(LEX) -o$@ $<
+#
+#.SUFFIXES: .c
+#.c.o:
+#	$(CC) -c $(CFLAGS) $<
+#
 
-#-D LEXER_VERBOSE
-#-D SYNTAXER_VERBOSE
-MACROS=-D LEXER_VERBOSE -D SYNTAXER_VERBOSE
+###########################
+all: compiler tests
 
+compiler: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(OBJECTS)
+	$(CC) -o $(TARGET) $(OBJECTS) $(LIBS)
+	strip $(TARGET)
 
-#std of compilation
-STD=c99
-
-# flags of compiler
-CFLAGS=-std=${STD} ${MACROS} -Wall
-
-#resulting heroc compiler binary name
-BIN=heroc
-
-#################################
-CC=gcc
-#################################
-.SUFFIXES: .c
-.c.o:
-	$(CC) -c $(CFLAGS) -o $@ $<
-#################################
-all: prepare tests compiler
+tests: prepare $(GRAMMAR) $(LEXER) $(TESTSRC) $(TESTOBJ)
+	$(CC) $(CFLAGS) -o bin/test-syntaxer  obj/test-syntaxer.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o bin/test-lexer  obj/test-lexer.o $(OBJECTS)
+	
 
 prepare:
-	mkdir -p gen
-	mkdir -p bin
+	mkdir -p gen obj bin
 
-compiler: build
-	
-tests: build compile-tests
-		
 clean:
-	rm -rf gen bin
-#################################	
-build: lexit syntaxit compile
+	@rm -rf gen obj bin
+
+	
+###########################
+gen/lexer.c: src/lexer.l
+	$(LEX) -o$@ $<
+	@rm -f src/lexer.c src/lexer.h #lexer dumps code in src folder as well, bug or feature?
+
+gen/syntaxer.c: src/syntaxer.y
+	$(YACC) -o$@ $<
+
+###########################
+
+obj/syntaxer.o: gen/syntaxer.c
+	${CC} -c ${CFLAGS} -o $@ -c $<
 	
 
-lexit:
-	flex src/lexer.l
+obj/lexer.o: gen/lexer.c
+	${CC} -c ${CFLAGS} -o $@ -c $<
+
+
+obj/token.o: src/token.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+#obj/main.o: src/main.c
+#	${CC} -c ${CFLAGS} -o $@ -c $<
 	
-syntaxit:
-	bison src/syntaxer.yy
-
-compile: src/ast.c src/token.c gen/lexer.c gen/syntaxer.c  bin/ast.o bin/token.o bin/lexer.o bin/syntaxer.o
-	$(CC) $(CFLAGS) -o bin/something bin/ast.o bin/token.o bin/lexer.o bin/syntaxer.o -lfl
+obj/test-lexer.o: test/test-lexer.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
 	
-	
-#compile: //bin/ast.o bin/lexer.o bin/syntaxer.o
-#	//echo "Compiling"
-	
-compile-tests: bin/test-lexer bin/test-syntaxer
-	echo "Compiling tests"
-
-#################################
-bin/token.o: src/token.c
-	${CC} ${CFLAGS} -o $@ -c $<
-
-bin/ast.o: src/ast.c
-	${CC} ${CFLAGS} -o $@ -c $<
-
-bin/lexer.o: gen/lexer.c 
-	${CC} ${CFLAGS} -lfl -o $@ -c $<
-
-bin/syntaxer.o: gen/syntaxer.c 
-	${CC} ${CFLAGS} -lfl -o $@ -c $<
-
-#################################
-bin/test-lexer: bin/token.o bin/ast.o bin/lexer.o  test/test-lexer.c  
-	${CC}  ${CFLAGS} -o $@ $^
-
-bin/test-syntaxer: bin/syntaxer.o test/test-syntaxer.c  
-	${CC} ${CFLAGS} -o $@ $^
-
-
-############################
-#mkdir -p gen
-#bison src/bison.yy
-#mkdir -p bin
-#gcc -std=${STD} -o bin/${BIN} src/main.c
-
+obj/test-syntaxer.o: test/test-syntaxer.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	

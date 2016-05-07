@@ -2,22 +2,27 @@
 #define _LEXER_HEADERS_H_
 
 #include "../src/token.h"
-#include "../src/ast.h"
 #include "../gen/syntaxer.h"
 
 int yylex(void);
 int fileno(FILE* file);
-int yywrap(void);
+//int yywrap(void);
 
 #ifdef LEXER_VERBOSE
-#define LEXER_LOG(MSG...) \
+#define LEXER_LOG(...) \
 	{ \
 		printf("[LEX] "); \
-		printf(MSG); \
+		printf(__VA_ARGS__); \
 		printf("\n"); \
 	}
 #else
-	#define LEXER_LOG(MSG...)
+	#define LEXER_LOG(...)
 #endif
+
+
+
+YYSTYPE
+make_double (double value);
+
 
 #endif
