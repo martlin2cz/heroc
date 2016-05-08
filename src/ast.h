@@ -1,45 +1,38 @@
 #ifndef _AST_H_
 #define _AST_H_
 
+typedef struct ast_node_t ast_node_t;
+
+#include "../gen/syntaxer.h"
 #include "tokens.h"
-
-union ast_node_value_t;
-struct ast_node_t;
-
-typedef union ast_node_value_t {
-	long number;
-	char* string;
-	int operator;
-	int keyword;
-	struct ast_node_t* child;
-	//TODO
-} ast_node_value_t;
-
-
 
 typedef struct ast_node_t {
 	TOKEN_TYPE_T type;
-	union ast_node_value_t value;
+	YYSTYPE value;
 	struct ast_node_t* next;
 } ast_node_t;
 
 
-ast_node_t* create_new_node();
+struct ast_node_t* create_new_node();
 
-ast_node_t* create_number(long value);
-ast_node_t* create_identifier(char* name);
+struct ast_node_t* create_number(long value);
+struct ast_node_t* create_identifier(char* name);
 
+struct ast_node_t* create_unary(TOKEN_TYPE_T operator, struct ast_node_t* expr);
+struct ast_node_t* create_binary(TOKEN_TYPE_T operator,
+		struct ast_node_t* expr1, struct ast_node_t* expr2);
+struct ast_node_t* create_ternary(TOKEN_TYPE_T operator,
+		struct ast_node_t* expr1, struct ast_node_t* expr2,
+		struct ast_node_t* expr3);
 
-ast_node_t* create_unary(TOKEN_TYPE_T operator, ast_node_t* expr);
-ast_node_t* create_binary(TOKEN_TYPE_T operator, ast_node_t* expr1, ast_node_t* expr2);
-ast_node_t* create_ternary(TOKEN_TYPE_T operator, ast_node_t* expr1, ast_node_t* expr2, ast_node_t* expr3);
-
-
-ast_node_t* create_list1(TOKEN_TYPE_T type, ast_node_t* expr1);
-ast_node_t* create_list2(TOKEN_TYPE_T type, ast_node_t* expr1, ast_node_t* expr2);
-ast_node_t* create_list3(TOKEN_TYPE_T type, ast_node_t* expr1, ast_node_t* expr2, ast_node_t* expr3);
-ast_node_t* create_list4(TOKEN_TYPE_T type, ast_node_t* expr1, ast_node_t* expr2, ast_node_t* expr3, ast_node_t* expr4);
-
+struct ast_node_t* create_list1(TOKEN_TYPE_T type, struct ast_node_t* expr1);
+struct ast_node_t* create_list2(TOKEN_TYPE_T type, struct ast_node_t* expr1,
+		struct ast_node_t* expr2);
+struct ast_node_t* create_list3(TOKEN_TYPE_T type, struct ast_node_t* expr1,
+		struct ast_node_t* expr2, struct ast_node_t* expr3);
+struct ast_node_t* create_list4(TOKEN_TYPE_T type, struct ast_node_t* expr1,
+		struct ast_node_t* expr2, struct ast_node_t* expr3,
+		struct ast_node_t* expr4);
 
 /*
  typedef int operator_t;

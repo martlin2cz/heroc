@@ -10,8 +10,9 @@ HEXDIGIT	[0-9a-fA-F]
 ALPHA	[a-zA-Z]
 ALNUM	DIGIT|ALPHA
 IDCHAR	[_a-zA-Z]
-OPER	  [\+\-\*\/\^]
-BRACKET	  [\(\)\{\}\[\]]
+OPER	[\+\*\/\%]
+MULTIOPER	[\-\*]
+BRACKET	[\(\)\{\}\[\]]
 
 %%
 
@@ -36,6 +37,12 @@ BRACKET	  [\(\)\{\}\[\]]
 {OPER} {
 	LEXER_LOG("operator: %s" , yytext);
 	int oper = str_to_oper(yytext);
+    return oper;
+}
+
+{MULTIOPER} {
+	LEXER_LOG("operator: %s" , yytext);
+	int oper = str_to_multioper(yytext);
 	yylval.oper = oper;
     return oper;
 }

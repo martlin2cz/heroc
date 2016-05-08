@@ -12,7 +12,7 @@
 
 
 extern int yylex (void);
-int yyerror (char *s);
+int yyerror (struct ast_node_t** tree, char *s);
 
 
 #ifdef SYNTAXER_VERBOSE

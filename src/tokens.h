@@ -1,7 +1,15 @@
 #ifndef _TOKENS_H_
 #define _TOKENS_H_
 
+
 #define TOKEN_TYPE_T int
+
+#include "../gen/syntaxer.h"
+
+int is_atomic(TOKEN_TYPE_T type);
+int is_operator(TOKEN_TYPE_T type);
+int is_construct(TOKEN_TYPE_T type);
+
 /*
 // basic (leaves with additional values) tokens
 #define NT_UNSPECIFIED	11
@@ -71,11 +79,21 @@
 TOKEN_TYPE_T str_to_oper(char* str);
 char* oper_to_str(TOKEN_TYPE_T oper);
 
+TOKEN_TYPE_T str_to_multioper(char* str);
+char* multioper_to_str(TOKEN_TYPE_T moper);
+
 TOKEN_TYPE_T str_to_bracket(char* str);
 char* bracket_to_str(TOKEN_TYPE_T bra);
 
 
 TOKEN_TYPE_T str_to_construct(char* str);
 char* construct_to_str(TOKEN_TYPE_T construct);
+
+TOKEN_TYPE_T one_char_str_to_oper(char c1);
+TOKEN_TYPE_T two_char_str_to_oper(char c1, char c2);
+TOKEN_TYPE_T three_char_str_to_oper(char c1, char c2, char c3);
+
+TOKEN_TYPE_T one_char_str_to_moper(char c1);
+TOKEN_TYPE_T two_char_str_to_moper(char c1, char c2);
 
 #endif

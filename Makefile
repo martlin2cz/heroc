@@ -22,12 +22,12 @@ LIBS	= -lfl -lm
 
 GRAMMAR	= src/syntaxer.y
 LEXER	= src/lexer.l
-SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c #src/main.c
-OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o #obj/main.o
+SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/ast-basic-exporter.c src/misc.c #src/main.c
+OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/ast-basic-exporter.o obj/misc.o #obj/main.o
 TARGET	= bin/compiler
 
-TESTSRC = test/test-lexer.c 
-TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o
+TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-ast.c   
+TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o  obj/test-ast.o
 TESTTGT	= bin/test-lexer text-syntaxer
   
 
@@ -56,6 +56,7 @@ compiler: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(OBJECTS)
 tests: prepare $(GRAMMAR) $(LEXER) $(TESTSRC) $(TESTOBJ)
 	$(CC) $(CFLAGS) -o bin/test-syntaxer  obj/test-syntaxer.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o bin/test-lexer  obj/test-lexer.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o bin/test-ast  obj/test-ast.o $(OBJECTS)
 	
 
 prepare:
@@ -74,7 +75,7 @@ gen/syntaxer.c: src/syntaxer.y
 	$(YACC) -o$@ $<
 
 ###########################
-
+### compile libs
 obj/syntaxer.o: gen/syntaxer.c
 	${CC} -c ${CFLAGS} -o $@ -c $<
 	
@@ -92,11 +93,21 @@ obj/ast.o: src/ast.c
 obj/tokens.o: src/tokens.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
+obj/ast-basic-exporter.o: src/ast-basic-exporter.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+obj/misc.o: src/misc.c
+	${CC} -c ${CFLAGS} -o $@ -c $<
+		
 #obj/main.o: src/main.c
 #	${CC} -c ${CFLAGS} -o $@ -c $<
+### compile tests
 	
 obj/test-lexer.o: test/test-lexer.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 	
 obj/test-syntaxer.o: test/test-syntaxer.c
-	${CC} -c ${CFLAGS} -o $@ -c $<	
+	${CC} -c ${CFLAGS} -o $@ -c $<
+	
+obj/test-ast.o: test/test-ast.c
+	${CC} -c ${CFLAGS} -o $@ -c $<		

@@ -1,8 +1,6 @@
 #ifndef _LEXER_HEADERS_H_
 #define _LEXER_HEADERS_H_
 
-//#include "../src/token.h"
-//#define YYSTYPE ast_node_t*
 #include "../src/ast.h"
 #include "../src/tokens.h"
 

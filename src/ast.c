@@ -1,14 +1,17 @@
-#ifndef _AST_C
-#define _AST_C
+#ifndef _AST_C_
+#define _AST_C_
 
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "ast.h"
 #include "../gen/syntaxer.h"
+#include "ast.h"
 
-ast_node_t* create_new_node(TOKEN_TYPE_T type) {
-	ast_node_t* node = (ast_node_t*) malloc(sizeof(ast_node_t));
+
+
+struct ast_node_t* create_new_node(TOKEN_TYPE_T type) {
+	struct ast_node_t* node = (struct ast_node_t*) malloc(
+			sizeof(struct ast_node_t));
 	if (!node) {
 		fprintf(stderr, "Cannot allocate memory");
 		return NULL;
@@ -16,59 +19,63 @@ ast_node_t* create_new_node(TOKEN_TYPE_T type) {
 
 	node->type = type;
 	node->next = NULL;
+	node->value.child = NULL;
+
 	return node;
 }
 
-ast_node_t* create_number(long value) {
-	ast_node_t* node = create_new_node(NT_NUMBER);
+struct ast_node_t* create_number(long value) {
+	struct ast_node_t* node = create_new_node(NT_NUMBER);
 	node->value.number = value;
 	return node;
 }
 
-ast_node_t* create_identifier(char* name) {
-	ast_node_t* node = create_new_node(NT_IDENTIFIER);
+struct ast_node_t* create_identifier(char* name) {
+	struct ast_node_t* node = create_new_node(NT_IDENTIFIER);
 	node->value.string = name;
 	return node;
 }
 
-ast_node_t* create_unary(TOKEN_TYPE_T operator, ast_node_t* expr) {
+struct ast_node_t* create_unary(TOKEN_TYPE_T operator, struct ast_node_t* expr) {
 	return create_list1(operator, expr);
 }
-ast_node_t* create_binary(TOKEN_TYPE_T operator, ast_node_t* expr1,
-		ast_node_t* expr2) {
+struct ast_node_t* create_binary(TOKEN_TYPE_T operator,
+		struct ast_node_t* expr1, struct ast_node_t* expr2) {
 	return create_list2(operator, expr1, expr2);
 }
-ast_node_t* create_ternary(TOKEN_TYPE_T operator, ast_node_t* expr1,
-		ast_node_t* expr2, ast_node_t* expr3) {
+struct ast_node_t* create_ternary(TOKEN_TYPE_T operator,
+		struct ast_node_t* expr1, struct ast_node_t* expr2,
+		struct ast_node_t* expr3) {
 	return create_list3(operator, expr1, expr2, expr3);
 }
 
-ast_node_t* create_list1(TOKEN_TYPE_T type, ast_node_t* expr1) {
-	ast_node_t* node = create_new_node(type);
+struct ast_node_t* create_list1(TOKEN_TYPE_T type, struct ast_node_t* expr1) {
+	struct ast_node_t* node = create_new_node(type);
 	node->value.child = expr1;
 	return node;
 }
-ast_node_t* create_list2(TOKEN_TYPE_T type, ast_node_t* expr1,
-		ast_node_t* expr2) {
+struct ast_node_t* create_list2(TOKEN_TYPE_T type, struct ast_node_t* expr1,
+		struct ast_node_t* expr2) {
 
-	ast_node_t* node = create_new_node(type);
+	struct ast_node_t* node = create_new_node(type);
 	node->value.child = expr1;
-	expr1->value.child = expr2;
+	expr1->next = expr2;
 	return node;
 }
-ast_node_t* create_list3(TOKEN_TYPE_T type, ast_node_t* expr1,
-		ast_node_t* expr2, ast_node_t* expr3) {
+struct ast_node_t* create_list3(TOKEN_TYPE_T type, struct ast_node_t* expr1,
+		struct ast_node_t* expr2, struct ast_node_t* expr3) {
 
-	ast_node_t* node = create_new_node(type);
+	struct ast_node_t* node = create_new_node(type);
 	node->value.child = expr1;
-	expr1->value.child = expr2;
-	expr2->value.child = expr3;
+	expr1->next = expr2;
+	expr2->next = expr3;
 	return node;
 }
-ast_node_t* create_list4(TOKEN_TYPE_T type, ast_node_t* expr1,
-		ast_node_t* expr2, ast_node_t* expr3, ast_node_t* expr4) {
+struct ast_node_t* create_list4(TOKEN_TYPE_T type, struct ast_node_t* expr1,
+		struct ast_node_t* expr2, struct ast_node_t* expr3,
+		struct ast_node_t* expr4) {
 
-	ast_node_t* node = create_new_node(type);
+	struct ast_node_t* node = create_new_node(type);
 	node->value.child = expr1;
 	expr1->value.child = expr2;
 	expr2->value.child = expr3;
