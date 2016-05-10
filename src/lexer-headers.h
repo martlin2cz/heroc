@@ -28,6 +28,9 @@ long parse_dec(char* yylval);
 long parse_hex(char* yylval);
 long parse_oct(char* yylval);
 char* parse_identifier(char* yylval);
+char* parse_string(char* yylval);
+long parse_character(char* yylval);
+
 
 char* duplicate_str(char* yylval);
 

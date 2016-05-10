@@ -10,8 +10,8 @@ CC	 = gcc
 LEX	 = flex
 YACC = bison
 
-#-D LEXER_VERBOSE 
-MACROS  = -D SYNTAXER_VERBOSE
+#-D LEXER_VERBOSE -D SYNTAXER_VERBOSE  
+MACROS  = -D LEXER_VERBOSE  
 #-Wall 
 CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 LIBS	= -lfl -lm
@@ -72,7 +72,7 @@ gen/lexer.c: src/lexer.l
 	@rm -f src/lexer.c src/lexer.h #lexer dumps code in src folder as well, bug or feature?
 
 gen/syntaxer.c: src/syntaxer.y
-	$(YACC) -o$@ $<
+	$(YACC) -Wall -o$@ $<
 
 ###########################
 ### compile libs

@@ -13,6 +13,9 @@ void ast_export_root(FILE* dest, struct ast_node_t* node) {
 
 void print_node(FILE* dest, struct ast_node_t* node, int padding) {
 	//printf("[NODE:%p \t type:%4d \t next:%9p \t value: %9x]\n", node, node->type, node->next, node->value.child);
+	if (!node) {
+		return;
+	}
 
 	TOKEN_TYPE_T type = node->type;
 	if (is_atomic(type)) {
@@ -37,7 +40,7 @@ void print_atomic(FILE* dest, struct ast_node_t* node, int padding) {
 
 	switch (node->type) {
 	case NT_NUMBER:
-		printf("Number: %ld \n", node->value.number);
+		fprintf(dest, "Number: %ld \n", node->value.number);
 		return;
 	case NT_IDENTIFIER:
 		fprintf(dest, "Identifier: %s\n", node->value.string);

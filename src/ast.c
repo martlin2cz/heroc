@@ -36,6 +36,36 @@ struct ast_node_t* create_identifier(char* name) {
 	return node;
 }
 
+struct ast_node_t* create_string(char* value) {
+	struct ast_node_t* node = create_new_node(NT_STRING);
+	node->value.string = value;
+	return node;
+}
+
+
+//TODO ...
+struct ast_node_t*  create_declarations(struct ast_node_t* decls, struct ast_node_t* decl) {
+	return NULL;
+}
+struct ast_node_t*  create_decl_of_var(struct ast_node_t* var, struct ast_node_t* value) {
+	return NULL;
+}
+struct ast_node_t*  create_procedure(struct ast_node_t* args, struct ast_node_t* body) {
+	return NULL;
+}
+struct ast_node_t*  create_identifiers(struct ast_node_t* ids, struct ast_node_t* id) {
+	return NULL;
+}
+struct ast_node_t*  create_decls_and_statements(struct ast_node_t* decls, struct ast_node_t* statemens) {
+	return NULL;
+}
+struct ast_node_t*  create_statements(struct ast_node_t* statement, struct ast_node_t* statements) {
+	return NULL;
+}
+
+
+
+
 struct ast_node_t* create_unary(TOKEN_TYPE_T operator, struct ast_node_t* expr) {
 	return create_list1(operator, expr);
 }

@@ -6,7 +6,11 @@ int main(int argc, char **argv)
 	printf("Running lexer (stdin): \n");
 
 	yyin = stdin;
-    yylex();
+
+	int val;
+	do {
+    	val = yylex();
+    } while (val);
 
     printf("Done.\n");
 

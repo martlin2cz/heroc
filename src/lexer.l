@@ -5,16 +5,32 @@
 %option outfile="gen/lexer.c" header-file="gen/lexer.h"
 %option noyywrap
 
-DIGIT	[0-9]
+DIGIT		[0-9]
 HEXDIGIT	[0-9a-fA-F]
-ALPHA	[a-zA-Z]
-ALNUM	DIGIT|ALPHA
-IDCHAR	[_a-zA-Z]
-OPER	[\+\*\/\%]
-MULTIOPER	[\-\*]
-BRACKET	[\(\)\{\}\[\]]
+OCTDIGIT	[0-7]
+ALPHA		[a-zA-Z]
+ALNUM		DIGIT|ALPHA
+
+OPER		[\+\*\/\%]|(\|\|)|(\&\&)|(\!)|(\|)|(\&)|(\^)|(\~)|(\<)|(\>)|(\<\=)|(\>\=)|(\!=)|(\<\<)|(\>\>)
+MULTIOPER	(\-)|(\+)|(\*)|(\+\+)|(\-\-)
+ASGOPER		(\=)|(\+\=)|(\-\=)|(\*\=)|(\/\=)(\%\=)|(\|\=)|(\&\=)|(\!\=)|(\^\=)|(\~\=)|(\<\<=)|(\>\>=)
+BRACKET		[\(\)\{\}\[\]]
+SPECSYM		[\,\;\:\?]
+
+KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
+
+%x MULTILINE_COMMENT
+%x ONELINE_COMMENT
+%x STRING_LITERAL
+
 
 %%
+
+{KEYWORD} {
+	LEXER_LOG("keyword: %s" , yytext);
+	int keyw = str_to_keyword(yytext);
+    return keyw;
+}
 
 {DIGIT}+ {
 	LEXER_LOG("decimal number: %s" , yytext);
@@ -28,10 +44,17 @@ BRACKET	[\(\)\{\}\[\]]
     return NT_NUMBER;
 }
 
-{ALPHA}{IDCHAR}* {
+(_|{ALPHA})(_|{ALPHA}|{DIGIT})* {
 	LEXER_LOG("identifier: %s" , yytext);
 	yylval.string = parse_identifier(yytext);
     return NT_IDENTIFIER;
+}
+
+
+{MULTIOPER} {
+	LEXER_LOG("multioperator: %s" , yytext);
+	int oper = str_to_multioper(yytext);
+    return oper;
 }
 
 {OPER} {
@@ -40,12 +63,12 @@ BRACKET	[\(\)\{\}\[\]]
     return oper;
 }
 
-{MULTIOPER} {
-	LEXER_LOG("operator: %s" , yytext);
-	int oper = str_to_multioper(yytext);
-	yylval.oper = oper;
-    return oper;
+{ASGOPER} {
+	LEXER_LOG("assignment: %s" , yytext);
+	int asgop = str_to_asgoper(yytext);
+    return TT_ASSIGNMENT;
 }
+
 
 {BRACKET} {
 	LEXER_LOG("bracket: %s" , yytext);
@@ -53,13 +76,69 @@ BRACKET	[\(\)\{\}\[\]]
     return bra;
 }
 
-";" {
-	LEXER_LOG("end of statement");
-    return NT_SEMICOLON;
+
+{SPECSYM} {
+	LEXER_LOG("special symbol: %s", yytext);
+    int ssym = str_to_specsym(yytext);
+    return ssym;
 }
 
+\'((\\)?(.))\' {
+	LEXER_LOG("character: %s", yytext);
+	long c = parse_character(yytext);
+	yylval.number = c;
+	return NT_NUMBER;
+}
+
+\" {
+	LEXER_LOG("start of string: %s", yytext);
+	BEGIN(STRING_LITERAL);
+}
+
+<STRING_LITERAL>(\\{2}|[^\"])* {
+	LEXER_LOG("string constant: %s", yytext);
+	yylval.string = parse_string(yytext);
+	return NT_STRING;
+}
+
+<STRING_LITERAL>\" {
+	LEXER_LOG("end of string: %s", yytext);
+	BEGIN(INITIAL);
+}
+
+"//" {
+	LEXER_LOG("start of one-line comment: %s", yytext);
+	BEGIN(ONELINE_COMMENT);
+}
+
+
+<ONELINE_COMMENT>[^\n]*\n {
+	LEXER_LOG("one-line comment: %s", yytext);
+	BEGIN(INITIAL);
+}
+
+"/*" {
+	LEXER_LOG("start of multi-line comment: %s", yytext);
+	BEGIN(MULTILINE_COMMENT);
+}
+
+<MULTILINE_COMMENT>[^*]+|"*"+[^/] {
+	LEXER_LOG("multi-line comment's body: %s", yytext);
+}
+
+<MULTILINE_COMMENT>"*"+"/" {
+    LEXER_LOG("end of multi-line comment: %s", yytext);
+    BEGIN(INITIAL);
+}
+
+
 [ \t\n]+ {
-	LEXER_LOG("just whitespace: %s", yytext);
+	LEXER_LOG("just whitespace: \"%s\"", yytext);
+}
+
+<<EOF>> {
+	LEXER_LOG("end of input");
+	yyterminate();
 }
 
 . {

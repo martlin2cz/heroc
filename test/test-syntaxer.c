@@ -12,8 +12,12 @@ int main(int argc, char **argv)
 	struct ast_node_t* root = NULL;
     yyparse(&root);
 
-    printf("Done with root %p:\n", root);
-    ast_export_root(stdout, root);
+    if (root) {
+    	printf("Done with root %p:\n", root);
+    	ast_export_root(stdout, root);
+    } else {
+    	printf("Parsing failed.\n");
+    }
 
     return 0;
 }

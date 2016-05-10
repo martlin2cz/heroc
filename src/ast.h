@@ -17,6 +17,16 @@ struct ast_node_t* create_new_node();
 
 struct ast_node_t* create_number(long value);
 struct ast_node_t* create_identifier(char* name);
+struct ast_node_t* create_string(char* value);
+
+//TODO ...
+struct ast_node_t*  create_declarations(struct ast_node_t* decls, struct ast_node_t* decl);
+struct ast_node_t*  create_decl_of_var(struct ast_node_t* var, struct ast_node_t* value);
+struct ast_node_t*  create_procedure(struct ast_node_t* args, struct ast_node_t* body);
+struct ast_node_t*  create_identifiers(struct ast_node_t* ids, struct ast_node_t* id);
+struct ast_node_t*  create_decls_and_statements(struct ast_node_t* decls, struct ast_node_t* statemens);
+struct ast_node_t*  create_statements(struct ast_node_t* statement, struct ast_node_t* statements);
+
 
 struct ast_node_t* create_unary(TOKEN_TYPE_T operator, struct ast_node_t* expr);
 struct ast_node_t* create_binary(TOKEN_TYPE_T operator,

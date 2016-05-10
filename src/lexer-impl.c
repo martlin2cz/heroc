@@ -6,17 +6,44 @@
 #include "lexer-headers.h"
 
 long parse_dec(char* yylval) {
-	return atoi(yylval);	//TODO
+	return atol(yylval);
 }
-long parse_hex(char* yylval) {
-	return atoi(yylval);	//TODO
+long parse_hex(char* text) {
+	return strtol(text + 2, NULL, 16);
 }
-long parse_oct(char* yylval) {
-	return atoi(yylval);	//TODO
+
+long parse_oct(char* text) {
+	return strtol(text + 1, NULL, 8);
 }
 
 char* parse_identifier(char* yylval) {
 	return duplicate_str(yylval);
+}
+
+char* parse_string(char* yylval) {
+	return duplicate_str(yylval);
+}
+
+long parse_character(char* yylval) {
+	if (strlen(yylval) == 3) {
+		return yylval[1];
+	} else if (strlen(yylval) == 4 && yylval[1] == '\\') {
+		switch (yylval[3]) {
+		case '\'':
+			return '\'';
+		case 'n':
+			return '\n';
+		case 't':
+			return '\t';
+		case '0':
+			return '\0';
+		case '\\':
+			return '\\';
+		}
+	}
+
+	fprintf(stderr, "Unsupported char: %s\n", yylval);
+	return 0;
 }
 
 char* duplicate_str(char* yylval) {
