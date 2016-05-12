@@ -10,10 +10,10 @@
 void ast_export_root(FILE* dest, struct ast_node_t* node) {
 
 
-	/*
+
 	print_node(dest, node, 0);
-	*/
-	fprintf(dest, "[FIXME, cycling!]\n");	//TODO FIXME
+
+	//fprintf(dest, "[FIXME, cycling!]\n");	//TODO FIXME
 }
 
 void print_node(FILE* dest, struct ast_node_t* node, int padding) {

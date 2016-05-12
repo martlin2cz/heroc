@@ -59,8 +59,8 @@ struct ast_node_t* create_array(long size) {
 
 struct ast_node_t* create_procedure(struct ast_node_t* args,
 		struct ast_node_t* body) {
-
-	return create_with_2_children(NTS_LAMBDA, args, body);
+	struct ast_node_t* args_node = create_block(args);
+	return create_with_2_children(NTS_LAMBDA, args_node, body);
 }
 
 struct ast_node_t* create_block(struct ast_node_t* statements) {
@@ -102,8 +102,7 @@ struct ast_node_t* create_return(struct ast_node_t* retexpr) {
 struct ast_node_t* create_assignment(struct ast_node_t* place,
 		struct ast_node_t* expr) {
 
-	struct ast_node_t* asg = create_with_2_children(TT_ASSIGNMENT, place, expr);
-	return asg;
+	return create_with_2_children(TT_ASSIGNMENT, place, expr);
 }
 
 struct ast_node_t* create_funcall(struct ast_node_t* proc,
@@ -189,9 +188,9 @@ struct ast_node_t* create_with_4_children(TOKEN_TYPE_T type,
 
 	struct ast_node_t* node = create_new_node(type);
 	node->value.child = expr1;
-	expr1->value.child = expr2;
-	expr2->value.child = expr3;
-	expr3->value.child = expr4;
+	expr1->next = expr2;
+	expr2->next = expr3;
+	expr3->next = expr4;
 	return node;
 }
 

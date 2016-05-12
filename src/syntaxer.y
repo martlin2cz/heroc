@@ -112,9 +112,9 @@
 %token<child>	NTO_GREATER_OR_EQUAL	2316
 
 /* (nonterminals) */
-%type<child> program decl_statements decl_statement procedure_decl variable_decl array_decl proc_params_list variables_decls_specs id_with_opt_asg_val
+%type<child> program toplevel_toplevel_decl_statements toplevel_decl_statement procedure_decl variable_decl array_decl proc_params_list variables_decls_specs id_with_opt_asg_val
 %type<child> block statements statement expressions expression 
-%type<child> if_statement for_statement while_statement do_while_statement keyword 
+%type<child> inblock_decl_statement  if_statement for_statement while_statement do_while_statement keyword 
 %type<child> assignment operation funcall place constant array sizeof_expr
 
 
@@ -144,22 +144,22 @@
 /* basic program rules */
 
 program: 
-	decl_statements { 
+	toplevel_toplevel_decl_statements { 
 			*root = $$ = $1;
 			SYNTAXER_LOG("whole program: %p", $$);
 		}
 ;
 
-decl_statements:
+toplevel_toplevel_decl_statements:
 		%empty {
 			*root = $$ = NULL;
 		}
-	|	decl_statement decl_statements {
+	|	toplevel_decl_statement toplevel_toplevel_decl_statements {
 			*root = $$ = prepend($1, $2);
 		}
 ;
 
-decl_statement:
+toplevel_decl_statement:
 		procedure_decl { 
 			*root = $$ = $1;
 		}
@@ -256,13 +256,22 @@ statements:
 statement:
 		TT_SEMICOLON						{	*root = $$ = NULL;	SYNTAXER_LOG("empty statement");	}
 	|	expression TT_SEMICOLON	{	*root = $$ = $1;	SYNTAXER_LOG("statement with expression: %p", $1);	}
-	|	decl_statement 					{ *root = $$ = $1;	SYNTAXER_LOG("declaration statement: %p", $1);	}
+	|	inblock_decl_statement 			{ *root = $$ = $1;	SYNTAXER_LOG("declaration statement: %p", $1);	}
 	|	if_statement 						{ *root = $$ = $1;	SYNTAXER_LOG("if: %p", $1);	}
 	|	for_statement 					{ *root = $$ = $1;	SYNTAXER_LOG("for: %p", $1);	}
 	|	while_statement 				{ *root = $$ = $1;	SYNTAXER_LOG("while: %p", $1);	}
 	|	do_while_statement 			{ *root = $$ = $1;	SYNTAXER_LOG("do-while: %p", $1);	}
 	|	keyword TT_SEMICOLON		{ *root = $$ = $1;	SYNTAXER_LOG("keyword: %p", $1);	}
 	|	block				 						{ *root = $$ = $1;	SYNTAXER_LOG("inner block: %p", $1);	}
+;
+
+inblock_decl_statement:
+		variable_decl { 
+			*root = $$ = $1;
+		}
+	|	array_decl {
+			*root = $$ = $1;
+		}
 ;
 
 if_statement:
