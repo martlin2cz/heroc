@@ -12,21 +12,48 @@ typedef struct ast_node_t {
 	struct ast_node_t* next;
 } ast_node_t;
 
-
-struct ast_node_t* create_new_node();
+struct ast_node_t* create_new_node(TOKEN_TYPE_T type);
 
 struct ast_node_t* create_number(long value);
 struct ast_node_t* create_identifier(char* name);
 struct ast_node_t* create_string(char* value);
 
-//TODO ...
-struct ast_node_t*  create_declarations(struct ast_node_t* decls, struct ast_node_t* decl);
-struct ast_node_t*  create_decl_of_var(struct ast_node_t* var, struct ast_node_t* value);
-struct ast_node_t*  create_procedure(struct ast_node_t* args, struct ast_node_t* body);
-struct ast_node_t*  create_identifiers(struct ast_node_t* ids, struct ast_node_t* id);
-struct ast_node_t*  create_decls_and_statements(struct ast_node_t* decls, struct ast_node_t* statemens);
-struct ast_node_t*  create_statements(struct ast_node_t* statement, struct ast_node_t* statements);
+struct ast_node_t* create_decl_assignment(struct ast_node_t* place,
+		struct ast_node_t* initval);
 
+struct ast_node_t* create_array(long size);
+struct ast_node_t* create_procedure(struct ast_node_t* args,
+		struct ast_node_t* body);
+
+struct ast_node_t* create_block(struct ast_node_t* statements);
+
+struct ast_node_t* create_if(struct ast_node_t* cond, struct ast_node_t* pos);
+struct ast_node_t* create_if_else(struct ast_node_t* cond,
+		struct ast_node_t* pos, struct ast_node_t* neg);
+struct ast_node_t* create_for(struct ast_node_t* init, struct ast_node_t* cond,
+		struct ast_node_t* inc, struct ast_node_t* body);
+struct ast_node_t* create_while(struct ast_node_t* cond,
+		struct ast_node_t* body);
+struct ast_node_t* create_do_else(struct ast_node_t* body,
+		struct ast_node_t* cond);
+struct ast_node_t* create_keyword(TOKEN_TYPE_T keyword);
+struct ast_node_t* create_return(struct ast_node_t* retexpr);
+
+
+struct ast_node_t* create_assignment(struct ast_node_t* place,
+		struct ast_node_t* expr);
+
+struct ast_node_t* create_funcall(struct ast_node_t* proc,
+		struct ast_node_t* args);
+struct ast_node_t* create_assignment_with_op(TOKEN_TYPE_T op,
+		struct ast_node_t* place, struct ast_node_t* expr);
+struct ast_node_t* create_reference(struct ast_node_t* of);
+struct ast_node_t* create_dereference(struct ast_node_t* of);
+struct ast_node_t* create_indexof(struct ast_node_t* of,
+		struct ast_node_t* index);
+struct ast_node_t* create_sizeof(struct ast_node_t* of);
+struct ast_node_t* create_ternar_op(struct ast_node_t* cond,
+		struct ast_node_t* pos, struct ast_node_t* neg);
 
 struct ast_node_t* create_unary(TOKEN_TYPE_T operator, struct ast_node_t* expr);
 struct ast_node_t* create_binary(TOKEN_TYPE_T operator,
@@ -35,14 +62,19 @@ struct ast_node_t* create_ternary(TOKEN_TYPE_T operator,
 		struct ast_node_t* expr1, struct ast_node_t* expr2,
 		struct ast_node_t* expr3);
 
-struct ast_node_t* create_list1(TOKEN_TYPE_T type, struct ast_node_t* expr1);
-struct ast_node_t* create_list2(TOKEN_TYPE_T type, struct ast_node_t* expr1,
-		struct ast_node_t* expr2);
-struct ast_node_t* create_list3(TOKEN_TYPE_T type, struct ast_node_t* expr1,
-		struct ast_node_t* expr2, struct ast_node_t* expr3);
-struct ast_node_t* create_list4(TOKEN_TYPE_T type, struct ast_node_t* expr1,
-		struct ast_node_t* expr2, struct ast_node_t* expr3,
-		struct ast_node_t* expr4);
+struct ast_node_t* create_with_0_children(TOKEN_TYPE_T type);
+struct ast_node_t* create_with_1_children(TOKEN_TYPE_T type,
+		struct ast_node_t* expr1);
+struct ast_node_t* create_with_2_children(TOKEN_TYPE_T type,
+		struct ast_node_t* expr1, struct ast_node_t* expr2);
+struct ast_node_t* create_with_3_children(TOKEN_TYPE_T type,
+		struct ast_node_t* expr1, struct ast_node_t* expr2,
+		struct ast_node_t* expr3);
+struct ast_node_t* create_with_4_children(TOKEN_TYPE_T type,
+		struct ast_node_t* expr1, struct ast_node_t* expr2,
+		struct ast_node_t* expr3, struct ast_node_t* expr4);
+
+struct ast_node_t* prepend(struct ast_node_t* item, struct ast_node_t* list);
 
 /*
  typedef int operator_t;

@@ -15,7 +15,7 @@ OPER		[\+\*\/\%]|(\|\|)|(\&\&)|(\!)|(\|)|(\&)|(\^)|(\~)|(\<)|(\>)|(\<\=)|(\>\=)|
 MULTIOPER	(\-)|(\+)|(\*)|(\+\+)|(\-\-)
 ASGOPER		(\=)|(\+\=)|(\-\=)|(\*\=)|(\/\=)(\%\=)|(\|\=)|(\&\=)|(\!\=)|(\^\=)|(\~\=)|(\<\<=)|(\>\>=)
 BRACKET		[\(\)\{\}\[\]]
-SPECSYM		[\,\;\:\?]
+SPECSYM		[\,\;\:\?\&]
 
 KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
 
@@ -66,6 +66,7 @@ KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
 {ASGOPER} {
 	LEXER_LOG("assignment: %s" , yytext);
 	int asgop = str_to_asgoper(yytext);
+	yylval.oper = asgop;
     return TT_ASSIGNMENT;
 }
 
@@ -78,7 +79,7 @@ KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
 
 
 {SPECSYM} {
-	LEXER_LOG("special symbol: %s", yytext);
+	LEXER_LOG("control symbol/char: %s", yytext);
     int ssym = str_to_specsym(yytext);
     return ssym;
 }

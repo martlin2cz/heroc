@@ -11,7 +11,7 @@ LEX	 = flex
 YACC = bison
 
 #-D LEXER_VERBOSE -D SYNTAXER_VERBOSE  
-MACROS  = -D LEXER_VERBOSE  
+MACROS  = -D SYNTAXER_VERBOSE -D LEXER_VERBOSE  
 #-Wall 
 CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 LIBS	= -lfl -lm
@@ -63,7 +63,7 @@ prepare:
 	mkdir -p gen obj bin
 
 clean:
-	@rm -rf gen obj bin
+	@rm -rf gen obj bin tmp
 
 	
 ###########################

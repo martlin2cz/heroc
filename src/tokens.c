@@ -9,7 +9,7 @@
 /******************************************************************************/
 /* TYPES */
 int is_atomic(TOKEN_TYPE_T type) {
-	return type > 1000 && type < 2000;
+	return type > 1000 && type < 1100;
 }
 int is_operator(TOKEN_TYPE_T type) {
 	return type > 2000 && type < 3000;
@@ -362,6 +362,8 @@ TOKEN_TYPE_T str_to_specsym(char* str) {
 		return TT_QUESTION_MARK;
 	case ':':
 		return TT_COLON;
+	case '&':
+		return TT_AMPERSAND;
 	default:
 		UNSUPPORTED_STR(str)
 	}
@@ -374,12 +376,13 @@ char* specsym_to_str(TOKEN_TYPE_T specsym) {
 	case TT_SEMICOLON:
 		return ";";
 	case TT_QUESTION_MARK:
-		return ",";
+		return "?";
 	case TT_COLON:
 		return ":";
+	case TT_AMPERSAND:
+		return "&";
 	default:
 		UNSUPPORTED_TYPE(specsym)
-		;
 	}
 }
 
@@ -387,37 +390,40 @@ char* specsym_to_str(TOKEN_TYPE_T specsym) {
 /* KEYWORDS AND SYNTACTIC CONSTRUCTS */
 
 TOKEN_TYPE_T str_to_keyword(char* keyw) {
-	if (strcmp(keyw, "long")) {
+	if (strcmp(keyw, "long") == 0) {
 		return NTS_TYPEDEF;
 	}
-	if (strcmp(keyw, "sizeof")) {
+	if (strcmp(keyw, "sizeof") == 0) {
 		return NTS_SIZEOF;
 	}
-	if (strcmp(keyw, "if")) {
+	if (strcmp(keyw, "if") == 0) {
 		return NTS_IF;
 	}
-	if (strcmp(keyw, "else")) {
+	if (strcmp(keyw, "else") == 0) {
 		return NTS_ELSE;
 	}
-	if (strcmp(keyw, "for")) {
+	if (strcmp(keyw, "for") == 0) {
 		return NTS_FOR;
 	}
-	if (strcmp(keyw, "while")) {
+	if (strcmp(keyw, "while") == 0) {
 		return NTS_WHILE;
 	}
-	if (strcmp(keyw, "do")) {
+	if (strcmp(keyw, "do") == 0) {
 		return NTS_DO;
 	}
-	if (strcmp(keyw, "break")) {
+	if (strcmp(keyw, "return") == 0) {
+		return NTS_RETURN;
+	}
+	if (strcmp(keyw, "break") == 0) {
 		return NTS_BREAK;
 	}
-	if (strcmp(keyw, "continue")) {
+	if (strcmp(keyw, "continue") == 0) {
 		return NTS_CONTINUE;
 	}
-	if (strcmp(keyw, "goto")) {
+	if (strcmp(keyw, "goto") == 0) {
 		return NTS_GOTO;
 	}
-	if (strcmp(keyw, "lambda")) {
+	if (strcmp(keyw, "lambda") == 0) {
 		return NTS_LAMBDA;
 	}
 

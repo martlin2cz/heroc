@@ -7,11 +7,10 @@
 #include "../gen/syntaxer.h"
 #include "ast.h"
 
-
-
 struct ast_node_t* create_new_node(TOKEN_TYPE_T type) {
 	struct ast_node_t* node = (struct ast_node_t*) malloc(
 			sizeof(struct ast_node_t));
+
 	if (!node) {
 		fprintf(stderr, "Cannot allocate memory");
 		return NULL;
@@ -42,58 +41,141 @@ struct ast_node_t* create_string(char* value) {
 	return node;
 }
 
+//struct ast_node_t* create_identifier_decl(struct ast_node_t* id_with_opt_asg_val) {
+//	return NULL; //TODO
+//}
 
-//TODO ...
-struct ast_node_t*  create_declarations(struct ast_node_t* decls, struct ast_node_t* decl) {
-	return NULL;
-}
-struct ast_node_t*  create_decl_of_var(struct ast_node_t* var, struct ast_node_t* value) {
-	return NULL;
-}
-struct ast_node_t*  create_procedure(struct ast_node_t* args, struct ast_node_t* body) {
-	return NULL;
-}
-struct ast_node_t*  create_identifiers(struct ast_node_t* ids, struct ast_node_t* id) {
-	return NULL;
-}
-struct ast_node_t*  create_decls_and_statements(struct ast_node_t* decls, struct ast_node_t* statemens) {
-	return NULL;
-}
-struct ast_node_t*  create_statements(struct ast_node_t* statement, struct ast_node_t* statements) {
-	return NULL;
+struct ast_node_t* create_decl_assignment(struct ast_node_t* place,
+		struct ast_node_t* initval) {
+
+	struct ast_node_t* asg = create_assignment(place, initval);
+	return create_with_1_children(NTS_TYPEDEF, asg);
 }
 
+struct ast_node_t* create_array(long size) {
+	struct ast_node_t* s = create_number(size);
+	return create_with_1_children(NTS_ARRAY, s);
+}
 
+struct ast_node_t* create_procedure(struct ast_node_t* args,
+		struct ast_node_t* body) {
 
+	return create_with_2_children(NTS_LAMBDA, args, body);
+}
+
+struct ast_node_t* create_block(struct ast_node_t* statements) {
+	return create_with_1_children(TT_BLOCK_LEFT_BRA, statements);
+}
+
+struct ast_node_t* create_if(struct ast_node_t* cond, struct ast_node_t* pos) {
+	return create_with_2_children(NTS_IF, cond, pos);
+}
+
+struct ast_node_t* create_if_else(struct ast_node_t* cond,
+		struct ast_node_t* pos, struct ast_node_t* neg) {
+	return create_with_3_children(NTS_IF, cond, pos, neg);
+}
+
+struct ast_node_t* create_for(struct ast_node_t* init, struct ast_node_t* cond,
+		struct ast_node_t* inc, struct ast_node_t* body) {
+	return create_with_4_children(NTS_FOR, init, cond, inc, body);
+}
+
+struct ast_node_t* create_while(struct ast_node_t* cond,
+		struct ast_node_t* body) {
+	return create_with_2_children(NTS_WHILE, cond, body);
+}
+
+struct ast_node_t* create_do_else(struct ast_node_t* body,
+		struct ast_node_t* cond) {
+	return create_with_2_children(NTS_DO, body, cond);
+}
+
+struct ast_node_t* create_keyword(TOKEN_TYPE_T keyword) {
+	return create_with_0_children(keyword);
+}
+
+struct ast_node_t* create_return(struct ast_node_t* retexpr) {
+	return create_with_1_children(NTS_RETURN, retexpr);
+}
+
+struct ast_node_t* create_assignment(struct ast_node_t* place,
+		struct ast_node_t* expr) {
+
+	struct ast_node_t* asg = create_with_2_children(TT_ASSIGNMENT, place, expr);
+	return asg;
+}
+
+struct ast_node_t* create_funcall(struct ast_node_t* proc,
+		struct ast_node_t* args) {
+	return create_with_2_children(TT_NORMAL_LEFT_BRA, proc, args);
+}
+struct ast_node_t* create_assignment_with_op(TOKEN_TYPE_T op,
+		struct ast_node_t* place, struct ast_node_t* expr) {
+	struct ast_node_t* value;
+
+	if (op != TT_ASSIGNMENT) {
+		value = create_binary(op, place, expr);
+	} else {
+		value = expr;
+	}
+
+	return create_assignment(place, value);
+}
+struct ast_node_t* create_reference(struct ast_node_t* of) {
+	return create_with_1_children(TT_STAR, of);
+}
+struct ast_node_t* create_dereference(struct ast_node_t* of) {
+	return create_with_1_children(TT_AMPERSAND, of);
+}
+struct ast_node_t* create_indexof(struct ast_node_t* of,
+		struct ast_node_t* index) {
+	return create_with_2_children(TT_INDEX_LEFT_BRA, of, index);
+}
+struct ast_node_t* create_sizeof(struct ast_node_t* of) {
+	return create_with_1_children(NTS_SIZEOF, of);
+}
+
+struct ast_node_t* create_ternar_op(struct ast_node_t* cond,
+		struct ast_node_t* pos, struct ast_node_t* neg) {
+	return create_ternary(TT_QUESTION_MARK, cond, pos, neg);
+}
 
 struct ast_node_t* create_unary(TOKEN_TYPE_T operator, struct ast_node_t* expr) {
-	return create_list1(operator, expr);
+	return create_with_1_children(operator, expr);
 }
 struct ast_node_t* create_binary(TOKEN_TYPE_T operator,
 		struct ast_node_t* expr1, struct ast_node_t* expr2) {
-	return create_list2(operator, expr1, expr2);
+	return create_with_2_children(operator, expr1, expr2);
 }
 struct ast_node_t* create_ternary(TOKEN_TYPE_T operator,
 		struct ast_node_t* expr1, struct ast_node_t* expr2,
 		struct ast_node_t* expr3) {
-	return create_list3(operator, expr1, expr2, expr3);
+	return create_with_3_children(operator, expr1, expr2, expr3);
 }
 
-struct ast_node_t* create_list1(TOKEN_TYPE_T type, struct ast_node_t* expr1) {
+struct ast_node_t* create_with_0_children(TOKEN_TYPE_T type) {
+	struct ast_node_t* node = create_new_node(type);
+	return node;
+}
+
+struct ast_node_t* create_with_1_children(TOKEN_TYPE_T type,
+		struct ast_node_t* expr1) {
 	struct ast_node_t* node = create_new_node(type);
 	node->value.child = expr1;
 	return node;
 }
-struct ast_node_t* create_list2(TOKEN_TYPE_T type, struct ast_node_t* expr1,
-		struct ast_node_t* expr2) {
+struct ast_node_t* create_with_2_children(TOKEN_TYPE_T type,
+		struct ast_node_t* expr1, struct ast_node_t* expr2) {
 
 	struct ast_node_t* node = create_new_node(type);
 	node->value.child = expr1;
 	expr1->next = expr2;
 	return node;
 }
-struct ast_node_t* create_list3(TOKEN_TYPE_T type, struct ast_node_t* expr1,
-		struct ast_node_t* expr2, struct ast_node_t* expr3) {
+struct ast_node_t* create_with_3_children(TOKEN_TYPE_T type,
+		struct ast_node_t* expr1, struct ast_node_t* expr2,
+		struct ast_node_t* expr3) {
 
 	struct ast_node_t* node = create_new_node(type);
 	node->value.child = expr1;
@@ -101,9 +183,9 @@ struct ast_node_t* create_list3(TOKEN_TYPE_T type, struct ast_node_t* expr1,
 	expr2->next = expr3;
 	return node;
 }
-struct ast_node_t* create_list4(TOKEN_TYPE_T type, struct ast_node_t* expr1,
-		struct ast_node_t* expr2, struct ast_node_t* expr3,
-		struct ast_node_t* expr4) {
+struct ast_node_t* create_with_4_children(TOKEN_TYPE_T type,
+		struct ast_node_t* expr1, struct ast_node_t* expr2,
+		struct ast_node_t* expr3, struct ast_node_t* expr4) {
 
 	struct ast_node_t* node = create_new_node(type);
 	node->value.child = expr1;
@@ -111,6 +193,11 @@ struct ast_node_t* create_list4(TOKEN_TYPE_T type, struct ast_node_t* expr1,
 	expr2->value.child = expr3;
 	expr3->value.child = expr4;
 	return node;
+}
+
+struct ast_node_t* prepend(struct ast_node_t* item, struct ast_node_t* list) {
+	item->next = list;
+	return item;
 }
 
 #if 0
@@ -175,7 +262,7 @@ syntax_node_t* create_keyword(special_t keyword) {
  Expressions
  */
 syntax_node_t* create_assignment(operator_t asg_operator, syntax_node_t* variable, syntax_node_t* expr) {
-	syntax_node_t* node = create_list2(ASSIGNMENT, variable, expr);
+	syntax_node_t* node = create_with_2_children(ASSIGNMENT, variable, expr);
 	if (!node)
 	return NULL;
 
@@ -184,7 +271,7 @@ syntax_node_t* create_assignment(operator_t asg_operator, syntax_node_t* variabl
 }
 
 syntax_node_t* create_unary(operator_t operator, syntax_node_t* expr) {
-	syntax_node_t* node = create_list1(OPERATION, expr);
+	syntax_node_t* node = create_with_1_children(OPERATION, expr);
 	if (!node)
 	return NULL;
 
@@ -193,7 +280,7 @@ syntax_node_t* create_unary(operator_t operator, syntax_node_t* expr) {
 }
 
 syntax_node_t* create_binary(operator_t operator, syntax_node_t* expr1, syntax_node_t* expr2) {
-	syntax_node_t* node = create_list2(OPERATION, expr1, expr2);
+	syntax_node_t* node = create_with_2_children(OPERATION, expr1, expr2);
 	if (!node)
 	return NULL;
 
@@ -208,11 +295,11 @@ syntax_node_t* create_print(syntax_node_t* string, syntax_node_t* expr) {
 	syntax_node_t* node;
 
 	if (!string)
-	node = create_list1(SPECIAL, expr);
+	node = create_with_1_children(SPECIAL, expr);
 	else if (!expr)
-	node = create_list1(SPECIAL, string);
+	node = create_with_1_children(SPECIAL, string);
 	else
-	node = create_list2(SPECIAL, string, expr);
+	node = create_with_2_children(SPECIAL, string, expr);
 
 	if (!node)
 	return NULL;
@@ -222,7 +309,7 @@ syntax_node_t* create_print(syntax_node_t* string, syntax_node_t* expr) {
 }
 
 syntax_node_t* create_scan(syntax_node_t* var) {
-	syntax_node_t* node = create_list1(SPECIAL, var);
+	syntax_node_t* node = create_with_1_children(SPECIAL, var);
 
 	if (!node)
 	return NULL;
@@ -235,9 +322,9 @@ syntax_node_t* create_if(syntax_node_t* cond, syntax_node_t* cmd, syntax_node_t*
 	syntax_node_t* node;
 
 	if (cmdelse)
-	node = create_list3(SPECIAL, cond, cmd, cmdelse);
+	node = create_with_3_children(SPECIAL, cond, cmd, cmdelse);
 	else
-	node = create_list2(SPECIAL, cond, cmd);
+	node = create_with_2_children(SPECIAL, cond, cmd);
 
 	if (!node)
 	return NULL;
@@ -247,7 +334,7 @@ syntax_node_t* create_if(syntax_node_t* cond, syntax_node_t* cmd, syntax_node_t*
 }
 
 syntax_node_t* create_for(syntax_node_t* init, syntax_node_t* cond, syntax_node_t* incr, syntax_node_t* cmd) {
-	syntax_node_t* node = create_list4(SPECIAL, init, cond, incr, cmd);
+	syntax_node_t* node = create_with_4_children(SPECIAL, init, cond, incr, cmd);
 
 	if (!node)
 	return NULL;
@@ -257,7 +344,7 @@ syntax_node_t* create_for(syntax_node_t* init, syntax_node_t* cond, syntax_node_
 }
 
 syntax_node_t* create_do_while(syntax_node_t* cond, syntax_node_t* cmd) {
-	syntax_node_t* node = create_list2(SPECIAL, cond, cmd);
+	syntax_node_t* node = create_with_2_children(SPECIAL, cond, cmd);
 
 	if (!node)
 	return NULL;
@@ -266,7 +353,7 @@ syntax_node_t* create_do_while(syntax_node_t* cond, syntax_node_t* cmd) {
 	return node;
 }
 syntax_node_t* create_while(syntax_node_t* cond, syntax_node_t* cmd) {
-	syntax_node_t* node = create_list2(SPECIAL, cond, cmd);
+	syntax_node_t* node = create_with_2_children(SPECIAL, cond, cmd);
 
 	if (!node)
 	return NULL;
@@ -276,7 +363,7 @@ syntax_node_t* create_while(syntax_node_t* cond, syntax_node_t* cmd) {
 }
 
 syntax_node_t* create_commands(syntax_node_t* command, syntax_node_t* commands) {
-	syntax_node_t* node = create_list2(COMMANDS, command, commands);
+	syntax_node_t* node = create_with_2_children(COMMANDS, command, commands);
 
 	if (!node)
 	return NULL;
@@ -285,7 +372,7 @@ syntax_node_t* create_commands(syntax_node_t* command, syntax_node_t* commands) 
 }
 
 syntax_node_t* create_empty_command() {
-	syntax_node_t* node = create_list1(COMMANDS, NULL);
+	syntax_node_t* node = create_with_1_children(COMMANDS, NULL);
 
 	if (!node)
 	return NULL;
@@ -296,7 +383,7 @@ syntax_node_t* create_empty_command() {
 /*
  Creating children lists
  */
-syntax_node_t* create_list1(syntax_node_type type, syntax_node_t* expr1) {
+syntax_node_t* create_with_1_children(syntax_node_type type, syntax_node_t* expr1) {
 	syntax_node_t* node = (syntax_node_t*) malloc(sizeof(syntax_node_t));
 	if (!node)
 	return NULL;
@@ -307,7 +394,7 @@ syntax_node_t* create_list1(syntax_node_type type, syntax_node_t* expr1) {
 	return node;
 }
 
-syntax_node_t* create_list2(syntax_node_type type, syntax_node_t* expr1, syntax_node_t* expr2) {
+syntax_node_t* create_with_2_children(syntax_node_type type, syntax_node_t* expr1, syntax_node_t* expr2) {
 	syntax_node_t* node = (syntax_node_t*) malloc(sizeof(syntax_node_t));
 	if (!node)
 	return NULL;
@@ -320,7 +407,7 @@ syntax_node_t* create_list2(syntax_node_type type, syntax_node_t* expr1, syntax_
 	return node;
 }
 
-syntax_node_t* create_list3(syntax_node_type type, syntax_node_t* expr1, syntax_node_t* expr2, syntax_node_t* expr3) {
+syntax_node_t* create_with_3_children(syntax_node_type type, syntax_node_t* expr1, syntax_node_t* expr2, syntax_node_t* expr3) {
 	syntax_node_t* node = (syntax_node_t*) malloc(sizeof(syntax_node_t));
 	if (!node)
 	return NULL;
@@ -335,7 +422,7 @@ syntax_node_t* create_list3(syntax_node_type type, syntax_node_t* expr1, syntax_
 
 }
 
-syntax_node_t* create_list4(syntax_node_type type, syntax_node_t* expr1, syntax_node_t* expr2, syntax_node_t* expr3, syntax_node_t* expr4) {
+syntax_node_t* create_with_4_children(syntax_node_type type, syntax_node_t* expr1, syntax_node_t* expr2, syntax_node_t* expr3, syntax_node_t* expr4) {
 	syntax_node_t* node = (syntax_node_t*) malloc(sizeof(syntax_node_t));
 	if (!node)
 	return NULL;
