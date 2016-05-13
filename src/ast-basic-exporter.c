@@ -35,13 +35,13 @@ void print_atomic(FILE* dest, struct ast_node_t* node, int padding) {
 	print_padding(dest, padding);
 
 	switch (node->type) {
-	case NT_NUMBER:
+	case ATT_NUMBER:
 		fprintf(dest, "Number: %ld \n", node->value.number);
 		return;
-	case NT_IDENTIFIER:
+	case ATT_IDENTIFIER:
 		fprintf(dest, "Identifier: %s\n", node->value.string);
 		return;
-	case NT_STRING:
+	case ATT_STRING:
 		fprintf(dest, "String: %s\n", node->value.string);
 		return;
 	default:
@@ -52,7 +52,7 @@ void print_atomic(FILE* dest, struct ast_node_t* node, int padding) {
 
 void print_compozite(FILE* dest, struct ast_node_t* node, int padding) {
 	print_padding(dest, padding);
-	printf("Node %04d\n", node->type);
+	printf("Node %s\n", to_string(node->type));
 
 	print_node(dest, node->value.child, padding + 1);
 }

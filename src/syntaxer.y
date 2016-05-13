@@ -36,106 +36,123 @@
 
 %start program
 
-/* tokens (terminals) */
-/* lexical tokens (not in use in ast) */
-%token	TT_MINUS 				0001
-%token	TT_PLUS 				0002
-%token	TT_STAR 				0003
-%token	TT_INCREMENT			0004
-%token	TT_DECREMENT			0005
-%token<oper>	TT_ASSIGNMENT			0011
-
-/* special characters */
-%token	TT_COMMA				0111
-%token 	TT_SEMICOLON			0112
-%token	TT_QUESTION_MARK		0113
-%token	TT_COLON				0114
-%token	TT_AMPERSAND				0115
+/* basic control characters */
+%token JLT_COMMA			0101 	
+%token JLT_SEMICOLON		0102
+%token JLT_QUESTION_MARK	0103
+%token JLT_COLON			0104
+%token JLT_AMPERSAND		0105
+%token<oper> JLT_ASSIGNMENT		0106
 
 /* brackets */
-%token	TT_NORMAL_LEFT_BRA		0211
-%token	TT_NORMAL_RIGHT_BRA		0212
-%token	TT_BLOCK_LEFT_BRA		0213
-%token	TT_BLOCK_RIGHT_BRA		0214
-%token	TT_INDEX_LEFT_BRA		0215
-%token	TT_INDEX_RIGHT_BRA		0216
+%token JLT_NORMAL_LEFT_BRA	0201
+%token JLT_NORMAL_RIGHT_BRA	0202
+%token JLT_BLOCK_LEFT_BRA	0203
+%token JLT_BLOCK_RIGHT_BRA	0204
+%token JLT_INDEX_LEFT_BRA	0205
+%token JLT_INDEX_RIGHT_BRA	0206
 
-/* atomic values */
-%token<number> 	NT_NUMBER		1001
-%token<string> 	NT_STRING		1002
-%token<string> 	NT_IDENTIFIER	1003
+/* multi-used symbols */
+%token JLT_MINUS			0301
+%token JLT_PLUS				0302
+%token JLT_STAR				0303
+%token JLT_INCREMENT		0304
+%token JLT_DECREMENT		0305
+
+/* atomic values' tokens */
+%token<number>	ATT_NUMBER		2101
+%token<string>	ATT_STRING		2102
+%token<string>	ATT_IDENTIFIER	2103
+
+/* keywords and their particular control statements */
+%token<child>	STK_ASSIGNMENT	2201
+%token<child>	STK_TYPE		2202
+%token<child>	STK_SIZEOF		2203
+%token<child>	STK_IF			2204
+%token<child>	STK_ELSE		2205
+%token<child>	STK_FOR			2206
+%token<child>	STK_WHILE		2207
+%token<child>	STK_DO			2208
+%token<child>	STK_RETURN		2209
+%token<child>	STK_BREAK		2210
+%token<child>	STK_CONTINUE	2211
+%token<child>	STK_GOTO		2212	
+%token<child>	STK_LAMBDA		2213
+
+/* just semantic tokens */
+%token<child>	JST_PROCEDURE				3301
+%token<child>	JST_PROCCALL				3302
+%token<child>	JST_ATOMIC_VARIABLE_DECL	3304
+%token<child>	JST_ARRAY_VARIABLE_DECL		3305
 
 
+/* lists */
+%token<child>	CNT_STATEMENTS	3401
+%token<child>	CNT_VARS_DECLS	3402
+%token<child>	CNT_NUMBERS		3403
+%token<child>	CNT_EXPRESSIONS	3404
+%token<child>	CNT_PARAMETERS	3405	
 
-/* specials */
-%token<child> NTS_TYPEDEF		1101
-%token<child> NTS_ASSIGNMENT	1102
-%token<child> NTS_SIZEOF		1103
-%token<child> NTS_IF			1104
-%token<child> NTS_ELSE			1105
-%token<child> NTS_FOR			1106
-%token<child> NTS_WHILE			1107
-%token<child> NTS_DO			1108
-%token<child> NTS_RETURN		1109
-%token NTS_BREAK			1110
-%token NTS_CONTINUE		1111
-%token NTS_GOTO			1112
-%token<child> NTS_LAMBDA		1113
 
-%token<child> NTS_ARRAY			1201
+/* operators/operations */
+%token<child>	OPT_PLUS		1101
+%token<child>	OPT_MINUS		1102
+%token<child>	OPT_TIMES		1103
+%token<child>	OPT_DIVIDE		1104
+%token<child>	OPT_MODULO		1105
+%token<child>	OPT_PRE_INCREMENT	1106
+%token<child>	OPT_PRE_DECREMENT	1107
+%token<child>	OPT_POST_INCREMENT	1108
+%token<child>	OPT_POST_DECREMENT	1109
 
-/* operators */
-%token<child>	NTO_PLUS 		2101
-%token<child>	NTO_MINUS 		2102
-%token<child>	NTO_DIVIDE 		2103
-%token<child>	NTO_MODULO		2104
-%token<child>	NTO_PRE_INCREMENT 		2111
-%token<child>	NTO_PRE_DECREMENT		2112
-%token<child>	NTO_POST_INCREMENT 		2113
-%token<child>	NTO_POST_DECREMENT		2114
+%token<child>	OPT_OR			1201
+%token<child>	OPT_AND			1202
+%token<child>	OPT_NOT			1203
+%token<child>	OPT_BITWISE_OR	1204
+%token<child>	OPT_BITWISE_AND	1205
+%token<child>	OPT_BITWISE_NOT	1206
+%token<child>	OPT_BITWISE_XOR	1207
+%token<child>	OPT_SHIFT_LEFT	1208
+%token<child>	OPT_SHIFT_RIGHT	1209
 
-%token<child>	NTO_OR		2201
-%token<child>	NTO_AND		2202
-%token<child>	NTO_NOT		2203
-%token<child>	NTO_BITWISE_OR		2211
-%token<child>	NTO_BITWISE_AND		2212
-%token<child>	NTO_BITWISE_NOT		2213
-%token<child>	NTO_BITWISE_XOR		2214
-%token<child>	NTO_SHIFT_LEFT		2221
-%token<child>	NTO_SHIFT_RIGHT		2222
+%token<child>	OPT_EQUAL			1301
+%token<child>	OPT_NOT_EQUAL		1302
+%token<child>	OPT_LESS_THAN		1303
+%token<child>	OPT_GREATER_THAN	1304
+%token<child>	OPT_LESS_OR_EQUAL	1305
+%token<child>	OPT_GREATER_OR_EQUAL	1306
 
-%token<child>	NTO_EQUAL			2311
-%token<child>	NTO_NOT_EQUAL		2312
-%token<child>	NTO_LESS_THAN		2313
-%token<child>	NTO_GREATER_THAN	2315
-%token<child>	NTO_LESS_OR_EQUAL		2314
-%token<child>	NTO_GREATER_OR_EQUAL	2316
+%token<child>	OPT_TERNARY		1401
+%token<child>	OPT_REFERENCE 	1402
+%token<child>	OPT_DEREFERENCE	1403
+%token<child>	OPT_INDEX		1405
 
 /* (nonterminals) */
-%type<child> program toplevel_toplevel_decl_statements toplevel_decl_statement procedure_decl variable_decl array_decl proc_params_list variables_decls_specs id_with_opt_asg_val
+%type<child> program toplevel_decl_statements toplevel_decl_statement
+%type<child> procedure_decl variables_decl proc_params_list variables_decls_specs var_with_opt_asg_val
 %type<child> block statements statement expressions expression 
 %type<child> inblock_decl_statement  if_statement for_statement while_statement do_while_statement keyword 
-%type<child> assignment operation funcall place constant array sizeof_expr
+%type<child> assignment operation proccall place constant array sizeof_expr
 
 
  
  /* asociativity and priority (precendence) */
  /* http://www.linuxsoft.cz/article.php?id_article=486 */
-%right TT_ASSIGNMENT
-%right TT_QUESTION_MARK
-%left NTO_OR
-%left NTO_AND
-%left NTO_BITWISE_OR
-%left NTO_BITWISE_XOR
-%left NTO_BITWISE_AND
-%left NTO_EQUAL NTO_NOT_EQUAL
-%left NTO_LESS_THAN NTO_GREATER_THAN NTO_LESS_OR_EQUAL NTO_GRATER_OR_EQUAL
-%left NTO_SHIFT_LEFT NTO_SHIFT_RIGHT
-%left NTO_MINUS NTO_PLUS 
-%left NTO_TIMES NTO_DIVIDE NTO_MODULO 
-%left TT_INCREMENT TT_DECREMENT
-%right TT_PLUS TT_MINUS NTO_PRE_INCREMENT NTO_PRE_DECREMENT NTO_NOT NTO_BITWISE_NOT 
-%left TT_NORMAL_LEFT_BRA TT_INDEX_LEFT_BRA
+%right JLT_ASSIGNMENT
+%right JLT_QUESTION_MARK
+%left OPT_OR
+%left OPT_AND
+%left OPT_BITWISE_OR
+%left OPT_BITWISE_XOR
+%left OPT_BITWISE_AND
+%left OPT_EQUAL OPT_NOT_EQUAL
+%left OPT_LESS_THAN OPT_GREATER_THAN OPT_LESS_OR_EQUAL OPT_GRATER_OR_EQUAL
+%left OPT_SHIFT_LEFT OPT_SHIFT_RIGHT
+%left JLT_MINUS JLT_PLUS 
+%left OPT_TIMES OPT_DIVIDE OPT_MODULO 
+%left JLT_INCREMENT JLT_DECREMENT
+%right OPT_PLUS OPT_MINUS OPT_PRE_INCREMENT OPT_PRE_DECREMENT OPT_NOT OPT_BITWISE_NOT 
+%left JLT_NORMAL_LEFT_BRA JLT_INDEX_LEFT_BRA
 
 
 
@@ -144,17 +161,17 @@
 /* basic program rules */
 
 program: 
-	toplevel_toplevel_decl_statements { 
-			*root = $$ = $1;
-			SYNTAXER_LOG("whole program: %p", $$);
+	toplevel_decl_statements { 
+			*root = $$ = create_program($1);
+			SYNTAXER_LOG("whole program: %p -> %p", $1, $$);
 		}
 ;
 
-toplevel_toplevel_decl_statements:
+toplevel_decl_statements:
 		%empty {
 			*root = $$ = NULL;
 		}
-	|	toplevel_decl_statement toplevel_toplevel_decl_statements {
+	|	toplevel_decl_statement toplevel_decl_statements {
 			*root = $$ = prepend($1, $2);
 		}
 ;
@@ -163,81 +180,84 @@ toplevel_decl_statement:
 		procedure_decl { 
 			*root = $$ = $1;
 		}
-	|	variable_decl { 
-			*root = $$ = $1;
-		}
-	|	array_decl {
+	|	variables_decl { 
 			*root = $$ = $1;
 		}
 ;
 
-variable_decl:
-		NTS_TYPEDEF variables_decls_specs TT_SEMICOLON {
-			*root = $$ = $2;
-			SYNTAXER_LOG("declaration of vars %p", $$);
+variables_decl:
+		STK_TYPE variables_decls_specs JLT_SEMICOLON {
+			*root = $$ = create_variables_decl($2);
+			SYNTAXER_LOG("declaration of vars %p -> %p", $2, $$);
 		}
 ;
 
 variables_decls_specs:
-		id_with_opt_asg_val {
+		var_with_opt_asg_val {
 				*root = $$ = $1;
 			}
-	|	id_with_opt_asg_val TT_COMMA variables_decls_specs {
+	|	var_with_opt_asg_val JLT_COMMA variables_decls_specs {
 				*root = $$ = prepend($1, $3);
 			}
 ;
 
-id_with_opt_asg_val:
-		NT_IDENTIFIER {
+var_with_opt_asg_val:
+		ATT_IDENTIFIER {
 				ast_node_t* var = create_identifier($1);
-				*root = $$ = create_decl_assignment(var, NULL);
+				*root = $$ = create_decl_of_var(var, NULL);
 				SYNTAXER_LOG("decl of variable %p -> %p", $1, $$);
 			}
-	|	NT_IDENTIFIER TT_ASSIGNMENT expression {
+	|	ATT_IDENTIFIER JLT_ASSIGNMENT expression {
 				ast_node_t* var = create_identifier($1);
-				*root = $$ = create_decl_assignment(var, $3);
+				*root = $$ = create_decl_of_var(var, $3);
 				SYNTAXER_LOG("decl of variable %p := %p -> %p", var, $3, $$);
 			}
-;
-
-array_decl:
-		NTS_TYPEDEF NT_IDENTIFIER TT_INDEX_LEFT_BRA NT_NUMBER TT_INDEX_RIGHT_BRA TT_SEMICOLON {
-				ast_node_t* arr = create_array($4);
-				*root = $$ = create_decl_assignment(arr, NULL);
-				SYNTAXER_LOG("decl of array %p [%d] -> %p", arr, $4, $$);
-		}
-	|	NTS_TYPEDEF NT_IDENTIFIER TT_INDEX_LEFT_BRA NT_NUMBER TT_INDEX_RIGHT_BRA TT_ASSIGNMENT array TT_SEMICOLON {
-				ast_node_t* arr = create_array($4);
-				*root = $$ = create_decl_assignment(arr, $7);
-				SYNTAXER_LOG("decl of variable %p [%d] := %p -> %p", arr, $4, $7, $$);
-		}
+	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA ATT_NUMBER JLT_INDEX_RIGHT_BRA JLT_SEMICOLON {
+				ast_node_t* var = create_identifier($1);
+				ast_node_t* size = create_number($3);
+				*root = $$ = create_decl_of_arr(var, size, NULL);
+				SYNTAXER_LOG("decl of array %p [%d] -> %p", var, size, $$);
+			}
+	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA JLT_INDEX_RIGHT_BRA JLT_ASSIGNMENT array JLT_SEMICOLON {
+				ast_node_t* var = create_identifier($1);
+				long len = lenght_of($5);
+				ast_node_t* size = create_number(len);
+				*root = $$ = create_decl_of_arr(var, size, $5);
+				SYNTAXER_LOG("decl of array %p [] := %p -> %p", var, $5, $$);
+			}
 ;
 
 
 procedure_decl:
-	NT_IDENTIFIER TT_NORMAL_LEFT_BRA proc_params_list TT_NORMAL_RIGHT_BRA block {
-			ast_node_t* id = create_identifier($1);			
-			ast_node_t* proc = create_procedure($3, $5);
-			*root = $$ = create_decl_assignment(id, proc);
-			SYNTAXER_LOG("declaration of proc %p ( %p ) { %p } -> %p = %p -> %p", $1, $3, $5, id, proc, $$);
+	ATT_IDENTIFIER JLT_NORMAL_LEFT_BRA proc_params_list JLT_NORMAL_RIGHT_BRA block {
+			ast_node_t* id = create_identifier($1);
+			ast_node_t* params = create_parameters($3);
+			ast_node_t* body = $5;
+			
+			ast_node_t* proc = create_procedure(id, params, body);
+			*root = $$ = create_decl_of_var(id, proc);
+			SYNTAXER_LOG("declaration of proc %p ( %p ) { %p } -> %p := %p -> %p", id, params, body, id, proc, $$);
 		}
 ;
 
 
 proc_params_list:
-		NT_IDENTIFIER TT_COMMA proc_params_list {
+		ATT_IDENTIFIER JLT_COMMA proc_params_list {
 				ast_node_t* id = create_identifier($1);
 				*root = $$ = prepend(id, $3);
 				SYNTAXER_LOG("procedure parameter %p", id);
 			}
-	|	NT_IDENTIFIER {
+	|	ATT_IDENTIFIER {
 				*root = $$ = create_identifier($1);
 				SYNTAXER_LOG("procedure parameter %p", $1);
+			}
+	|	%empty {
+				*root = $$ = NULL;
 			}
 ;
 	 
 block:
-	TT_BLOCK_LEFT_BRA statements TT_BLOCK_RIGHT_BRA {
+	JLT_BLOCK_LEFT_BRA statements JLT_BLOCK_RIGHT_BRA {
 		*root = $$ = create_block($2);
 		SYNTAXER_LOG("block { %p } -> %p", $2, $$);
 	}
@@ -254,69 +274,66 @@ statements:
 ;
 
 statement:
-		TT_SEMICOLON						{	*root = $$ = NULL;	SYNTAXER_LOG("empty statement");	}
-	|	expression TT_SEMICOLON	{	*root = $$ = $1;	SYNTAXER_LOG("statement with expression: %p", $1);	}
-	|	inblock_decl_statement 			{ *root = $$ = $1;	SYNTAXER_LOG("declaration statement: %p", $1);	}
-	|	if_statement 						{ *root = $$ = $1;	SYNTAXER_LOG("if: %p", $1);	}
-	|	for_statement 					{ *root = $$ = $1;	SYNTAXER_LOG("for: %p", $1);	}
-	|	while_statement 				{ *root = $$ = $1;	SYNTAXER_LOG("while: %p", $1);	}
-	|	do_while_statement 			{ *root = $$ = $1;	SYNTAXER_LOG("do-while: %p", $1);	}
-	|	keyword TT_SEMICOLON		{ *root = $$ = $1;	SYNTAXER_LOG("keyword: %p", $1);	}
-	|	block				 						{ *root = $$ = $1;	SYNTAXER_LOG("inner block: %p", $1);	}
+		JLT_SEMICOLON					{	*root = $$ = NULL;	SYNTAXER_LOG("empty statement");	}
+	|	expression JLT_SEMICOLON		{	*root = $$ = $1;	SYNTAXER_LOG("statement with expression: %p", $1);	}
+	|	inblock_decl_statement 			{	*root = $$ = $1;	SYNTAXER_LOG("declaration statement: %p", $1);	}
+	|	if_statement 					{	*root = $$ = $1;	SYNTAXER_LOG("if: %p", $1);	}
+	|	for_statement 					{	*root = $$ = $1;	SYNTAXER_LOG("for: %p", $1);	}
+	|	while_statement 				{	*root = $$ = $1;	SYNTAXER_LOG("while: %p", $1);	}
+	|	do_while_statement 				{	*root = $$ = $1;	SYNTAXER_LOG("do-while: %p", $1);	}
+	|	keyword JLT_SEMICOLON			{	*root = $$ = $1;	SYNTAXER_LOG("keyword: %p", $1);	}
+	|	block				 			{	*root = $$ = $1;	SYNTAXER_LOG("inner block: %p", $1);	}
 ;
 
 inblock_decl_statement:
-		variable_decl { 
-			*root = $$ = $1;
-		}
-	|	array_decl {
+		variables_decl { 
 			*root = $$ = $1;
 		}
 ;
 
 if_statement:
-		NTS_IF TT_NORMAL_LEFT_BRA expression TT_NORMAL_RIGHT_BRA block {
+		STK_IF JLT_NORMAL_LEFT_BRA expression JLT_NORMAL_RIGHT_BRA block {
 			*root = $$ = create_if($3, $5);
 			SYNTAXER_LOG("if %p then { %p } -> %p", $3, $5, $$);
 		}
-	|	NTS_IF TT_NORMAL_LEFT_BRA expression TT_NORMAL_RIGHT_BRA block NTS_ELSE block {
+	|	STK_IF JLT_NORMAL_LEFT_BRA expression JLT_NORMAL_RIGHT_BRA block STK_ELSE block {
 			*root = $$ = create_if_else($3, $5, $7);
 			SYNTAXER_LOG("if %p then { %p } else { %p }-> %p", $3, $5, $7, $$);
 	}
 ;
 
 for_statement:
-	NTS_FOR TT_NORMAL_LEFT_BRA expression TT_SEMICOLON expression TT_SEMICOLON expression TT_NORMAL_RIGHT_BRA block {
+	STK_FOR JLT_NORMAL_LEFT_BRA expression JLT_SEMICOLON expression JLT_SEMICOLON expression JLT_NORMAL_RIGHT_BRA block {
 			*root = $$ = create_for($3, $5, $7, $9);
 			SYNTAXER_LOG("for ( %p ; %p ; %p ) do { %p } -> %p", $3, $5, $7, $9, $$);
 	}
 ;
 while_statement:
-	NTS_WHILE TT_NORMAL_LEFT_BRA expression TT_NORMAL_RIGHT_BRA block {
+	STK_WHILE JLT_NORMAL_LEFT_BRA expression JLT_NORMAL_RIGHT_BRA block {
 				*root = $$ = create_while($3, $5);
 		SYNTAXER_LOG("while ( %p ) do { %p } -> %p", $3, $5, $$);
 	}
 ;	
 do_while_statement:
-	NTS_DO block NTS_WHILE TT_NORMAL_LEFT_BRA expression TT_NORMAL_RIGHT_BRA TT_SEMICOLON {
+	STK_DO block STK_WHILE JLT_NORMAL_LEFT_BRA expression JLT_NORMAL_RIGHT_BRA JLT_SEMICOLON {
 				*root = $$ = create_do_else($2, $5);
 		SYNTAXER_LOG("do { %p } while ( %p ) -> %p", $2, $5, $$);
 	}
 ;
 keyword:
-		NTS_CONTINUE {
-			*root = $$ = create_keyword(NTS_CONTINUE);
+		STK_CONTINUE {
+			*root = $$ = create_keyword(STK_CONTINUE);
 			SYNTAXER_LOG("continue -> %p", $$);
 		}
-	|	NTS_BREAK {
-			*root = $$ = create_keyword(NTS_BREAK);
+	|	STK_BREAK {
+			*root = $$ = create_keyword(STK_BREAK);
 			SYNTAXER_LOG("break -> %p", $$);
 		}
-	|	NTS_RETURN expression {
+	|	STK_RETURN expression {
 			*root = $$ = create_return($2);
 			SYNTAXER_LOG("return %p -> %p", $2, $$);
 	}
-	|	NTS_GOTO {
+	|	STK_GOTO {
 		fprintf(stderr, "You shall not use goto!\n");
 		$$ = NULL;
 	}
@@ -324,23 +341,22 @@ keyword:
  
 expression:
 		constant 	{ *root = $$ = $1;	}	/* TODO rly? */
-	|	place 		{ *root = $$ = $1;	}	/* TODO rly? */
+	|	place 		{ *root = $$ = $1;	}	
 	|	operation 	{ *root = $$ = $1;	}
 	|	assignment 	{ *root = $$ = $1;	}
-	|	funcall		{ *root = $$ = $1;	}
+	|	proccall		{ *root = $$ = $1;	}
 	| 	sizeof_expr { *root = $$ = $1;	}
-	|	TT_NORMAL_LEFT_BRA expression TT_NORMAL_RIGHT_BRA 
+	|	JLT_NORMAL_LEFT_BRA expression JLT_NORMAL_RIGHT_BRA 
 			{ *root = $$ = $2;	SYNTAXER_LOG("( %p ) -> %p", $2, $$);	}
-	|	TT_AMPERSAND place 
-			{ *root = $$ = create_reference($2);	SYNTAXER_LOG("reference & %p  -> %p", $2, $$);	}
 
 ;
 
-funcall: 
-	NT_IDENTIFIER TT_NORMAL_LEFT_BRA expressions TT_NORMAL_RIGHT_BRA {
+proccall: 
+	ATT_IDENTIFIER JLT_NORMAL_LEFT_BRA expressions JLT_NORMAL_RIGHT_BRA {
 		ast_node_t* id = create_identifier($1);
-		*root = $$ = create_funcall(id, $3);
-		SYNTAXER_LOG("funcall %p ( %p ) -> %p", id, $3, $$);
+		ast_node_t* args = create_expressions($3);
+		*root = $$ = create_proccall(id, args);
+		SYNTAXER_LOG("proccall %p ( %p ) -> %p", id, args, $$);
 	}
 ;
 
@@ -352,29 +368,30 @@ expressions:
 			*root = $$ = $1;
 			SYNTAXER_LOG("expression in exprs: %p", $$);
 		}
-	|	expression TT_COMMA expressions {
+	|	expression JLT_COMMA expressions {
 			*root = $$ = prepend($1, $3);
 			SYNTAXER_LOG("expression in exprs: %p, %p -> %p", $1, $3, $$);
 		}
 ;
+
 assignment:
-	place TT_ASSIGNMENT expression {
+	place JLT_ASSIGNMENT expression {
 		*root = $$ = create_assignment_with_op($2, $1, $3);
 		SYNTAXER_LOG("assignment %p := %d %p -> %p", $1, $2, $3, $$);
 	}
 ;
 
 constant:
-		NT_NUMBER			{ *root = $$ = create_number($1);			SYNTAXER_LOG("number %ld -> %p", $1, $$);	}
-	|	NT_STRING			{ *root = $$ = create_string($1);			SYNTAXER_LOG("string %s -> %p", $1, $$);	}
+		ATT_NUMBER			{ *root = $$ = create_number($1);			SYNTAXER_LOG("number %ld -> %p", $1, $$);	}
+	|	ATT_STRING			{ *root = $$ = create_string($1);			SYNTAXER_LOG("string %s -> %p", $1, $$);	}
 ;
 
 sizeof_expr:
-		NTS_SIZEOF TT_NORMAL_LEFT_BRA place TT_NORMAL_RIGHT_BRA { 
+		STK_SIZEOF JLT_NORMAL_LEFT_BRA place JLT_NORMAL_RIGHT_BRA { 
 			*root = $$ = create_sizeof($3);	
 			SYNTAXER_LOG("sizeof place %p -> %p", $3, $$);
 		}
-	|	NTS_SIZEOF TT_NORMAL_LEFT_BRA NT_IDENTIFIER TT_NORMAL_RIGHT_BRA { 
+	|	STK_SIZEOF JLT_NORMAL_LEFT_BRA ATT_IDENTIFIER JLT_NORMAL_RIGHT_BRA { 
 			ast_node_t* var = create_identifier($3);
 			*root = $$ = create_sizeof(var);	
 			SYNTAXER_LOG("sizeof variable %p -> %p", var, $$);
@@ -382,60 +399,65 @@ sizeof_expr:
 ;
 
 place:
-		NT_IDENTIFIER {
+		ATT_IDENTIFIER {
 			*root = $$ = create_identifier($1);
 			SYNTAXER_LOG("identifier %s -> %p", $1, $$);
 		}
-	|	NT_IDENTIFIER TT_INDEX_LEFT_BRA expression TT_INDEX_RIGHT_BRA {
+	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA expression JLT_INDEX_RIGHT_BRA {
 			ast_node_t* id = create_identifier($1);
 			*root = $$ = create_indexof(id, $3);
 			SYNTAXER_LOG("indexing %p [ %p ] -> %p", id, $3, $$);
 		}
-	|	TT_STAR expression {
+	|	JLT_STAR expression {
 			*root = $$ = create_dereference($2);
 			SYNTAXER_LOG("dereference * %p -> %p", $2, $$);
 		}
 ;
 
 array:
-	TT_BLOCK_LEFT_BRA expressions TT_BLOCK_RIGHT_BRA {
+	JLT_BLOCK_LEFT_BRA expressions JLT_BLOCK_RIGHT_BRA {
 		*root = $$ = $2;
 	}
 ;
 
 operation:
-		expression TT_PLUS expression	{ BINARY_OP($1, $3, $$, NTO_PLUS)	}
-	|	expression TT_MINUS expression	{ BINARY_OP($1,  $3, $$, NTO_MINUS)	}
-	|	expression TT_STAR expression	{ BINARY_OP($1,  $3, $$, NTO_TIMES)	}
-	|	expression NTO_DIVIDE expression	{ BINARY_OP($1,  $3, $$, NTO_DIVIDE)	}
-	|	expression NTO_MODULO expression	{ BINARY_OP($1,  $3, $$, NTO_MODULO)	}
-	|	expression NTO_OR expression		{ BINARY_OP($1,  $3, $$, NTO_OR)	}
-	|	expression NTO_AND expression		{ BINARY_OP($1,  $3, $$, NTO_AND)	}
-	|	expression NTO_BITWISE_OR expression	{ BINARY_OP($1,  $3, $$, NTO_BITWISE_OR)	}
-	|	expression NTO_BITWISE_AND expression	{ BINARY_OP($1,  $3, $$, NTO_BITWISE_AND)	}
-	|	expression NTO_BITWISE_XOR expression	{ BINARY_OP($1,  $3, $$, NTO_BITWISE_XOR)	}
-	|	expression NTO_SHIFT_LEFT expression	{ BINARY_OP($1,  $3, $$, NTO_SHIFT_LEFT)	}
-	|	expression NTO_SHIFT_RIGHT expression	{ BINARY_OP($1,  $3, $$, NTO_SHIFT_RIGHT)	}
-	|	expression NTO_EQUAL expression			{ BINARY_OP($1,  $3, $$, NTO_EQUAL)	}
-	|	expression NTO_NOT_EQUAL expression		{ BINARY_OP($1,  $3, $$, NTO_NOT_EQUAL)	}
-	|	expression NTO_LESS_THAN expression		{ BINARY_OP($1,  $3, $$, NTO_LESS_THAN)	}
-	|	expression NTO_GREATER_THAN expression	{ BINARY_OP($1,  $3, $$, NTO_GREATER_THAN)	}
-	|	expression NTO_LESS_OR_EQUAL expression	{ BINARY_OP($1,  $3, $$, NTO_LESS_OR_EQUAL)	}
-	|	expression NTO_GREATER_OR_EQUAL expression	{ BINARY_OP($1,  $3, $$, NTO_GREATER_OR_EQUAL)	}
+		expression JLT_PLUS expression	{ BINARY_OP($1, $3, $$, OPT_PLUS)	}
+	|	expression JLT_MINUS expression	{ BINARY_OP($1,  $3, $$, OPT_MINUS)	}
+	|	expression JLT_STAR expression	{ BINARY_OP($1,  $3, $$, OPT_TIMES)	}
+	|	expression OPT_DIVIDE expression	{ BINARY_OP($1,  $3, $$, OPT_DIVIDE)	}
+	|	expression OPT_MODULO expression	{ BINARY_OP($1,  $3, $$, OPT_MODULO)	}
+	|	expression OPT_OR expression		{ BINARY_OP($1,  $3, $$, OPT_OR)	}
+	|	expression OPT_AND expression		{ BINARY_OP($1,  $3, $$, OPT_AND)	}
+	|	expression OPT_BITWISE_OR expression	{ BINARY_OP($1,  $3, $$, OPT_BITWISE_OR)	}
+	|	expression OPT_BITWISE_AND expression	{ BINARY_OP($1,  $3, $$, OPT_BITWISE_AND)	}
+	|	expression OPT_BITWISE_XOR expression	{ BINARY_OP($1,  $3, $$, OPT_BITWISE_XOR)	}
+	|	expression OPT_SHIFT_LEFT expression	{ BINARY_OP($1,  $3, $$, OPT_SHIFT_LEFT)	}
+	|	expression OPT_SHIFT_RIGHT expression	{ BINARY_OP($1,  $3, $$, OPT_SHIFT_RIGHT)	}
+	|	expression OPT_EQUAL expression			{ BINARY_OP($1,  $3, $$, OPT_EQUAL)	}
+	|	expression OPT_NOT_EQUAL expression		{ BINARY_OP($1,  $3, $$, OPT_NOT_EQUAL)	}
+	|	expression OPT_LESS_THAN expression		{ BINARY_OP($1,  $3, $$, OPT_LESS_THAN)	}
+	|	expression OPT_GREATER_THAN expression	{ BINARY_OP($1,  $3, $$, OPT_GREATER_THAN)	}
+	|	expression OPT_LESS_OR_EQUAL expression	{ BINARY_OP($1,  $3, $$, OPT_LESS_OR_EQUAL)	}
+	|	expression OPT_GREATER_OR_EQUAL expression	{ BINARY_OP($1,  $3, $$, OPT_GREATER_OR_EQUAL)	}
 
-	|	TT_PLUS expression 		{ UNARY_OP($2, $$, TT_PLUS)	}
-	|	TT_MINUS expression 	{ UNARY_OP($2, $$, TT_MINUS)	}
-	|	NTO_NOT expression 		{ UNARY_OP($2, $$, NTO_NOT)	}
-	|	NTO_BITWISE_NOT expression 	{ UNARY_OP($2, $$, NTO_BITWISE_NOT)	}
+	|	JLT_PLUS expression 		{ UNARY_OP($2, $$, OPT_PLUS)	}
+	|	JLT_MINUS expression 	{ UNARY_OP($2, $$, OPT_MINUS)	}
+	|	OPT_NOT expression 		{ UNARY_OP($2, $$, OPT_NOT)	}
+	|	OPT_BITWISE_NOT expression 	{ UNARY_OP($2, $$, OPT_BITWISE_NOT)	}
 	
-	|	TT_INCREMENT place 	{ UNARY_OP($2, $$, NTO_PRE_INCREMENT)	}
-	|	TT_DECREMENT place 	{ UNARY_OP($2, $$, NTO_PRE_INCREMENT)	}
-	|	place TT_INCREMENT 	{ UNARY_OP($1, $$, NTO_POST_INCREMENT)	}
-	|	place TT_DECREMENT  	{ UNARY_OP($1, $$, NTO_POST_INCREMENT)	}
-	|	expression TT_QUESTION_MARK expression TT_COLON expression {
+	|	JLT_INCREMENT place 	{ UNARY_OP($2, $$, OPT_PRE_INCREMENT)	}
+	|	JLT_DECREMENT place 	{ UNARY_OP($2, $$, OPT_PRE_INCREMENT)	}
+	|	place JLT_INCREMENT 	{ UNARY_OP($1, $$, OPT_POST_INCREMENT)	}
+	|	place JLT_DECREMENT  	{ UNARY_OP($1, $$, OPT_POST_INCREMENT)	}
+	
+	|	JLT_AMPERSAND place { 
+			*root = $$ = create_reference($2);
+			SYNTAXER_LOG("reference & %p  -> %p", $2, $$);	
+		}
+	|	expression JLT_QUESTION_MARK expression JLT_COLON expression {
 			*root = $$ = create_ternar_op($1, $3, $5);
 			SYNTAXER_LOG("Ternary operator: %p ? %p : %p -> %p", $1, $3, $5, $$);
-	}
+		}
 ;
 
 

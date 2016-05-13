@@ -28,59 +28,58 @@ KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
 
 {KEYWORD} {
 	LEXER_LOG("keyword: %s" , yytext);
-	int keyw = str_to_keyword(yytext);
+	int keyw = find_lexical(yytext);
     return keyw;
 }
 
 {DIGIT}+ {
 	LEXER_LOG("decimal number: %s" , yytext);
     yylval.number = parse_dec(yytext);
-    return NT_NUMBER;
+    return ATT_NUMBER;
 }
 
 0x{HEXDIGIT}+ {
 	LEXER_LOG("hex number: %s" , yytext);
     yylval.number = parse_hex(yytext);
-    return NT_NUMBER;
+    return ATT_NUMBER;
 }
 
 (_|{ALPHA})(_|{ALPHA}|{DIGIT})* {
 	LEXER_LOG("identifier: %s" , yytext);
 	yylval.string = parse_identifier(yytext);
-    return NT_IDENTIFIER;
+    return ATT_IDENTIFIER;
 }
-
 
 {MULTIOPER} {
 	LEXER_LOG("multioperator: %s" , yytext);
-	int oper = str_to_multioper(yytext);
+	int oper = find_lexical(yytext);
     return oper;
 }
 
 {OPER} {
 	LEXER_LOG("operator: %s" , yytext);
-	int oper = str_to_oper(yytext);
+	int oper = find_lexical(yytext);
     return oper;
 }
 
 {ASGOPER} {
 	LEXER_LOG("assignment: %s" , yytext);
-	int asgop = str_to_asgoper(yytext);
+	int asgop = find_lexical(yytext);
 	yylval.oper = asgop;
-    return TT_ASSIGNMENT;
+    return JLT_ASSIGNMENT;
 }
 
 
 {BRACKET} {
 	LEXER_LOG("bracket: %s" , yytext);
-	int bra = str_to_bracket(yytext);
+	int bra = find_lexical(yytext);
     return bra;
 }
 
 
 {SPECSYM} {
 	LEXER_LOG("control symbol/char: %s", yytext);
-    int ssym = str_to_specsym(yytext);
+    int ssym = find_lexical(yytext);
     return ssym;
 }
 
@@ -88,7 +87,7 @@ KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
 	LEXER_LOG("character: %s", yytext);
 	long c = parse_character(yytext);
 	yylval.number = c;
-	return NT_NUMBER;
+	return ATT_NUMBER;
 }
 
 \" {
@@ -99,7 +98,7 @@ KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
 <STRING_LITERAL>(\\{2}|[^\"])* {
 	LEXER_LOG("string constant: %s", yytext);
 	yylval.string = parse_string(yytext);
-	return NT_STRING;
+	return ATT_STRING;
 }
 
 <STRING_LITERAL>\" {
