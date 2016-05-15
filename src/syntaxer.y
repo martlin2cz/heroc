@@ -80,10 +80,10 @@
 %token<child>	STK_LAMBDA		2213
 
 /* just semantic tokens */
-%token<child>	JST_PROCEDURE				3301
-%token<child>	JST_PROCCALL				3302
-%token<child>	JST_ATOMIC_VARIABLE_DECL	3304
-%token<child>	JST_ARRAY_VARIABLE_DECL		3305
+%token<child>	JST_ARRAY			3301
+%token<child>	JST_PROCEDURE		3302
+%token<child>	JST_PROCCALL		3303
+%token<child>	JST_VARIABLE_DECL	3304
 
 
 /* containers */
@@ -205,23 +205,24 @@ variables_decls_specs:
 var_with_opt_asg_val:
 		ATT_IDENTIFIER { 
 				ast_node_t* var = create_identifier($1);
-				*root = $$ = create_decl_of_var(var, NULL);
-				SYNTAXER_LOG("decl of variable %p -> %p", $1, $$);
+				*root = $$ = create_declaration(var, NULL);
+				SYNTAXER_LOG("declaration %p -> %p", $1, $$);
 			}
 	|	ATT_IDENTIFIER JLT_ASSIGNMENT expression { 
 				ast_node_t* var = create_identifier($1);
-				*root = $$ = create_decl_of_var(var, $3);
-				SYNTAXER_LOG("decl of variable %p := %p -> %p", var, $3, $$);
+				*root = $$ = create_declaration(var, $3);
+				SYNTAXER_LOG("declaration %p := %p -> %p", var, $3, $$);
 			}
 	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA ATT_NUMBER JLT_INDEX_RIGHT_BRA { 
 				ast_node_t* var = create_identifier($1);
-				ast_node_t* size = create_number($3);
-				*root = $$ = create_decl_of_arr(var, size, NULL);
-				SYNTAXER_LOG("decl of array %p [%d] -> %p", var, size, $$);
+				ast_node_t* array = create_array_of_size($3);
+				*root = $$ = create_declaration(var, array);
+				SYNTAXER_LOG("decl of array %p [%d] -> %p", var, $3, $$);
 			}
 	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA JLT_INDEX_RIGHT_BRA JLT_ASSIGNMENT array {
 				ast_node_t* var = create_identifier($1);
-				*root = $$ = create_decl_of_arr(var, NULL, $5);
+				ast_node_t* array = create_array_of_value($5);
+				*root = $$ = create_declaration(var, array);
 				SYNTAXER_LOG("decl of array %p [] := %p -> %p", var, $5, $$);
 			}
 ;
@@ -234,7 +235,9 @@ procedure_decl:
 			ast_node_t* body = $5;
 			
 			ast_node_t* proc = create_procedure(id, params, body);
-			*root = $$ = create_decl_of_proc(id, proc);
+			ast_node_t* decl = create_declaration(id, proc);
+			ast_node_t* decls = prepend(decl, NULL);
+			*root = $$ = create_variables_decl(decls);
 			SYNTAXER_LOG("declaration of proc %p ( %p ) { %p } -> %p := %p -> %p", id, params, body, id, proc, $$);
 		}
 ;

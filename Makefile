@@ -11,9 +11,9 @@ LEX	 = flex
 YACC = bison
 
 # -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  
-MACROS  = -D LEXER_VERBOSE -D SYNTAXER_VERBOSE
+MACROS	?= #-D LEXER_VERBOSE -D SYNTAXER_VERBOSE
 # basic|scheme|gasm
-EXPORT	= scheme
+EXPORT	?= scheme
 #-Wall 
 CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 LIBS	= -lfl -lm
@@ -24,13 +24,17 @@ LIBS	= -lfl -lm
 
 GRAMMAR	= src/syntaxer.y
 LEXER	= src/lexer.l
-SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/ast-${EXPORT}-exporter.c src/misc.c #src/main.c
-OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/ast-${EXPORT}-exporter.o obj/misc.o #obj/main.o
+SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/ast-${EXPORT}-exporter.c src/misc.c
+OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/ast-${EXPORT}-exporter.o obj/misc.o 
 TARGET	= bin/compiler
+
+CMPSRC	=  src/compiler-main.c
+CMPOBJ	=  obj/compiler-main.o  
+CMPTGT	=  bin/compiler 
 
 TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-ast.c   
 TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o  obj/test-ast.o
-TESTTGT	=  bin/test-lexer    bin/text-syntaxer
+TESTTGT	=  test-bin/test-lexer test-bin/text-syntaxer test-bin/test-ast.o
   
 
 ####### vzory
@@ -51,21 +55,21 @@ TESTTGT	=  bin/test-lexer    bin/text-syntaxer
 ###########################
 all: compiler tests
 
-compiler: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(OBJECTS)
-	$(CC) -o $(TARGET) $(OBJECTS) $(LIBS)
+compiler: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(CMPSRC) $(OBJECTS) $(CMPOBJ)
+	$(CC) -o $(CMPTGT) $(OBJECTS) $(CMPOBJ) $(LIBS)
 	strip $(TARGET)
 
 tests: prepare $(GRAMMAR) $(LEXER) $(TESTSRC) $(TESTOBJ)
-	$(CC) $(CFLAGS) -o bin/test-syntaxer  obj/test-syntaxer.o $(OBJECTS)
-	$(CC) $(CFLAGS) -o bin/test-lexer  obj/test-lexer.o $(OBJECTS)
-	$(CC) $(CFLAGS) -o bin/test-ast  obj/test-ast.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o test-bin/test-syntaxer  obj/test-syntaxer.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o test-bin/test-lexer  obj/test-lexer.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o test-bin/test-ast  obj/test-ast.o $(OBJECTS)
 	
 
 prepare:
-	mkdir -p gen obj bin
+	mkdir -p gen obj bin test-bin tmp
 
 clean:
-	@rm -rf gen obj bin tmp
+	@rm -rf gen obj bin test-bin tmp
 
 	
 ###########################
@@ -99,6 +103,9 @@ obj/ast-${EXPORT}-exporter.o: src/ast-${EXPORT}-exporter.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
 obj/misc.o: src/misc.c
+	${CC} -c ${CFLAGS} -o $@ -c $<
+		
+obj/compiler-main.o: src/compiler-main.c
 	${CC} -c ${CFLAGS} -o $@ -c $<
 		
 #obj/main.o: src/main.c

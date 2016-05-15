@@ -22,7 +22,7 @@ int evaluate(syntax_node_t* root) {
 		}
 	
 		printf("Evaluation returned element: ");
-		print_node(-1, result);
+		print_single_node(-1, result);
 		return 0;
 	} else {
 		printf("Evaluation finished with error. Here is list of defined variables, may be usefull:\n");
@@ -36,7 +36,7 @@ syntax_node_t* evaluate_node(syntax_node_t* node, int* brokenp, int* continuedp)
 		return NULL;
 	
 	if (print_each_tree) {
-		print_node(0, node);
+		print_single_node(0, node);
 		printf("-------------\n");
 	}
 

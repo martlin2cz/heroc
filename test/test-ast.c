@@ -108,9 +108,9 @@ ast_node_t* create_some_fn(void) {
 			NULL)));
 
 	/// initial variables declaration
-	ast_node_t* decl4A = create_decl_of_var( //
+	ast_node_t* decl4A = create_declaration( //
 			create_identifier("q"), create_number(1));
-	ast_node_t* decl4B = create_decl_of_var( //
+	ast_node_t* decl4B = create_declaration( //
 			create_identifier("i"), NULL);
 
 	ast_node_t* decl4 = //

@@ -46,11 +46,12 @@ struct ast_node_t* create_program(struct ast_node_t* decls);
 
 struct ast_node_t* create_procedure(struct ast_node_t* name,
 		struct ast_node_t* params, struct ast_node_t* body);
+struct ast_node_t* create_array_of_size(long size);
+struct ast_node_t* create_array_of_value(struct ast_node_t* arrexpr);
+
 struct ast_node_t* create_variables_decl(struct ast_node_t* decls);
-struct ast_node_t* create_decl_of_var(struct ast_node_t* var,
+struct ast_node_t* create_declaration(struct ast_node_t* var,
 		struct ast_node_t* value);
-struct ast_node_t* create_decl_of_arr(struct ast_node_t* var,
-		struct ast_node_t* size, struct ast_node_t* value);
 
 struct ast_node_t* create_decl_of_proc(struct ast_node_t* name, struct ast_node_t* proc);
 

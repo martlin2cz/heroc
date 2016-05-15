@@ -69,9 +69,9 @@ const token_str_tuple_t just_semantics[JUST_SEMANTICS_COUNT] = //
 		{ //
 		/* just semantic tokens */
 		{ JST_PROCEDURE, "(procedure)" },	//
+				{ JST_ARRAY, "(array)" },	//
 				{ JST_PROCCALL, "(procedure call)" },	//
-				{ JST_ATOMIC_VARIABLE_DECL, "(atomic variable)" },	//
-				{ JST_ARRAY_VARIABLE_DECL, "(array variable)" },	//
+				{ JST_VARIABLE_DECL, "(variable declaration)" },	//
 
 				/* containers */
 				{ CNT_STATEMENTS, "(block of statements)" },	//

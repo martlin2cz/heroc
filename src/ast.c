@@ -45,29 +45,31 @@ struct ast_node_t* create_procedure(struct ast_node_t* name,
 	return create_with_3_children(JST_PROCEDURE, name, params, body);
 }
 
+struct ast_node_t* create_array_of_size(long size) {
+
+	struct ast_node_t* s = create_number(size);
+	return create_with_2_children(JST_ARRAY, s, NULL);
+}
+struct ast_node_t* create_array_of_value(struct ast_node_t* arrexpr) {
+	long size = lenght_of(arrexpr);
+	struct ast_node_t* s = create_number(size);
+		return create_with_2_children(JST_ARRAY, s, arrexpr);
+}
+
+
 struct ast_node_t* create_variables_decl(struct ast_node_t* decls) {
 	return create_with_1_children(CNT_VARS_DECLS, decls);
 }
-struct ast_node_t* create_decl_of_var(struct ast_node_t* var,
+struct ast_node_t* create_declaration(struct ast_node_t* var,
 		struct ast_node_t* value) {
 
-	return create_with_2_children(JST_ATOMIC_VARIABLE_DECL, var, value);
-}
-struct ast_node_t* create_decl_of_arr(struct ast_node_t* var,
-		struct ast_node_t* size, struct ast_node_t* value) {
-
-	if (size == NULL) {
-		long len = lenght_of(value->value.child);
-		size = create_number(len);
-	}
-
-	return create_with_3_children(JST_ARRAY_VARIABLE_DECL, var, size, value);
+	return create_with_2_children(JST_VARIABLE_DECL, var, value);
 }
 
 struct ast_node_t* create_decl_of_proc(struct ast_node_t* var,
 		struct ast_node_t* proc) {
 
-	struct ast_node_t* decls = prepend(create_decl_of_var(var, proc), NULL);
+	struct ast_node_t* decls = prepend(create_declaration(var, proc), NULL);
 	return create_variables_decl(decls);
 }
 

@@ -4,18 +4,20 @@
 #include <stdio.h>
 #include "ast-exporter.h"
 
-void print_single_node(FILE* dest, struct ast_node_t* root, int padding,
+int print_single_node(FILE* dest, struct ast_node_t* root, int padding,
 		int wrap);
+
+void print_preamble(FILE* dest);
 
 void print_atomic(FILE* dest, struct ast_node_t* node, int padding, int wrap);
-void print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap);
+int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap);
 //int print_head(FILE* dest, struct ast_node_t* node, int padding);
 
-void print_vars_decls(FILE* dest, struct ast_node_t* node, int padding,
+int print_vars_decls(FILE* dest, struct ast_node_t* node, int padding,
 		int wrap);
-void print_atomic_var_decl(FILE* dest, struct ast_node_t* node, int padding,
+void print_variable_decl(FILE* dest, struct ast_node_t* node, int padding,
 		int wrap);
-void print_array_var_decl(FILE* dest, struct ast_node_t* node, int padding,
+void print_array(FILE* dest, struct ast_node_t* node, int padding,
 		int wrap);
 
 void print_proccal(FILE* dest, struct ast_node_t* node, int padding, int wrap);

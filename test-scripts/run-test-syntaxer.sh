@@ -1,12 +1,14 @@
 #!/bin/bash
 # runs test-lexer on all examples
 
+make --eval="EXPORT=scheme" tests
+
 mkdir -p tmp
 rm -rf tmp/log.log
 
 for F in examples-vychodil/*.heroc counterexamples/*.heroc;	do
 	echo $F:
 	echo $F: >> tmp/log.log
-	cat $F | ./bin/test-syntaxer  >> tmp/log.log
+ 	./test-bin/test-syntaxer  < $F >> tmp/log.log
 done
 
