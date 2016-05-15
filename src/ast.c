@@ -33,29 +33,42 @@ struct ast_node_t* create_string(char* value) {
 struct ast_node_t* create_program(struct ast_node_t* decls) {
 	return decls;
 }
+
+struct ast_node_t* create_procedure(struct ast_node_t* name,
+		struct ast_node_t* params, struct ast_node_t* body) {
+
+	if (name == NULL) {
+		ast_node_t* name = create_keyword(STK_LAMBDA);
+	} else {
+		name = duplicate(name);
+	}
+	return create_with_3_children(JST_PROCEDURE, name, params, body);
+}
+
 struct ast_node_t* create_variables_decl(struct ast_node_t* decls) {
 	return create_with_1_children(CNT_VARS_DECLS, decls);
 }
 struct ast_node_t* create_decl_of_var(struct ast_node_t* var,
 		struct ast_node_t* value) {
+
 	return create_with_2_children(JST_ATOMIC_VARIABLE_DECL, var, value);
 }
 struct ast_node_t* create_decl_of_arr(struct ast_node_t* var,
 		struct ast_node_t* size, struct ast_node_t* value) {
 
 	if (size == NULL) {
-		return create_with_2_children(JST_ARRAY_VARIABLE_DECL, var, value);
-	} else {
-		return create_with_2_children(JST_ARRAY_VARIABLE_DECL, var, size);
+		long len = lenght_of(value->value.child);
+		size = create_number(len);
 	}
-}
-struct ast_node_t* create_procedure(struct ast_node_t* name,
-		struct ast_node_t* params, struct ast_node_t* body) {
 
-	if (name == NULL) {
-		ast_node_t* name = create_keyword(STK_LAMBDA);
-	}
-	return create_with_3_children(JST_PROCEDURE, name, params, body);
+	return create_with_3_children(JST_ARRAY_VARIABLE_DECL, var, size, value);
+}
+
+struct ast_node_t* create_decl_of_proc(struct ast_node_t* var,
+		struct ast_node_t* proc) {
+
+	struct ast_node_t* decls = prepend(create_decl_of_var(var, proc), NULL);
+	return create_variables_decl(decls);
 }
 
 /*****************************************************************************/
@@ -111,7 +124,7 @@ struct ast_node_t* create_expressions(struct ast_node_t* exprs) {
 }
 
 /*****************************************************************************/
-/* containers */
+/* expressions */
 
 struct ast_node_t* create_proccall(struct ast_node_t* proc,
 		struct ast_node_t* args) {

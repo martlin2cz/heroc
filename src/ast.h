@@ -20,7 +20,6 @@ long lenght_of(struct ast_node_t* node);
 struct ast_node_t* duplicate(struct ast_node_t* node);
 
 
-
 /* constructors of lists */
 struct ast_node_t* create_with_0_children(TOKEN_TYPE_T type);
 struct ast_node_t* create_with_1_children(TOKEN_TYPE_T type,
@@ -44,14 +43,16 @@ struct ast_node_t* create_string(char* value);
 
 /* the whole program and declarations */
 struct ast_node_t* create_program(struct ast_node_t* decls);
+
+struct ast_node_t* create_procedure(struct ast_node_t* name,
+		struct ast_node_t* params, struct ast_node_t* body);
 struct ast_node_t* create_variables_decl(struct ast_node_t* decls);
 struct ast_node_t* create_decl_of_var(struct ast_node_t* var,
 		struct ast_node_t* value);
 struct ast_node_t* create_decl_of_arr(struct ast_node_t* var,
 		struct ast_node_t* size, struct ast_node_t* value);
-struct ast_node_t* create_procedure(struct ast_node_t* name,
-		struct ast_node_t* params, struct ast_node_t* body);
 
+struct ast_node_t* create_decl_of_proc(struct ast_node_t* name, struct ast_node_t* proc);
 
 /* syntactic constructs */
 struct ast_node_t* create_assignment(struct ast_node_t* place,

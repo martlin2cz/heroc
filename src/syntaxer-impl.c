@@ -4,11 +4,11 @@
 #include "syntaxer-headers.h"
 #include "ast-exporter.h"
 
-int yyerror (struct ast_node_t** tree, char *s) {
-    fprintf(stderr, "Syntax error: %s near to:\n", s);
-    ast_export_root(stderr, *tree);
-    *tree = NULL;
-    return 0;
+int yyerror(struct ast_node_t** tree, char *s) {
+	fprintf(stderr, "Syntax error: %s, somewhere near to: \n", s);
+	ast_export_root(stderr, *tree);
+	*tree = NULL;
+	return 0;
 }
 
 #endif

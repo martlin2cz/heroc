@@ -86,7 +86,7 @@
 %token<child>	JST_ARRAY_VARIABLE_DECL		3305
 
 
-/* lists */
+/* containers */
 %token<child>	CNT_STATEMENTS	3401
 %token<child>	CNT_VARS_DECLS	3402
 %token<child>	CNT_NUMBERS		3403
@@ -130,7 +130,7 @@
 /* (nonterminals) */
 %type<child> program toplevel_decl_statements toplevel_decl_statement
 %type<child> procedure_decl variables_decl proc_params_list variables_decls_specs var_with_opt_asg_val
-%type<child> block statements statement expressions expression 
+%type<child> block statements statement expressions expression emptyable_expression 
 %type<child> inblock_decl_statement  if_statement for_statement while_statement do_while_statement keyword 
 %type<child> assignment operation proccall place constant array sizeof_expr
 
@@ -171,7 +171,7 @@ toplevel_decl_statements:
 		%empty {
 			*root = $$ = NULL;
 		}
-	|	toplevel_decl_statement toplevel_decl_statements {
+	|	toplevel_decl_statement toplevel_decl_statements { 
 			*root = $$ = prepend($1, $2);
 		}
 ;
@@ -180,49 +180,48 @@ toplevel_decl_statement:
 		procedure_decl { 
 			*root = $$ = $1;
 		}
-	|	variables_decl { 
+	|	variables_decl {  
 			*root = $$ = $1;
 		}
 ;
 
 variables_decl:
-		STK_TYPE variables_decls_specs JLT_SEMICOLON {
+		STK_TYPE variables_decls_specs JLT_SEMICOLON { 
+		
 			*root = $$ = create_variables_decl($2);
 			SYNTAXER_LOG("declaration of vars %p -> %p", $2, $$);
 		}
 ;
 
 variables_decls_specs:
-		var_with_opt_asg_val {
+		var_with_opt_asg_val { 
 				*root = $$ = $1;
 			}
-	|	var_with_opt_asg_val JLT_COMMA variables_decls_specs {
+	|	var_with_opt_asg_val JLT_COMMA variables_decls_specs { 
 				*root = $$ = prepend($1, $3);
 			}
 ;
 
 var_with_opt_asg_val:
-		ATT_IDENTIFIER {
+		ATT_IDENTIFIER { 
 				ast_node_t* var = create_identifier($1);
 				*root = $$ = create_decl_of_var(var, NULL);
 				SYNTAXER_LOG("decl of variable %p -> %p", $1, $$);
 			}
-	|	ATT_IDENTIFIER JLT_ASSIGNMENT expression {
+	|	ATT_IDENTIFIER JLT_ASSIGNMENT expression { 
 				ast_node_t* var = create_identifier($1);
 				*root = $$ = create_decl_of_var(var, $3);
 				SYNTAXER_LOG("decl of variable %p := %p -> %p", var, $3, $$);
 			}
-	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA ATT_NUMBER JLT_INDEX_RIGHT_BRA JLT_SEMICOLON {
+	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA ATT_NUMBER JLT_INDEX_RIGHT_BRA { 
 				ast_node_t* var = create_identifier($1);
 				ast_node_t* size = create_number($3);
 				*root = $$ = create_decl_of_arr(var, size, NULL);
 				SYNTAXER_LOG("decl of array %p [%d] -> %p", var, size, $$);
 			}
-	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA JLT_INDEX_RIGHT_BRA JLT_ASSIGNMENT array JLT_SEMICOLON {
+	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA JLT_INDEX_RIGHT_BRA JLT_ASSIGNMENT array {
 				ast_node_t* var = create_identifier($1);
-				long len = lenght_of($5);
-				ast_node_t* size = create_number(len);
-				*root = $$ = create_decl_of_arr(var, size, $5);
+				*root = $$ = create_decl_of_arr(var, NULL, $5);
 				SYNTAXER_LOG("decl of array %p [] := %p -> %p", var, $5, $$);
 			}
 ;
@@ -235,7 +234,7 @@ procedure_decl:
 			ast_node_t* body = $5;
 			
 			ast_node_t* proc = create_procedure(id, params, body);
-			*root = $$ = create_decl_of_var(id, proc);
+			*root = $$ = create_decl_of_proc(id, proc);
 			SYNTAXER_LOG("declaration of proc %p ( %p ) { %p } -> %p := %p -> %p", id, params, body, id, proc, $$);
 		}
 ;
@@ -274,7 +273,7 @@ statements:
 ;
 
 statement:
-		JLT_SEMICOLON					{	*root = $$ = NULL;	SYNTAXER_LOG("empty statement");	}
+	JLT_SEMICOLON					{	*root = $$ = NULL;	SYNTAXER_LOG("empty statement");	}
 	|	expression JLT_SEMICOLON		{	*root = $$ = $1;	SYNTAXER_LOG("statement with expression: %p", $1);	}
 	|	inblock_decl_statement 			{	*root = $$ = $1;	SYNTAXER_LOG("declaration statement: %p", $1);	}
 	|	if_statement 					{	*root = $$ = $1;	SYNTAXER_LOG("if: %p", $1);	}
@@ -303,7 +302,7 @@ if_statement:
 ;
 
 for_statement:
-	STK_FOR JLT_NORMAL_LEFT_BRA expression JLT_SEMICOLON expression JLT_SEMICOLON expression JLT_NORMAL_RIGHT_BRA block {
+	STK_FOR JLT_NORMAL_LEFT_BRA emptyable_expression JLT_SEMICOLON emptyable_expression JLT_SEMICOLON emptyable_expression JLT_NORMAL_RIGHT_BRA block {
 			*root = $$ = create_for($3, $5, $7, $9);
 			SYNTAXER_LOG("for ( %p ; %p ; %p ) do { %p } -> %p", $3, $5, $7, $9, $$);
 	}
@@ -329,7 +328,7 @@ keyword:
 			*root = $$ = create_keyword(STK_BREAK);
 			SYNTAXER_LOG("break -> %p", $$);
 		}
-	|	STK_RETURN expression {
+	|	STK_RETURN emptyable_expression {
 			*root = $$ = create_return($2);
 			SYNTAXER_LOG("return %p -> %p", $2, $$);
 	}
@@ -338,9 +337,15 @@ keyword:
 		$$ = NULL;
 	}
 ;
+
+emptyable_expression:
+		%empty 		{	$$ = create_number(1);	SYNTAXER_LOG("empty expression, assuming 1 -> %p", $$);	}
+	|	expression	{	$$ = $1;	}
+ ;
  
 expression:
 		constant 	{ *root = $$ = $1;	}	/* TODO rly? */
+	| 	array 		{ *root = $$ = $1;	}	/* will work? */	
 	|	place 		{ *root = $$ = $1;	}	
 	|	operation 	{ *root = $$ = $1;	}
 	|	assignment 	{ *root = $$ = $1;	}
@@ -352,11 +357,10 @@ expression:
 ;
 
 proccall: 
-	ATT_IDENTIFIER JLT_NORMAL_LEFT_BRA expressions JLT_NORMAL_RIGHT_BRA {
-		ast_node_t* id = create_identifier($1);
+	expression JLT_NORMAL_LEFT_BRA expressions JLT_NORMAL_RIGHT_BRA {
 		ast_node_t* args = create_expressions($3);
-		*root = $$ = create_proccall(id, args);
-		SYNTAXER_LOG("proccall %p ( %p ) -> %p", id, args, $$);
+		*root = $$ = create_proccall($1, args);
+		SYNTAXER_LOG("proccall %p ( %p ) -> %p", $1, args, $$);
 	}
 ;
 
@@ -391,10 +395,10 @@ sizeof_expr:
 			*root = $$ = create_sizeof($3);	
 			SYNTAXER_LOG("sizeof place %p -> %p", $3, $$);
 		}
-	|	STK_SIZEOF JLT_NORMAL_LEFT_BRA ATT_IDENTIFIER JLT_NORMAL_RIGHT_BRA { 
-			ast_node_t* var = create_identifier($3);
-			*root = $$ = create_sizeof(var);	
-			SYNTAXER_LOG("sizeof variable %p -> %p", var, $$);
+	|	STK_SIZEOF JLT_NORMAL_LEFT_BRA STK_TYPE JLT_NORMAL_RIGHT_BRA { 
+			ast_node_t* type = create_keyword(STK_TYPE);
+			*root = $$ = create_sizeof(type);	
+			SYNTAXER_LOG("sizeof type %p -> %p", type, $$);
 		}
 ;
 
@@ -403,10 +407,9 @@ place:
 			*root = $$ = create_identifier($1);
 			SYNTAXER_LOG("identifier %s -> %p", $1, $$);
 		}
-	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA expression JLT_INDEX_RIGHT_BRA {
-			ast_node_t* id = create_identifier($1);
-			*root = $$ = create_indexof(id, $3);
-			SYNTAXER_LOG("indexing %p [ %p ] -> %p", id, $3, $$);
+	|	expression JLT_INDEX_LEFT_BRA expression JLT_INDEX_RIGHT_BRA {
+			*root = $$ = create_indexof($1, $3);
+			SYNTAXER_LOG("indexing %p [ %p ] -> %p", $1, $3, $$);
 		}
 	|	JLT_STAR expression {
 			*root = $$ = create_dereference($2);
@@ -416,7 +419,8 @@ place:
 
 array:
 	JLT_BLOCK_LEFT_BRA expressions JLT_BLOCK_RIGHT_BRA {
-		*root = $$ = $2;
+		*root = $$ = create_expressions($2);
+		SYNTAXER_LOG("array of exprs: %p -> %p", $2, $$);
 	}
 ;
 
@@ -424,12 +428,12 @@ operation:
 		expression JLT_PLUS expression	{ BINARY_OP($1, $3, $$, OPT_PLUS)	}
 	|	expression JLT_MINUS expression	{ BINARY_OP($1,  $3, $$, OPT_MINUS)	}
 	|	expression JLT_STAR expression	{ BINARY_OP($1,  $3, $$, OPT_TIMES)	}
+	|	expression JLT_AMPERSAND expression	{ BINARY_OP($1,  $3, $$, OPT_BITWISE_AND)	}
 	|	expression OPT_DIVIDE expression	{ BINARY_OP($1,  $3, $$, OPT_DIVIDE)	}
 	|	expression OPT_MODULO expression	{ BINARY_OP($1,  $3, $$, OPT_MODULO)	}
 	|	expression OPT_OR expression		{ BINARY_OP($1,  $3, $$, OPT_OR)	}
 	|	expression OPT_AND expression		{ BINARY_OP($1,  $3, $$, OPT_AND)	}
 	|	expression OPT_BITWISE_OR expression	{ BINARY_OP($1,  $3, $$, OPT_BITWISE_OR)	}
-	|	expression OPT_BITWISE_AND expression	{ BINARY_OP($1,  $3, $$, OPT_BITWISE_AND)	}
 	|	expression OPT_BITWISE_XOR expression	{ BINARY_OP($1,  $3, $$, OPT_BITWISE_XOR)	}
 	|	expression OPT_SHIFT_LEFT expression	{ BINARY_OP($1,  $3, $$, OPT_SHIFT_LEFT)	}
 	|	expression OPT_SHIFT_RIGHT expression	{ BINARY_OP($1,  $3, $$, OPT_SHIFT_RIGHT)	}
@@ -445,10 +449,10 @@ operation:
 	|	OPT_NOT expression 		{ UNARY_OP($2, $$, OPT_NOT)	}
 	|	OPT_BITWISE_NOT expression 	{ UNARY_OP($2, $$, OPT_BITWISE_NOT)	}
 	
-	|	JLT_INCREMENT place 	{ UNARY_OP($2, $$, OPT_PRE_INCREMENT)	}
-	|	JLT_DECREMENT place 	{ UNARY_OP($2, $$, OPT_PRE_INCREMENT)	}
+	|	JLT_INCREMENT place %prec OPT_PRE_INCREMENT	{ UNARY_OP($2, $$, OPT_PRE_INCREMENT)	}
+	|	JLT_DECREMENT place	%prec OPT_PRE_DECREMENT	{ UNARY_OP($2, $$, OPT_PRE_DECREMENT)	}
 	|	place JLT_INCREMENT 	{ UNARY_OP($1, $$, OPT_POST_INCREMENT)	}
-	|	place JLT_DECREMENT  	{ UNARY_OP($1, $$, OPT_POST_INCREMENT)	}
+	|	place JLT_DECREMENT  	{ UNARY_OP($1, $$, OPT_POST_DECREMENT)	}
 	
 	|	JLT_AMPERSAND place { 
 			*root = $$ = create_reference($2);

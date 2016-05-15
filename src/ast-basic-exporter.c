@@ -2,6 +2,8 @@
 #define _AST_BASIC_EXPORTER_C_
 
 #include <stdio.h>
+
+#include <unistd.h>
 #include "misc.h"
 #include "ast.h"
 #include "tokens.h"
@@ -11,12 +13,12 @@ void ast_export_root(FILE* dest, struct ast_node_t* node) {
 
 
 
-	print_node(dest, node, 0);
+	print_single_node(dest, node, 0);
 
 	//fprintf(dest, "[FIXME, cycling!]\n");	//TODO FIXME
 }
 
-void print_node(FILE* dest, struct ast_node_t* node, int padding) {
+void print_single_node(FILE* dest, struct ast_node_t* node, int padding) {
 	//printf("[NODE:%p \t type:%4d \t next:%9p \t value: %9x]\n", node, node->type, node->next, node->value.child);
 	while (node != NULL) {
 
@@ -53,24 +55,8 @@ void print_atomic(FILE* dest, struct ast_node_t* node, int padding) {
 void print_compozite(FILE* dest, struct ast_node_t* node, int padding) {
 	print_padding(dest, padding);
 	printf("Node %s\n", to_string(node->type));
-
-	print_node(dest, node->value.child, padding + 1);
+	print_single_node(dest, node->value.child, padding + 1);
 }
 
-/*
- void print_construct(FILE* dest, struct ast_node_t* node, int padding) {
- print_padding(dest, padding);
- fprintf(stderr, "TODO: construct %d", node->type);
- }
-
- void print_operator(FILE* dest, struct ast_node_t* node, int padding) {
- print_padding(dest, padding);
- char* strval = oper_to_str(node->type);
- fprintf(dest, "Operator %s on:\n", strval);
- if (node->value.child) {
- print_node(dest, node->value.child, padding + 1);
- }
- }
- */
 
 #endif

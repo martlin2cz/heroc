@@ -8,11 +8,11 @@
 
 #define TOKENT_NOT_FOUND 0
 
-#define JUST_LEXICALS_COUNT 100
-#define COMMONS_COUNT 200
-#define JUST_SEMANTICS_COUNT 300
-#define OPERATORS_COUNT 400
-#define ASSIGNMENTS_OPS_COUNT 500
+#define JUST_LEXICALS_COUNT 17
+#define COMMONS_COUNT 16
+#define JUST_SEMANTICS_COUNT 9
+#define OPERATORS_COUNT 28
+#define ASSIGNMENTS_OPS_COUNT 12
 
 const token_str_tuple_t just_lexicals[JUST_LEXICALS_COUNT] = //
 		{ //
@@ -92,7 +92,7 @@ const token_str_tuple_t operators[OPERATORS_COUNT] = //
 				{ OPT_PRE_INCREMENT, "pre++" },	//
 				{ OPT_PRE_DECREMENT, "pre--" },	//
 				{ OPT_POST_INCREMENT, "post++" },	//
-				{ OPT_POST_DECREMENT, "post++" },	//
+				{ OPT_POST_DECREMENT, "post--" },	//
 
 				{ OPT_OR, "||" },	//
 				{ OPT_AND, "&&" },	//

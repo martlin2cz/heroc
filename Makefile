@@ -10,8 +10,10 @@ CC	 = gcc
 LEX	 = flex
 YACC = bison
 
-#-D LEXER_VERBOSE -D SYNTAXER_VERBOSE  
-MACROS  = -D SYNTAXER_VERBOSE -D LEXER_VERBOSE  
+# -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  
+MACROS  = -D LEXER_VERBOSE -D SYNTAXER_VERBOSE
+# basic|scheme|gasm
+EXPORT	= scheme
 #-Wall 
 CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 LIBS	= -lfl -lm
@@ -22,13 +24,13 @@ LIBS	= -lfl -lm
 
 GRAMMAR	= src/syntaxer.y
 LEXER	= src/lexer.l
-SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/ast-basic-exporter.c src/misc.c #src/main.c
-OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/ast-basic-exporter.o obj/misc.o #obj/main.o
+SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/ast-${EXPORT}-exporter.c src/misc.c #src/main.c
+OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/ast-${EXPORT}-exporter.o obj/misc.o #obj/main.o
 TARGET	= bin/compiler
 
 TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-ast.c   
 TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o  obj/test-ast.o
-TESTTGT	= bin/test-lexer text-syntaxer
+TESTTGT	=  bin/test-lexer    bin/text-syntaxer
   
 
 ####### vzory
@@ -93,7 +95,7 @@ obj/ast.o: src/ast.c
 obj/tokens.o: src/tokens.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
-obj/ast-basic-exporter.o: src/ast-basic-exporter.c
+obj/ast-${EXPORT}-exporter.o: src/ast-${EXPORT}-exporter.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
 obj/misc.o: src/misc.c

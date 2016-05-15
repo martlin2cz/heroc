@@ -11,9 +11,9 @@ OCTDIGIT	[0-7]
 ALPHA		[a-zA-Z]
 ALNUM		DIGIT|ALPHA
 
-OPER		[\+\*\/\%]|(\|\|)|(\&\&)|(\!)|(\|)|(\&)|(\^)|(\~)|(\<)|(\>)|(\<\=)|(\>\=)|(\!=)|(\<\<)|(\>\>)
-MULTIOPER	(\-)|(\+)|(\*)|(\+\+)|(\-\-)
-ASGOPER		(\=)|(\+\=)|(\-\=)|(\*\=)|(\/\=)(\%\=)|(\|\=)|(\&\=)|(\!\=)|(\^\=)|(\~\=)|(\<\<=)|(\>\>=)
+OPER		[\+\*\/\%]|(\|\|)|(\&\&)|(\!)|(\|)|(\^)|(\~)|(\<)|(\>)|(\<\=)|(\>\=)|(\=\=)|(\!\=)|(\<\<)|(\>\>)
+MULTIOPER	(\-)|(\+)|(\*)|(\&)|(\+\+)|(\-\-)
+ASGOPER		(\=)|(\+\=)|(\-\=)|(\*\=)|(\/\=)|(\%\=)|(\|\=)|(\&\=)|(\!\=)|(\^\=)|(\~\=)|(\<\<=)|(\>\>=)
 BRACKET		[\(\)\{\}\[\]]
 SPECSYM		[\,\;\:\?\&]
 
@@ -38,7 +38,7 @@ KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
     return ATT_NUMBER;
 }
 
-0x{HEXDIGIT}+ {
+0[xX]{HEXDIGIT}+ {
 	LEXER_LOG("hex number: %s" , yytext);
     yylval.number = parse_hex(yytext);
     return ATT_NUMBER;
@@ -56,18 +56,20 @@ KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
     return oper;
 }
 
-{OPER} {
-	LEXER_LOG("operator: %s" , yytext);
-	int oper = find_lexical(yytext);
-    return oper;
-}
-
 {ASGOPER} {
 	LEXER_LOG("assignment: %s" , yytext);
 	int asgop = find_lexical(yytext);
 	yylval.oper = asgop;
     return JLT_ASSIGNMENT;
 }
+
+{OPER} {
+	LEXER_LOG("operator: %s" , yytext);
+	int oper = find_lexical(yytext);
+    return oper;
+}
+
+
 
 
 {BRACKET} {
