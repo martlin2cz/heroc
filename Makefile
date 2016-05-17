@@ -12,8 +12,8 @@ YACC = bison
 
 # -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  
 MACROS	?= #-D LEXER_VERBOSE -D SYNTAXER_VERBOSE
-# basic|scheme|gasm
-EXPORT	?= scheme
+# basic|scheme|stackode|gas
+EXPORT	?= stackode
 #-Wall 
 CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 LIBS	= -lfl -lm
@@ -24,17 +24,17 @@ LIBS	= -lfl -lm
 
 GRAMMAR	= src/syntaxer.y
 LEXER	= src/lexer.l
-SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/ast-${EXPORT}-exporter.c src/misc.c
-OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/ast-${EXPORT}-exporter.o obj/misc.o 
+SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/stackode.c src/ast-${EXPORT}-exporter.c src/misc.c
+OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/stackode.o obj/ast-${EXPORT}-exporter.o obj/misc.o 
 TARGET	= bin/compiler
 
 CMPSRC	=  src/compiler-main.c
 CMPOBJ	=  obj/compiler-main.o  
 CMPTGT	=  bin/compiler 
 
-TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-ast.c   
-TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o  obj/test-ast.o
-TESTTGT	=  test-bin/test-lexer test-bin/text-syntaxer test-bin/test-ast.o
+TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-ast.c test/test-stackode.c test/test-gas.c      
+TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o  obj/test-ast.o  obj/test-stackode.o  obj/test-gas.o
+TESTTGT	=  test-bin/test-lexer test-bin/text-syntaxer test-bin/test-ast test-bin/test-stackode test-bin/test-gas
   
 
 ####### vzory
@@ -63,6 +63,8 @@ tests: prepare $(GRAMMAR) $(LEXER) $(TESTSRC) $(TESTOBJ)
 	$(CC) $(CFLAGS) -o test-bin/test-syntaxer  obj/test-syntaxer.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-lexer  obj/test-lexer.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-ast  obj/test-ast.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o test-bin/test-stackode  obj/test-stackode.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o test-bin/test-gas  obj/test-gas.o $(OBJECTS)
 	
 
 prepare:
@@ -99,7 +101,22 @@ obj/ast.o: src/ast.c
 obj/tokens.o: src/tokens.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
-obj/ast-${EXPORT}-exporter.o: src/ast-${EXPORT}-exporter.c
+obj/stackode.o: src/stackode.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+obj/gas.o: src/gas.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+obj/ast-basic-exporter.o: src/ast-basic-exporter.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+obj/ast-scheme-exporter.o: src/ast-scheme-exporter.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+obj/ast-stackode-exporter.o: src/ast-stackode-exporter.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+obj/ast-gas-exporter.o: src/ast-gas-exporter.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
 obj/misc.o: src/misc.c
@@ -119,4 +136,10 @@ obj/test-syntaxer.o: test/test-syntaxer.c
 	${CC} -c ${CFLAGS} -o $@ -c $<
 	
 obj/test-ast.o: test/test-ast.c
-	${CC} -c ${CFLAGS} -o $@ -c $<		
+	${CC} -c ${CFLAGS} -o $@ -c $<
+	
+obj/test-stackode.o: test/test-stackode.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+	
+obj/test-gas.o: test/test-gas.c
+	${CC} -c ${CFLAGS} -o $@ -c $<			
