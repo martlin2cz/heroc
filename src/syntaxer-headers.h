@@ -27,7 +27,7 @@ int yyerror (struct ast_node_t** tree, char *s);
 #endif
 
 
-#define BINARY_OP($1,  $3, $$, OP) \
+#define BINARY_OP($1, $3, $$, OP) \
 	{ \
 		*root = $$ = create_binary(OP, $1, $3); \
 		SYNTAXER_LOG("%04d of %p %p -> %p", OP, $1, $3, $$); \

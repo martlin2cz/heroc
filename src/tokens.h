@@ -19,4 +19,6 @@ const char* to_string(TOKEN_TYPE_T tok);
 
 int is_atomic(TOKEN_TYPE_T tok);
 
+int is_operator(TOKEN_TYPE_T tok);
+
 #endif

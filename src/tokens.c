@@ -9,8 +9,8 @@
 #define TOKENT_NOT_FOUND 0
 
 #define JUST_LEXICALS_COUNT 17
-#define COMMONS_COUNT 16
-#define JUST_SEMANTICS_COUNT 9
+#define COMMONS_COUNT 15
+#define JUST_SEMANTICS_COUNT 10
 #define OPERATORS_COUNT 28
 #define ASSIGNMENTS_OPS_COUNT 12
 
@@ -49,7 +49,6 @@ const token_str_tuple_t commons[COMMONS_COUNT] =	//
 				{ ATT_IDENTIFIER, "(identifier)" },	//
 
 				/* keywords and their particular control statements */
-				{ STK_ASSIGNMENT, "=" },	//
 				{ STK_TYPE, "long" },	//
 				{ STK_SIZEOF, "sizeof" },	//
 				{ STK_IF, "if" },	//
@@ -68,6 +67,7 @@ const token_str_tuple_t commons[COMMONS_COUNT] =	//
 const token_str_tuple_t just_semantics[JUST_SEMANTICS_COUNT] = //
 		{ //
 		/* just semantic tokens */
+				{ JST_ASSIGNMENT, "=" },	//
 		{ JST_PROCEDURE, "(procedure)" },	//
 				{ JST_ARRAY, "(array)" },	//
 				{ JST_PROCCALL, "(procedure call)" },	//
@@ -119,7 +119,7 @@ const token_str_tuple_t operators[OPERATORS_COUNT] = //
 
 const token_str_tuple_t asssignments_ops[ASSIGNMENTS_OPS_COUNT] = //
 		{ //
-		{ STK_ASSIGNMENT, "=" },	//
+		{ JST_ASSIGNMENT, "=" },	//
 				{ OPT_PLUS, "+=" },	//
 				{ OPT_MINUS, "-=" },	//
 				{ OPT_TIMES, "*=" },	//
@@ -224,5 +224,13 @@ const char* to_string(TOKEN_TYPE_T tok) {
 
 int is_atomic(TOKEN_TYPE_T tok) {
 	return tok > 2100 && tok < 2200;
+}
+
+int is_operator(TOKEN_TYPE_T tok) {
+	return tok > 1000 && tok < 2000;
+}
+
+int is_container(TOKEN_TYPE_T tok) {
+	return tok > 3400 && tok < 3500;
 }
 #endif

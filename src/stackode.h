@@ -39,9 +39,16 @@ typedef struct sk_program_t {
 	sk_instruction_t** instructions;
 } sk_program_t;
 
+
+
+//TODO declare context here ...
+
 /*********************************************************/
 sk_program_t* ast_to_stackode(ast_node_t* root);
 
+
+void single_node_to_stackode(sk_program_t* program, ast_node_t* node);
+/*********************************************************/
 sk_program_t* create_empty_program(void);
 
 void add_instruction(sk_program_t* program, sk_instruction_t* instruction);

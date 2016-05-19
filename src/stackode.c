@@ -6,15 +6,41 @@
 #include "stackode.h"
 #include "tokens.h"
 
+/*********************************************************/
 sk_program_t* ast_to_stackode(ast_node_t* root) {
 	sk_program_t *program = create_empty_program();
 
 	printf("Converting ast to stackode, ...\n");
+	single_node_to_stackode(program, root);
 
+	//TODO use context here...
 
 	return program;
 }
 
+void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
+
+	/*
+	if (is_atomic(node->type)) {
+		atomic_to_stackode(program, node);
+		return;
+	}
+	if (is_operator(node->type)) {
+		operator_to_stackode(program, node);
+		return;
+	}
+
+	other_to_stackode(program, node);
+			return;
+			*/
+}
+/*
+void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
+
+}
+*/
+
+/*********************************************************/
 sk_program_t* create_empty_program(void) {
 	sk_program_t* program = (sk_program_t*) malloc(sizeof(sk_program_t));
 	program->instructions = NULL;
