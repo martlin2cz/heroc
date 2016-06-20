@@ -1,39 +1,47 @@
 (sc-program
- '((declare-atomic)
+ '(
+   ;declare variable
+   (declare-atomic)
    (push-constant 10)
-   (push-relative-address +1)
+   (push-relative-adress 0)
    (assign)
    
    (label loop-start)
    ;increment
+   
+   (push-relative-adress 0)
+   (load)
    (push-constant 2)
    (sub)
+   (push-relative-adress 0)
+   (assign)
    
-   ; call print
-   (duplicate)
+   ; call print-long
+   (push-relative-adress 0)
+   (load)
    (push-label-adress print-long)
    (call)
-   (push-label-adress print-nl)
-   (call)
+   (cleanup-after-call 1)
+   (pop)
    
-   ;TODO pop duplicated call argument
+   ;;call print-char
+   (push-constant 32)
+   (push-label-adress print-char)
+   (call)
+   (cleanup-after-call 1)
+   (pop)
    
    ; jump back
-   (duplicate)
+   (push-relative-adress 0)
+   (load)
    (push-label-adress loop-start)
    (jump-on-non-zero)
-   ;TODO pop duplicated call argument
    
    ;afterloop
    (label after-loop)
    
-   (push-constant 42)
-   (push-label-adress print-long)
-   (call)
-   
    (push-label-adress print-nl)
    (call)
-   
-   ;TODO pop duplicated call argument
-   
+   (cleanup-after-call 0)
+   (pop)
    ))

@@ -1,0 +1,11 @@
+(define-syntax define-with-tuples
+	(syntax-rules ()
+		((define-with-tuples) #f)
+		((define-with-tuples foo) 'foo)))
+
+(define main
+ (lambda (args)
+	(define-with-tuples)
+;	 (display (+ x 1))
+	 
+	 ))

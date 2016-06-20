@@ -5,7 +5,7 @@
 #interpretter
 SCHEME=scheme-r5rs
 
-make tests --eval="EXPORT=scheme" --eval="MACROS= "
+make --quiet tests --eval="EXPORT=scheme" --eval="MACROS= "
 
 F=$1
 #examples-me/to-scheme-01.heroc
@@ -22,5 +22,7 @@ cat \
 	test-scripts/run-main.scm \
 	> tmp/to-eval.scm
 
+echo "================"
 $SCHEME tmp/to-eval.scm
+echo "================"
 

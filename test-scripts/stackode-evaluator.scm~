@@ -1,0 +1,55 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; simple interpreter of heroc stackode
+;;
+
+(define *stack* '())
+
+(define reset-stack
+  (lambda ()
+    (set! *stack* '())))
+
+(define push
+  (lambda (x)
+    (set! *stack* (cons x *stack*))
+    *stack*))
+
+(define pop
+  (lambda ()
+    (let ((head (car *stack*)))
+      (set! *stack* (cdr *stack*))
+      head)))
+
+(define with-1-on-top
+  (lambda (op)
+    (let ((operand1 (pop)))
+      (push (op operand1)))))
+
+
+(define with-2-on-top
+  (lambda (op)
+    (let ((operand1 (pop))
+          (operand2 (pop)))
+      (push (op operand1 operand2)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define sc-push push)
+
+(define sc-add
+  (lambda ()
+    (with-2-on-top +)))
+
+(define sc-sub
+  (lambda ()
+    (with-2-on-top -)))
+
+(define sc-mul
+  (lambda ()
+    (with-2-on-top *)))
+
+(define sc-div
+  (lambda ()
+    (with-2-on-top /)))
+
+(define sc-mod
+  (lambda ()
+    (with-2-on-top mod)))

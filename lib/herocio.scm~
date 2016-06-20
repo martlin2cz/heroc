@@ -12,10 +12,11 @@
         (begin
           (display "warning: not a char")
           (newline))
-          (display (integer->char x)))
-    x))
+        (begin 
+          (display "warning: print_char not completelly supported")
+          (newline)
+          (display x)))))
 
 (define print_nl 
   (lambda ()
-    (newline)
-    0))
+    (newline)))
