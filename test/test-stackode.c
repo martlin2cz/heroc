@@ -35,6 +35,7 @@ void test_program_1(void) {
 	add_instruction(program, //
 			create_instruction(SKI_CALL));
 
-	export_stackode(stdout, program);
+	printf("export to stackode not supported\n");
+//	export_stackode(stdout, program);
 
 }

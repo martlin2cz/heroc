@@ -1,0 +1,21 @@
+print_signum(x) {
+	if (x > 0) {
+		print_long(+1);
+	}
+	if (x < 0) {
+		print_long(-1);
+	}
+	if (x == 0) {
+		print_long(0);
+	}
+	print_nl();
+}
+
+main() {
+	long a = 10, b = -12, c = 0;
+
+	print_signum(a);
+	print_signum(b);
+	print_signum(c);
+
+}

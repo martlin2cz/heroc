@@ -13,7 +13,7 @@ YACC = bison
 # -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  
 MACROS	?= #-D LEXER_VERBOSE -D SYNTAXER_VERBOSE
 # basic|scheme|stackode|gas
-EXPORT	?= stackode
+EXPORT	?= scheme
 #-Wall 
 CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 LIBS	= -lfl -lm

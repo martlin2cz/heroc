@@ -51,11 +51,10 @@ struct ast_node_t* create_array_of_size(long size) {
 	return create_with_2_children(JST_ARRAY, s, NULL);
 }
 struct ast_node_t* create_array_of_value(struct ast_node_t* arrexpr) {
-	long size = lenght_of(arrexpr);
+	long size = lenght_of(arrexpr->value.child);
 	struct ast_node_t* s = create_number(size);
-		return create_with_2_children(JST_ARRAY, s, arrexpr);
+	return create_with_2_children(JST_ARRAY, s, arrexpr);
 }
-
 
 struct ast_node_t* create_variables_decl(struct ast_node_t* decls) {
 	return create_with_1_children(CNT_VARS_DECLS, decls);
@@ -78,7 +77,7 @@ struct ast_node_t* create_decl_of_proc(struct ast_node_t* var,
 struct ast_node_t* create_assignment(struct ast_node_t* place,
 		struct ast_node_t* expr) {
 
-	return create_with_2_children(JST_ASSIGNMENT, place, expr);
+	return create_with_2_children(STK_ASSIGNMENT, place, expr);
 }
 
 struct ast_node_t* create_if(struct ast_node_t* cond, struct ast_node_t* pos) {
@@ -177,7 +176,7 @@ struct ast_node_t* create_binary(TOKEN_TYPE_T operator,
 
 /*****************************************************************************/
 /* lists */
-/*
+
 struct ast_node_t* create_with_0_children(TOKEN_TYPE_T type) {
 	struct ast_node_t* node = create_new_node(type);
 	return node;
@@ -218,7 +217,6 @@ struct ast_node_t* create_with_4_children(TOKEN_TYPE_T type,
 	expr3->next = expr4;
 	return node;
 }
-*/
 
 /*****************************************************************************/
 /* help nodes and lists methods */
@@ -233,23 +231,18 @@ struct ast_node_t* create_new_node(TOKEN_TYPE_T type) {
 	}
 
 	node->type = type;
-	//FIXME
-	//node->next = NULL;
-	//node->value.child = NULL;
+	node->next = NULL;
+	node->value.child = NULL;
 
 	return node;
 }
 
-struct ast_items_t* prepend(struct ast_node_t* item, struct an_items_t* list) {
-
-	an_items_t* new_item = NULL;//TODO allocate
-
-	new_item->value = item;
-	new_item->next = list;
-	return new_item;
+struct ast_node_t* prepend(struct ast_node_t* item, struct ast_node_t* list) {
+	item->next = list;
+	return item;
 }
 
-long lenght_of(struct ast_items_t* node) {
+long lenght_of(struct ast_node_t* node) {
 	long len = 0;
 	while (node) {
 		node = node->next;
@@ -264,13 +257,12 @@ struct ast_node_t* duplicate(struct ast_node_t* node) {
 	}
 
 	struct ast_node_t* copy = create_new_node(node->type);
+	copy->next = duplicate(node->next);
 
 	if (is_atomic(node->type)) {
 		copy->value = node->value;
 	} else {
-		fprintf(stderr, "Duplicating nonatomic, the type %d\n", node->type);
-		//TODO what to do?
-		//copy->value.child = duplicate(node->value.child);
+		copy->value.child = duplicate(node->value.child);
 	}
 
 	return copy;
