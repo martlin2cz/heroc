@@ -75,7 +75,6 @@ const token_str_tuple_t just_semantics[JUST_SEMANTICS_COUNT] = //
 
 				/* containers */
 				{ CNT_STATEMENTS, "(block of statements)" },	//
-				{ CNT_VARS_DECLS, "(variables declarations)" },	//
 				{ CNT_NUMBERS, "(numbers)" },	//
 				{ CNT_EXPRESSIONS, "(expressions)" },	//
 				{ CNT_PARAMETERS, "(parameters list)" }	//

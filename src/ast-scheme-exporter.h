@@ -13,9 +13,10 @@ void print_atomic(FILE* dest, struct ast_node_t* node, int padding, int wrap);
 int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap);
 //int print_head(FILE* dest, struct ast_node_t* node, int padding);
 
-int print_vars_decls(FILE* dest, struct ast_node_t* node, int padding,
+void print_procedure(FILE* dest, struct ast_node_t* node, int padding,
 		int wrap);
-void print_variable_decl(FILE* dest, struct ast_node_t* node, int padding,
+
+int print_variable_decl(FILE* dest, struct ast_node_t* node, int padding,
 		int wrap);
 void print_array(FILE* dest, struct ast_node_t* node, int padding,
 		int wrap);

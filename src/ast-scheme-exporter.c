@@ -61,17 +61,27 @@ int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap) 
 	int new_pad = padding + (wrap ? 1 : 1);
 
 	switch (node->type) {
+	//XXX
+	//case CNT_VARS_DECLS: {
+	//	int skip = print_vars_decls(dest, node, padding, wrap);
+	//	return skip;
+	//	break;
+	//}
+
 	//absolutelly syntactically specifically printed
-	case CNT_VARS_DECLS: {
-		int skip = print_vars_decls(dest, node, padding, wrap);
-		return skip;
+
+	case JST_VARIABLE_DECL: {
+		int done = print_variable_decl(dest, node, padding, wrap);
+		return done;
 		break;
+	}
+	case JST_PROCEDURE: {
+			print_procedure(dest, node, padding, wrap);
+			return 1;
+			break;
 	}
 	case JST_PROCCALL:
 		print_proccal(dest, node, padding, wrap);
-		break;
-	case JST_VARIABLE_DECL:
-		print_variable_decl(dest, node, padding, wrap);
 		break;
 	case JST_ARRAY:
 		print_array(dest, node, padding, wrap);
@@ -79,7 +89,9 @@ int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap) 
 	case STK_SIZEOF:
 		print_sizeof(dest, node, padding, wrap);
 		break;
-		// printing of containers
+
+
+	// printing of containers
 	case CNT_PARAMETERS:
 		print_scheme_list(dest, child, new_pad, 0);
 		break;
@@ -93,9 +105,6 @@ int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap) 
 		// renaming
 	case STK_ASSIGNMENT:
 		print_renamed(dest, "set!", child, new_pad, 0);
-		break;
-	case JST_PROCEDURE:
-		print_renamed(dest, "lambda", child->next, new_pad, 1);
 		break;
 	case OPT_INDEX:
 		print_renamed(dest, "at", child, new_pad, 0);
@@ -153,51 +162,30 @@ int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap) 
 	return 0;
 }
 
-int print_vars_decls(FILE* dest, struct ast_node_t* node, int padding, int wrap) {
-	ast_node_t* child = node->value.child;
+void print_procedure(FILE* dest, struct ast_node_t* node, int padding, int wrap) {
+	ast_node_t* name = node->value.child;
+	ast_node_t* params = name->next;
+	ast_node_t* body = params->next;
 	int new_pad = padding + 1;
-	int is_global = padding == 0;
 
-	ast_node_t* decl = child;
-	if (!is_global) {
-		fprintf(dest, "(");
-		fprintf(dest, "let*");
+	fprintf(dest, "(");
+	fprintf(dest, "lambda");
+	print_separator(dest, new_pad, 0);
+
+	fprintf(dest, "(");
+	ast_node_t* param = params->value.child;
+	while (param) {
+		print_single_node(dest, param->value.child, new_pad, 0);
 		print_separator(dest, new_pad, 0);
-		fprintf(dest, "(");
-		print_separator(dest, new_pad, 1);
+		param = param->next;
 	}
-	while (decl) {
-		ast_node_t* ident = decl->value.child;
-		ast_node_t* value = ident->next;
-		fprintf(dest, "(");
-		if (is_global) {
-			fprintf(dest, "define");
-			print_separator(dest, new_pad, 0);
-		}
+	fprintf(dest, ")");
+	print_separator(dest, new_pad, 1);
 
-		print_single_node(dest, ident, new_pad, 0);
-		print_separator(dest, new_pad, 0);
-		if (value) {
-			print_single_node(dest, value, new_pad, 0);
-		} else {
-			fprintf(dest, "#f");
-		}
-		fprintf(dest, ")");
-
-		decl = decl->next;
-		if (decl) {
-			print_separator(dest, new_pad, 1);
-		}
-	}
-	if (!is_global) {
-		fprintf(dest, ")");
-		print_separator(dest, padding, 1);
-		print_naked_list(dest, node->next, padding, wrap);
-		fprintf(dest, ")");
-		return 1;
-	}
-	return 0;
+	print_single_node(dest, body, new_pad, 1);
+	fprintf(dest, ")");
 }
+
 void print_proccal(FILE* dest, struct ast_node_t* node, int padding, int wrap) {
 	ast_node_t* child = node->value.child;
 	int new_pad = padding + 1;
@@ -211,7 +199,7 @@ void print_proccal(FILE* dest, struct ast_node_t* node, int padding, int wrap) {
 	fprintf(dest, ")");
 	print_separator(dest, new_pad, wrap);
 
-	//FIXME
+	//FIXME ?
 }
 
 void print_sizeof(FILE* dest, struct ast_node_t* node, int padding, int wrap) {
@@ -224,12 +212,55 @@ void print_sizeof(FILE* dest, struct ast_node_t* node, int padding, int wrap) {
 		print_labeled_scheme_list(dest, "sizeof", child, new_pad, 0);
 	}
 }
-void print_variable_decl(FILE* dest, struct ast_node_t* node, int padding,
-		int wrap) {
-	ast_node_t* child = node->value.child;
-	int new_pad = padding + 1;
 
-	print_scheme_list(dest, child, new_pad, 1);
+int print_variable_decl(FILE* dest, struct ast_node_t* node, int padding,
+		int wrap) {
+
+		ast_node_t* ident = node->value.child;
+		ast_node_t* value = node->value.child->next;
+		int new_pad = padding + 1;
+		int is_global = (padding == 0);
+
+		fprintf(dest, "(");
+
+		if (is_global) {
+			fprintf(dest, "define");
+		} else {
+			fprintf(dest, "let");
+		}
+
+		print_separator(dest, new_pad, 0);
+
+		if (!is_global) {
+			fprintf(dest, "(");
+			fprintf(dest, "(");
+		}
+
+		print_single_node(dest, ident, new_pad, 0);
+		print_separator(dest, new_pad, 0);
+
+		if (value) {
+			print_single_node(dest, value, new_pad, 0);
+		} else {
+			fprintf(dest, "'undefined");
+		}
+
+		int completed;
+		if (!is_global) {
+			fprintf(dest, ")");
+			fprintf(dest, ")");
+
+			print_separator(dest, new_pad, 1);
+			print_naked_list(dest, node->next, new_pad, wrap);
+
+			completed = 1;
+		} else {
+			completed = 0;
+		}
+
+		fprintf(dest, ")");
+
+		return completed;
 }
 
 void print_array(FILE* dest, struct ast_node_t* node, int padding, int wrap) {

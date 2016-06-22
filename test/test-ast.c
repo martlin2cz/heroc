@@ -114,7 +114,7 @@ ast_node_t* create_some_fn(void) {
 			create_identifier("i"), NULL);
 
 	ast_node_t* decl4 = //
-			create_variables_decl( //
+			( //
 					prepend(decl4A, //
 							prepend(decl4B, //
 									NULL)));

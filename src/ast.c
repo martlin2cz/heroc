@@ -38,7 +38,7 @@ struct ast_node_t* create_procedure(struct ast_node_t* name,
 		struct ast_node_t* params, struct ast_node_t* body) {
 
 	if (name == NULL) {
-		ast_node_t* name = create_keyword(STK_LAMBDA);
+		ast_node_t* name = create_keyword(STK_LAMBDA);//TODO FIXME won't work, no? not tested yet! will create new var and recycle it
 	} else {
 		name = duplicate(name);
 	}
@@ -56,9 +56,12 @@ struct ast_node_t* create_array_of_value(struct ast_node_t* arrexpr) {
 	return create_with_2_children(JST_ARRAY, s, arrexpr);
 }
 
-struct ast_node_t* create_variables_decl(struct ast_node_t* decls) {
-	return create_with_1_children(CNT_VARS_DECLS, decls);
-}
+
+//struct ast_node_t* create_variables_decl(struct ast_node_t* decls) {
+//	//TESTING return create_with_1_children(CNT_VARS_DECLS, decls);
+//	return decls;
+//}
+
 struct ast_node_t* create_declaration(struct ast_node_t* var,
 		struct ast_node_t* value) {
 
@@ -68,8 +71,7 @@ struct ast_node_t* create_declaration(struct ast_node_t* var,
 struct ast_node_t* create_decl_of_proc(struct ast_node_t* var,
 		struct ast_node_t* proc) {
 
-	struct ast_node_t* decls = prepend(create_declaration(var, proc), NULL);
-	return create_variables_decl(decls);
+	return create_declaration(var, proc);
 }
 
 /*****************************************************************************/
@@ -238,7 +240,12 @@ struct ast_node_t* create_new_node(TOKEN_TYPE_T type) {
 }
 
 struct ast_node_t* prepend(struct ast_node_t* item, struct ast_node_t* list) {
-	item->next = list;
+	struct ast_node_t* curr_item = item;
+	while (curr_item->next) {
+		curr_item = curr_item->next;
+	}
+
+	curr_item->next = list;
 	return item;
 }
 

@@ -88,10 +88,15 @@
 
 /* containers */
 %token<child>	CNT_STATEMENTS	3401
-%token<child>	CNT_VARS_DECLS	3402
 %token<child>	CNT_NUMBERS		3403
 %token<child>	CNT_EXPRESSIONS	3404
 %token<child>	CNT_PARAMETERS	3405	
+
+/* meta nodes */
+%token<child>	META_PREVIOUS	4001
+%token<child>	META_LOOP		4002
+
+
 
 
 /* operators/operations */
@@ -188,8 +193,8 @@ toplevel_decl_statement:
 variables_decl:
 		STK_TYPE variables_decls_specs JLT_SEMICOLON { 
 		
-			*root = $$ = create_variables_decl($2);
-			SYNTAXER_LOG("declaration of vars %p -> %p", $2, $$);
+			*root = $$ = $2;
+			SYNTAXER_LOG("declaration of vars %p ...", $2, $$);
 		}
 ;
 
@@ -231,13 +236,12 @@ var_with_opt_asg_val:
 procedure_decl:
 	ATT_IDENTIFIER JLT_NORMAL_LEFT_BRA proc_params_list JLT_NORMAL_RIGHT_BRA block {
 			ast_node_t* id = create_identifier($1);
+			
 			ast_node_t* params = create_parameters($3);
 			ast_node_t* body = $5;
-			
 			ast_node_t* proc = create_procedure(id, params, body);
-			ast_node_t* decl = create_declaration(id, proc);
-			ast_node_t* decls = prepend(decl, NULL);
-			*root = $$ = create_variables_decl(decls);
+			
+			*root = $$ = create_decl_of_proc(id, proc);
 			SYNTAXER_LOG("declaration of proc %p ( %p ) { %p } -> %p := %p -> %p", id, params, body, id, proc, $$);
 		}
 ;
@@ -246,11 +250,15 @@ procedure_decl:
 proc_params_list:
 		ATT_IDENTIFIER JLT_COMMA proc_params_list {
 				ast_node_t* id = create_identifier($1);
-				*root = $$ = prepend(id, $3);
+				ast_node_t* decl = create_declaration(id, NULL);
+				*root = $$ = prepend(decl, $3);
 				SYNTAXER_LOG("procedure parameter %p", id);
 			}
 	|	ATT_IDENTIFIER {
-				*root = $$ = create_identifier($1);
+				ast_node_t* id = create_identifier($1);
+				ast_node_t* decl = create_declaration(id, NULL);
+				
+				*root = $$ = decl;
 				SYNTAXER_LOG("procedure parameter %p", $1);
 			}
 	|	%empty {
