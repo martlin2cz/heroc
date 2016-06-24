@@ -18,5 +18,7 @@ TOKEN_TYPE_T find_semantic(char* str);
 const char* to_string(TOKEN_TYPE_T tok);
 
 int is_atomic(TOKEN_TYPE_T tok);
+int is_container(TOKEN_TYPE_T tok);
+int is_meta(TOKEN_TYPE_T tok);
 
 #endif

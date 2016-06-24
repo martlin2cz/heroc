@@ -8,6 +8,7 @@ typedef struct ast_node_t ast_node_t;
 
 typedef struct ast_node_t {
 	TOKEN_TYPE_T type;
+	int uid;
 	YYSTYPE value;
 	struct ast_node_t* next;
 } ast_node_t;
@@ -17,6 +18,7 @@ typedef struct ast_node_t {
 struct ast_node_t* create_new_node(TOKEN_TYPE_T type);
 struct ast_node_t* prepend(struct ast_node_t* item, struct ast_node_t* list);
 long lenght_of(struct ast_node_t* node);
+long lenght_ignore_meta(struct ast_node_t* node);
 struct ast_node_t* duplicate(struct ast_node_t* node);
 
 

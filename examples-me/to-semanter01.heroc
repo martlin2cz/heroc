@@ -1,0 +1,4 @@
+long a;
+long b = a;
+long c = b;
+

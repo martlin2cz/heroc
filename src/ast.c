@@ -16,12 +16,6 @@ struct ast_node_t* create_number(long value) {
 	return node;
 }
 
-struct ast_node_t* create_identifier(char* name) {
-	struct ast_node_t* node = create_new_node(ATT_IDENTIFIER);
-	node->value.string = name;
-	return node;
-}
-
 struct ast_node_t* create_string(char* value) {
 	struct ast_node_t* node = create_new_node(ATT_STRING);
 	node->value.string = value;
@@ -34,11 +28,18 @@ struct ast_node_t* create_program(struct ast_node_t* decls) {
 	return decls;
 }
 
+struct ast_node_t* create_identifier(char* name) {
+	struct ast_node_t* name_node = create_new_node(ATT_STRING);
+	name_node->value.string = name;
+
+	return create_with_1_children(JST_VARIABLE, name_node);
+}
+
 struct ast_node_t* create_procedure(struct ast_node_t* name,
 		struct ast_node_t* params, struct ast_node_t* body) {
 
 	if (name == NULL) {
-		ast_node_t* name = create_keyword(STK_LAMBDA);//TODO FIXME won't work, no? not tested yet! will create new var and recycle it
+		ast_node_t* name = create_keyword(STK_LAMBDA); //TODO FIXME won't work, no? not tested yet! will create new var and recycle it
 	} else {
 		name = duplicate(name);
 	}
@@ -55,7 +56,6 @@ struct ast_node_t* create_array_of_value(struct ast_node_t* arrexpr) {
 	struct ast_node_t* s = create_number(size);
 	return create_with_2_children(JST_ARRAY, s, arrexpr);
 }
-
 
 //struct ast_node_t* create_variables_decl(struct ast_node_t* decls) {
 //	//TESTING return create_with_1_children(CNT_VARS_DECLS, decls);
@@ -224,6 +224,7 @@ struct ast_node_t* create_with_4_children(TOKEN_TYPE_T type,
 /* help nodes and lists methods */
 
 struct ast_node_t* create_new_node(TOKEN_TYPE_T type) {
+	static int guid = 0;
 	struct ast_node_t* node = (struct ast_node_t*) malloc(
 			sizeof(struct ast_node_t));
 
@@ -233,8 +234,11 @@ struct ast_node_t* create_new_node(TOKEN_TYPE_T type) {
 	}
 
 	node->type = type;
+	node->uid = guid;
 	node->next = NULL;
 	node->value.child = NULL;
+
+	guid++;
 
 	return node;
 }
@@ -254,6 +258,17 @@ long lenght_of(struct ast_node_t* node) {
 	while (node) {
 		node = node->next;
 		len++;
+	}
+	return len;
+}
+
+long lenght_ignore_meta(struct ast_node_t* node) {
+	long len = 0;
+	while (node) {
+		if (!is_meta(node->type)) {
+			len++;
+		}
+		node = node->next;
 	}
 	return len;
 }

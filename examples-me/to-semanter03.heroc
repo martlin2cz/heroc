@@ -1,0 +1,18 @@
+foo(x) {
+	foo(x);
+}
+
+bar(x) {
+	print_char(x);
+	print_long(x);
+	print_nl();
+}
+
+baz(x) {
+	(1 + (print_char - 1))(x);
+}
+
+aux() {
+	long t = print_nl;
+	t();
+}

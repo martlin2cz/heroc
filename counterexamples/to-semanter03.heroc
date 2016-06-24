@@ -1,0 +1,22 @@
+foo(x) {
+	foo();
+	//arity mismatch
+}
+
+bar(x, y, z) {
+	foo(x, y, z);
+	//again
+}
+
+baz(a, b, c) {
+	print_char();
+	print_long(a, b);
+	print_nl(c);
+
+	//now with predefs
+}
+
+qux(a, b) {
+	undef(a, b);
+	//undefined target variable
+}

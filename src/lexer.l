@@ -47,7 +47,7 @@ KEYWORD 	long|sizeof|if|else|for|while|do|return|break|continue|goto|lambda
 (_|{ALPHA})(_|{ALPHA}|{DIGIT})* {
 	LEXER_LOG("identifier: %s" , yytext);
 	yylval.string = parse_identifier(yytext);
-    return ATT_IDENTIFIER;
+    return JST_VARIABLE;
 }
 
 {MULTIOPER} {

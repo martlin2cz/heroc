@@ -1,0 +1,32 @@
+long x;
+foo(x) {
+	//duplicate global and param
+}
+
+bar(y, y) {
+	//duplicate params
+}
+
+bar() {
+	//duplicate proc name
+}
+
+baz() {
+	long x;
+	//duplicate global and local
+}
+
+qux() {
+	if (x) {
+		long x;
+	}
+	//duplicate global and internal local
+}
+
+aux() {
+	long y;
+	if (x) {
+		long y;
+	}
+	//duplicate local and internal
+}

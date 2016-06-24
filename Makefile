@@ -10,10 +10,10 @@ CC	 = gcc
 LEX	 = flex
 YACC = bison
 
-# -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  
-MACROS	?= #-D LEXER_VERBOSE -D SYNTAXER_VERBOSE
+# -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  -D SEMANTER_VERBOSE 
+MACROS	?= -D SEMANTER_VERBOSE
 # basic|scheme|stackode|gas
-EXPORT	?= scheme
+EXPORT	?= basic
 #-Wall 
 CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 LIBS	= -lfl -lm
@@ -24,17 +24,17 @@ LIBS	= -lfl -lm
 
 GRAMMAR	= src/syntaxer.y
 LEXER	= src/lexer.l
-SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/stackode.c src/ast-${EXPORT}-exporter.c src/misc.c
-OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/stackode.o obj/ast-${EXPORT}-exporter.o obj/misc.o 
+SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/semanter.c src/stackode.c src/ast-${EXPORT}-exporter.c src/misc.c
+OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/semanter.o obj/stackode.o obj/ast-${EXPORT}-exporter.o obj/misc.o 
 TARGET	= bin/compiler
 
 CMPSRC	=  src/compiler-main.c
 CMPOBJ	=  obj/compiler-main.o  
 CMPTGT	=  bin/compiler 
 
-TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-ast.c test/test-stackode.c test/test-gas.c      
-TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o  obj/test-ast.o  obj/test-stackode.o  obj/test-gas.o
-TESTTGT	=  test-bin/test-lexer test-bin/text-syntaxer test-bin/test-ast test-bin/test-stackode test-bin/test-gas
+TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-semanter.c test/test-ast.c test/test-stackode.c test/test-gas.c      
+TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o obj/test-semanter.o  obj/test-ast.o  obj/test-stackode.o  obj/test-gas.o
+TESTTGT	=  test-bin/test-lexer test-bin/text-syntaxer test-bin/text-semanter test-bin/test-ast test-bin/test-stackode test-bin/test-gas
   
 
 ####### vzory
@@ -60,8 +60,9 @@ compiler: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(CMPSRC) $(OBJECTS) $(CMPOBJ)
 	strip $(TARGET)
 
 tests: prepare $(GRAMMAR) $(LEXER) $(TESTSRC) $(TESTOBJ)
-	$(CC) $(CFLAGS) -o test-bin/test-syntaxer  obj/test-syntaxer.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-lexer  obj/test-lexer.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o test-bin/test-syntaxer  obj/test-syntaxer.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o test-bin/test-semanter  obj/test-semanter.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-ast  obj/test-ast.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-stackode  obj/test-stackode.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-gas  obj/test-gas.o $(OBJECTS)
@@ -99,7 +100,10 @@ obj/ast.o: src/ast.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
 obj/tokens.o: src/tokens.c
-	${CC} -c ${CFLAGS} -o $@ -c $<	
+	${CC} -c ${CFLAGS} -o $@ -c $<
+	
+obj/semanter.o: src/semanter.c
+	${CC} -c ${CFLAGS} -o $@ -c $<
 
 obj/stackode.o: src/stackode.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
@@ -133,6 +137,9 @@ obj/test-lexer.o: test/test-lexer.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 	
 obj/test-syntaxer.o: test/test-syntaxer.c
+	${CC} -c ${CFLAGS} -o $@ -c $<
+
+obj/test-semanter.o: test/test-semanter.c
 	${CC} -c ${CFLAGS} -o $@ -c $<
 	
 obj/test-ast.o: test/test-ast.c

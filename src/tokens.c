@@ -9,8 +9,8 @@
 #define TOKENT_NOT_FOUND 0
 
 #define JUST_LEXICALS_COUNT 17
-#define COMMONS_COUNT 16
-#define JUST_SEMANTICS_COUNT 9
+#define COMMONS_COUNT 15
+#define JUST_SEMANTICS_COUNT 14
 #define OPERATORS_COUNT 28
 #define ASSIGNMENTS_OPS_COUNT 12
 
@@ -46,7 +46,6 @@ const token_str_tuple_t commons[COMMONS_COUNT] =	//
 		/* atomic values' tokens */
 		{ ATT_NUMBER, "(number)" },	//
 				{ ATT_STRING, "(string)" },	//
-				{ ATT_IDENTIFIER, "(identifier)" },	//
 
 				/* keywords and their particular control statements */
 				{ STK_ASSIGNMENT, "=" },	//
@@ -68,7 +67,8 @@ const token_str_tuple_t commons[COMMONS_COUNT] =	//
 const token_str_tuple_t just_semantics[JUST_SEMANTICS_COUNT] = //
 		{ //
 		/* just semantic tokens */
-		{ JST_PROCEDURE, "(procedure)" },	//
+		{ JST_VARIABLE, "(variable)" },	//
+				{ JST_PROCEDURE, "(procedure)" },	//
 				{ JST_ARRAY, "(array)" },	//
 				{ JST_PROCCALL, "(procedure call)" },	//
 				{ JST_VARIABLE_DECL, "(variable declaration)" },	//
@@ -77,7 +77,12 @@ const token_str_tuple_t just_semantics[JUST_SEMANTICS_COUNT] = //
 				{ CNT_STATEMENTS, "(block of statements)" },	//
 				{ CNT_NUMBERS, "(numbers)" },	//
 				{ CNT_EXPRESSIONS, "(expressions)" },	//
-				{ CNT_PARAMETERS, "(parameters list)" }	//
+				{ CNT_PARAMETERS, "(parameters list)" },	//
+				/* metas */
+				{ META_ADRESS, "(adress of)" },	//
+				{ META_DECLARATION, "(declaration)" },	//
+				{ META_LOOP, "(loop ref)" },	//
+				{ META_PREVIOUS, "(previous)" }	//
 
 		};
 
@@ -175,7 +180,7 @@ TOKEN_TYPE_T find_lexical(char* str) {
 		return result;
 	}
 
-	fprintf(stderr, "Token %s not found\n", str);
+	fprintf(stderr, "fl: Token %s not found\n", str);
 	return TOKENT_NOT_FOUND;
 }
 
@@ -196,7 +201,7 @@ TOKEN_TYPE_T find_semantic(char* str) {
 		return result;
 	}
 
-	fprintf(stderr, "Token %s not found\n", str);
+	fprintf(stderr, "fs: Token %s not found\n", str);
 	return TOKENT_NOT_FOUND;
 }
 
@@ -217,11 +222,19 @@ const char* to_string(TOKEN_TYPE_T tok) {
 		return result;
 	}
 
-	fprintf(stderr, "Token %d not found\n", tok);
+	fprintf(stderr, "ts: Token %d not found\n", tok);
 	return NULL;
 }
 
 int is_atomic(TOKEN_TYPE_T tok) {
 	return tok > 2100 && tok < 2200;
+}
+
+int is_container(TOKEN_TYPE_T tok) {
+	return tok > 3400 && tok < 3500;
+}
+
+int is_meta(TOKEN_TYPE_T tok) {
+	return tok > 4000 && tok < 4100;
 }
 #endif

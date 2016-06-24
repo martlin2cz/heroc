@@ -1,0 +1,33 @@
+foo() {
+	4 + x;
+	//undefined x
+}
+
+bar() {
+	break;
+	//break outside of loop
+}
+
+baz() {
+	continue;
+	//continue outside of loop
+}
+
+qux() {
+	if (4) {
+		break;
+	} else {
+		if (5) {
+			continue;
+		}
+	}
+	//some other breaks & continues
+}
+
+aux(x) {
+	long y = z;
+
+	noop(x);
+	//again undefined variable, also with funcall
+}
+

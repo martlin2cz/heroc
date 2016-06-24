@@ -1,0 +1,36 @@
+long x; 
+
+foo(y) { 
+	long z; 
+	if (1) { 
+		long w; 
+		x + y + z + w; 
+	} 
+}
+
+bar(y) {
+	long z;
+
+	if (1) {
+		long a;
+		print_long(x + y + z + a); 
+	} else {
+		long b;
+		print_long(x + y + z + b);
+	}
+
+	long w;
+	return x + y + z + w;
+}
+
+baz(y) { 
+	long z; 
+
+	while(z) { 
+		long q = x + y; 
+		if (q) { 
+			break; 
+		}  
+		q++; 
+	} 
+}

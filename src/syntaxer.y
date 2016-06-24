@@ -61,8 +61,8 @@
 
 /* atomic values' tokens */
 %token<number>	ATT_NUMBER		2101
-%token<string>	ATT_STRING		2102
-%token<string>	ATT_IDENTIFIER	2103
+%token<string>	ATT_STRING		2102	//ok, variable/proc name
+
 
 /* keywords and their particular control statements */
 %token<child>	STK_ASSIGNMENT	2201
@@ -80,10 +80,11 @@
 %token<child>	STK_LAMBDA		2213
 
 /* just semantic tokens */
-%token<child>	JST_ARRAY			3301
-%token<child>	JST_PROCEDURE		3302
-%token<child>	JST_PROCCALL		3303
-%token<child>	JST_VARIABLE_DECL	3304
+%token<string>	JST_VARIABLE		3301
+%token<child>	JST_ARRAY			3302
+%token<child>	JST_PROCEDURE		3303
+%token<child>	JST_PROCCALL		3304
+%token<child>	JST_VARIABLE_DECL	3305
 
 
 /* containers */
@@ -94,7 +95,9 @@
 
 /* meta nodes */
 %token<child>	META_PREVIOUS	4001
-%token<child>	META_LOOP		4002
+%token<child>	META_DECLARATION	4002
+%token<child>	META_LOOP		4003
+%token<number>	META_ADRESS		4004
 
 
 
@@ -208,23 +211,23 @@ variables_decls_specs:
 ;
 
 var_with_opt_asg_val:
-		ATT_IDENTIFIER { 
+		JST_VARIABLE { 
 				ast_node_t* var = create_identifier($1);
 				*root = $$ = create_declaration(var, NULL);
 				SYNTAXER_LOG("declaration %p -> %p", $1, $$);
 			}
-	|	ATT_IDENTIFIER JLT_ASSIGNMENT expression { 
+	|	JST_VARIABLE JLT_ASSIGNMENT expression { 
 				ast_node_t* var = create_identifier($1);
 				*root = $$ = create_declaration(var, $3);
 				SYNTAXER_LOG("declaration %p := %p -> %p", var, $3, $$);
 			}
-	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA ATT_NUMBER JLT_INDEX_RIGHT_BRA { 
+	|	JST_VARIABLE JLT_INDEX_LEFT_BRA ATT_NUMBER JLT_INDEX_RIGHT_BRA { 
 				ast_node_t* var = create_identifier($1);
 				ast_node_t* array = create_array_of_size($3);
 				*root = $$ = create_declaration(var, array);
 				SYNTAXER_LOG("decl of array %p [%d] -> %p", var, $3, $$);
 			}
-	|	ATT_IDENTIFIER JLT_INDEX_LEFT_BRA JLT_INDEX_RIGHT_BRA JLT_ASSIGNMENT array {
+	|	JST_VARIABLE JLT_INDEX_LEFT_BRA JLT_INDEX_RIGHT_BRA JLT_ASSIGNMENT array {
 				ast_node_t* var = create_identifier($1);
 				ast_node_t* array = create_array_of_value($5);
 				*root = $$ = create_declaration(var, array);
@@ -234,7 +237,7 @@ var_with_opt_asg_val:
 
 
 procedure_decl:
-	ATT_IDENTIFIER JLT_NORMAL_LEFT_BRA proc_params_list JLT_NORMAL_RIGHT_BRA block {
+	JST_VARIABLE JLT_NORMAL_LEFT_BRA proc_params_list JLT_NORMAL_RIGHT_BRA block {
 			ast_node_t* id = create_identifier($1);
 			
 			ast_node_t* params = create_parameters($3);
@@ -248,13 +251,13 @@ procedure_decl:
 
 
 proc_params_list:
-		ATT_IDENTIFIER JLT_COMMA proc_params_list {
+		JST_VARIABLE JLT_COMMA proc_params_list {
 				ast_node_t* id = create_identifier($1);
 				ast_node_t* decl = create_declaration(id, NULL);
 				*root = $$ = prepend(decl, $3);
 				SYNTAXER_LOG("procedure parameter %p", id);
 			}
-	|	ATT_IDENTIFIER {
+	|	JST_VARIABLE {
 				ast_node_t* id = create_identifier($1);
 				ast_node_t* decl = create_declaration(id, NULL);
 				
@@ -414,7 +417,7 @@ sizeof_expr:
 ;
 
 place:
-		ATT_IDENTIFIER {
+		JST_VARIABLE {
 			*root = $$ = create_identifier($1);
 			SYNTAXER_LOG("identifier %s -> %p", $1, $$);
 		}

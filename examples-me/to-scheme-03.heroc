@@ -1,0 +1,22 @@
+foo() {
+	long x;
+	{ 
+		 long a = 10;
+		  long b = 20;
+			 x = a * b;
+	}
+	print_long(x); 
+}
+
+bar(x, y, z) { 
+	long r;
+	r = 4 + z * x - y; 
+	print_long(r);
+}
+
+main() {
+	foo();
+	print_nl();
+	bar(4, 5, 6);
+	print_nl();
+}

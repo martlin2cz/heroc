@@ -25,11 +25,17 @@ void print_preamble(FILE* dest) {
 int print_single_node(FILE* dest, struct ast_node_t* node, int padding,
 		int wrap) {
 	TOKEN_TYPE_T type = node->type;
+
 	if (is_atomic(type)) {
 		print_atomic(dest, node, padding, wrap);
+
+	} else if (is_meta(type)) {
+		//ignore
+
 	} else {
 		return print_compozite(dest, node, padding, wrap);
 	}
+
 	return 0;
 }
 
@@ -42,11 +48,8 @@ void print_atomic(FILE* dest, struct ast_node_t* node, int padding, int wrap) {
 	case ATT_NUMBER:
 		fprintf(dest, "%ld", node->value.number);
 		return;
-	case ATT_IDENTIFIER:
-		fprintf(dest, "%s", node->value.string);
-		return;
 	case ATT_STRING:
-		fprintf(dest, "\"%s\"", node->value.string);
+		fprintf(dest, "%s", node->value.string);
 		return;
 	default:
 		fprintf(stderr, "unknown type of type to export: %d", node->type);
@@ -73,6 +76,10 @@ int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap) 
 	case JST_VARIABLE_DECL: {
 		int done = print_variable_decl(dest, node, padding, wrap);
 		return done;
+		break;
+	}
+	case JST_VARIABLE: {
+		print_single_node(dest, child, padding, wrap);
 		break;
 	}
 	case JST_PROCEDURE: {
@@ -239,7 +246,7 @@ int print_variable_decl(FILE* dest, struct ast_node_t* node, int padding,
 		print_single_node(dest, ident, new_pad, 0);
 		print_separator(dest, new_pad, 0);
 
-		if (value) {
+		if (value && !is_meta(value->type)) {
 			print_single_node(dest, value, new_pad, 0);
 		} else {
 			fprintf(dest, "'undefined");
