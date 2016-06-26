@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "../src/ast.h"
-#include "../src/ast-exporter.h"
+#include "../src/ast-displayer.h"
 
 ast_node_t* create_arithmetic_tree(void);
 ast_node_t* create_some_fn(void);
@@ -10,11 +10,11 @@ int main(int argc, char **argv) {
 
 	printf("=== TREE 1: === \n");
 	ast_node_t* tree1 = create_arithmetic_tree();
-	ast_export_root(stdout, tree1);
+	ast_display_root(stdout, tree1);
 
 	printf("=== TREE 2: === \n");
 	ast_node_t* tree2 = create_some_fn();
-	ast_export_root(stdout, tree2);
+	ast_display_root(stdout, tree2);
 
 	//TODO test arrays?
 

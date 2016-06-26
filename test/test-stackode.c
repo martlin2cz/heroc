@@ -5,6 +5,7 @@
 #include "../src/semanter.h"
 
 #include "../src/stackode.h"
+#include "../src/ast-displayer.h"
 #include "../src/ast-stackode-exporter.h"
 
 int main(int argc, char **argv) {
@@ -22,7 +23,7 @@ int main(int argc, char **argv) {
 
 	printf("Parsed, analysing.\n");
 	int errors = analyze_tree(root);
-	ast_export_root(stdout, root);
+	ast_display_root(stdout, root);
 
 	if (errors) {
 		printf("Analysing failed, %d errors found. \n", errors);

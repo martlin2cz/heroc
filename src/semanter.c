@@ -6,7 +6,7 @@
 
 #include "semanter.h"
 #include "ast.h"
-#include "ast-exporter.h"
+#include "ast-displayer.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,7 @@
 	fprintf(stderr, "Semantic error: "); \
 	fprintf(stderr, __VA_ARGS__); \
 	fprintf(stderr, " near to:\n", message); \
-	ast_export_root(stderr, context); \
+	ast_display_root(stderr, context); \
 	\
 	(*errors)++; \
 
@@ -340,7 +340,6 @@ void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors) {
 
 	//directly analyze
 	analyze_one_node(proc_var, previous, NULL, NULL, errors);
-fprintf(stderr, "-- checking:  %p %p\n", proc_var, params_list);
 	analyze_nodes(params_list, previous, NULL, NULL, errors);
 
 	//then try to check aritiy

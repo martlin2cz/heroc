@@ -3,7 +3,7 @@
 #include "../gen/lexer.h"
 #include "../gen/syntaxer.h"
 #include "../src/semanter.h"
-#include "../src/ast-exporter.h"
+#include "../src/ast-displayer.h"
 
 
 int main(int argc, char **argv)
@@ -26,12 +26,12 @@ int main(int argc, char **argv)
 
 	if (errors) {
 		printf("Analysing failed, %d errors found. Analysed tree would be corrupted or uncomplete:\n", errors);
-		ast_export_root(stdout, root);
+		ast_display_root(stdout, root);
 		return 2;
 	}
 
 	printf("Analysed: \n");
-	ast_export_root(stdout, root);
+	ast_display_root(stdout, root);
 
     return 0;
 }

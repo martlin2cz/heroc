@@ -14,8 +14,8 @@ YACC = bison
 MACROS	?= -D STACKODE_VERBOSE -D SEMANTER_VERBOSE
 # basic|scheme|stackode|gas
 EXPORT	?= stackode
-#-Wall 
-CFLAGS	= -ansi -pedantic -std=c11 $(MACROS) -dbg
+#-Wall -d
+CFLAGS	= -ansi -pedantic -std=c11 $(MACROS) 
 LIBS	= -lfl -lm
 
 
@@ -24,8 +24,8 @@ LIBS	= -lfl -lm
 
 GRAMMAR	= src/syntaxer.y
 LEXER	= src/lexer.l
-SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/semanter.c src/stackode.c src/ast-${EXPORT}-exporter.c src/misc.c
-OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/semanter.o obj/stackode.o obj/ast-${EXPORT}-exporter.o obj/misc.o 
+SOURCE	= gen/syntaxer.c gen/lexer.c src/token.c src/tokens.c src/ast.c src/ast-displayer.c src/semanter.c src/stackode.c src/ast-${EXPORT}-exporter.c src/misc.c
+OBJECTS = obj/syntaxer.o obj/lexer.o obj/token.o obj/tokens.o obj/ast.o obj/ast-displayer.o obj/semanter.o obj/stackode.o obj/ast-${EXPORT}-exporter.o obj/misc.o 
 TARGET	= bin/compiler
 
 CMPSRC	=  src/compiler-main.c
@@ -98,7 +98,10 @@ obj/token.o: src/token.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
 obj/ast.o: src/ast.c
-	${CC} -c ${CFLAGS} -o $@ -c $<	
+	${CC} -c ${CFLAGS} -o $@ -c $<
+	
+obj/ast-displayer.o: src/ast-displayer.c
+	${CC} -c ${CFLAGS} -o $@ -c $<		
 
 obj/tokens.o: src/tokens.c
 	${CC} -c ${CFLAGS} -o $@ -c $<

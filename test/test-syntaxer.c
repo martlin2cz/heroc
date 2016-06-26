@@ -2,7 +2,7 @@
 
 #include "../gen/lexer.h"
 #include "../gen/syntaxer.h"
-#include "../src/ast-exporter.h"
+#include "../src/ast-displayer.h"
 
 
 int main(int argc, char **argv)
@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 
     if (root) {
     	printf("Done with root %p:\n", root);
-    	ast_export_root(stdout, root);
+    	ast_display_root(stdout, root);
     } else {
     	printf("Parsing failed.\n");
     }
