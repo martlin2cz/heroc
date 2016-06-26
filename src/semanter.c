@@ -180,7 +180,9 @@ int analyze_tree(ast_node_t* root) {
 
 	analyze_nodes(root, &previous, NULL, &next_var_at, &errors);
 
-	SEMANTER_LOG("Global scope requires %d cells on stack.", next_var_at);SEMANTER_LOG("Semantic analysis completed with %d errors.", errors);
+	SEMANTER_LOG("Global scope requires %d cells on stack.", next_var_at);
+
+	SEMANTER_LOG("Semantic analysis completed with %d errors.", errors);
 
 	return errors;
 }
@@ -299,10 +301,9 @@ void analyze_loop_keyw(ast_node_t* node, ast_node_t* inloop, int *errors) {
 		return;
 	}
 
-	ast_node_t* new = create_new_node(META_LOOP);
-	new->value.child = inloop;
-
-	node->value.child = new;
+	YYSTYPE val;
+	val.child = inloop;
+	append_child(node, META_LOOP, val);
 }
 
 void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors) {

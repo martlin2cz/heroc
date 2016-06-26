@@ -1,0 +1,6 @@
+foo() {
+	long x;
+	x = 4 + 5;
+	print_long(x);
+	print_nl();
+}

@@ -230,6 +230,19 @@ int is_atomic(TOKEN_TYPE_T tok) {
 	return tok > 2100 && tok < 2200;
 }
 
+int is_unary_operator(TOKEN_TYPE_T tok) {
+	return tok > 1000 && tok < 2000
+			&& ((tok == OPT_PRE_INCREMENT) || (tok == OPT_POST_INCREMENT)
+					|| (tok == OPT_PRE_DECREMENT) || (tok == OPT_POST_DECREMENT)
+					|| (tok == OPT_NOT) || (tok == OPT_BITWISE_NOT)
+					|| (tok == OPT_DEREFERENCE) || (tok == OPT_REFERENCE));
+
+}
+
+int is_binary_operator(TOKEN_TYPE_T tok) {
+	return tok > 1000 && tok < 2000;
+}
+
 int is_container(TOKEN_TYPE_T tok) {
 	return tok > 3400 && tok < 3500;
 }

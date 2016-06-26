@@ -325,9 +325,8 @@
     'next-instruction))
 
 (define just-jump
-  (lambda (stack)
-    (let* ((addr (pop stack)))    
-      addr)))
+  (lambda (stack addr)
+      addr))
 
 (define jump-if-1
   (lambda (stack predicate)
@@ -377,6 +376,10 @@
 (define sci-label 
   (lambda (context label)
     (ignore-1-and-continue (stack context) label)))
+
+(define sci-comment
+  (lambda (context comment)
+    (ignore-1-and-continue (stack context) comment)))
 
 (define sci-push-label-adress
   (lambda (context label)
@@ -446,9 +449,11 @@
                (lambda (c) (= c 0)))))
 
 (define sci-jump-to
-  (lambda (context)
-    (let* ((stack (stack context)))
-      (just-jump stack))))
+  (lambda (context label)
+    (let* ((stack (stack context))
+           (program (program context))
+           (addr (sc-address-of-label label program)))
+      (just-jump stack addr))))
 
 (define sci-call
   (lambda (context)
@@ -487,26 +492,49 @@
       'next-instruction)))
 
 
+(define sci-unary-operation
+  (lambda (context operator)
+    (join-1-and-continue 
+     (stack context)
+     (case operator
+       ((!) not)
+       ((~) bit-not)
+       ;TODO
+       ))))
 
-(define sci-add
-  (lambda (context)
-    (join-2-and-continue (stack context) +)))
 
-(define sci-sub
-  (lambda (context)
-    (join-2-and-continue (stack context) -)))
+(define sci-binary-operation
+  (lambda (context operator)
+    (join-1-and-continue   
+     (stack context)
+     (case operator
+       ((+) +)
+       ((-) -)
+       ((*) *)
+       ((/) /)
+       ((%) mod)
+       ;TODO
+       ))))
 
-(define sci-mul
-  (lambda (context)
-    (join-2-and-continue (stack context) *)))
-
-(define sci-div
-  (lambda (context)
-    (join-2-and-continue (stack context) /)))
-
-(define sci-mod
-  (lambda (context)
-    (join-2-and-continue (stack context) mod)))
+;(define sci-add
+;  (lambda (context)
+;    (join-2-and-continue (stack context) +)))
+;
+;(define sci-sub
+;  (lambda (context)
+;    (join-2-and-continue (stack context) -)))
+;
+;(define sci-mul
+;  (lambda (context)
+;    (join-2-and-continue (stack context) *)))
+;
+;(define sci-div
+;  (lambda (context)
+;    (join-2-and-continue (stack context) /)))
+;
+;(define sci-mod
+;  (lambda (context)
+;    (join-2-and-continue (stack context) mod)))
 
 
 
@@ -515,6 +543,7 @@
 (define *sc-instructions*
   (list 
    ;control instructions 
+   (list 'comment sci-comment)
    (list 'end sci-end)
    (list 'label sci-label)
    
@@ -537,17 +566,11 @@
    (list 'push-relative-adress  sci-push-relative-adress)
    (list 'push-absolute-adress  sci-push-absolute-adress)
    (list 'pop sci-pop)
-   
-   
         
    ;arithmetic instructions
-   (list 'add sci-add)
-   (list 'sub sci-sub)
-   (list 'mul sci-mul)
-   (list 'div sci-div)
+   (list 'unary-operation sci-unary-operation)
+   (list 'binary-operation sci-binary-operation)
    
-   ;(list '  )
-   ;;TODO
    ))
 
 

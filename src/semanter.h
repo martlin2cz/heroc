@@ -6,9 +6,9 @@
 #ifdef SEMANTER_VERBOSE
 #define SEMANTER_LOG(...) \
 	{ \
-		printf("[SEM] "); \
-		printf(__VA_ARGS__); \
-		printf("\n"); \
+		fprintf(stderr,"[SEM] "); \
+		fprintf(stderr,__VA_ARGS__); \
+		fprintf(stderr,"\n"); \
 	}
 #else
 	#define SEMANTER_LOG(...)

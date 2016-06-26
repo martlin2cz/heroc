@@ -10,10 +10,10 @@ CC	 = gcc
 LEX	 = flex
 YACC = bison
 
-# -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  -D SEMANTER_VERBOSE 
-MACROS	?= -D SEMANTER_VERBOSE
+# -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  -D SEMANTER_VERBOSE  -D STACKODE_VERBOSE
+MACROS	?= -D STACKODE_VERBOSE
 # basic|scheme|stackode|gas
-EXPORT	?= basic
+EXPORT	?= stackode
 #-Wall 
 CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 LIBS	= -lfl -lm
@@ -32,9 +32,9 @@ CMPSRC	=  src/compiler-main.c
 CMPOBJ	=  obj/compiler-main.o  
 CMPTGT	=  bin/compiler 
 
-TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-semanter.c test/test-ast.c test/test-stackode.c test/test-gas.c      
-TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o obj/test-semanter.o  obj/test-ast.o  obj/test-stackode.o  obj/test-gas.o
-TESTTGT	=  test-bin/test-lexer test-bin/text-syntaxer test-bin/text-semanter test-bin/test-ast test-bin/test-stackode test-bin/test-gas
+TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-semanter.c test/test-ast.c test/test-stackode-exporter.c test/test-stackode.c test/test-gas.c      
+TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o obj/test-semanter.o  obj/test-ast.o  obj/test-stackode-exporter.o obj/test-stackode.o  obj/test-gas.o
+TESTTGT	=  test-bin/test-lexer test-bin/text-syntaxer test-bin/text-semanter test-bin/test-ast test-bin/test-stackode-exporter test-bin/test-stackode test-bin/test-gas
   
 
 ####### vzory
@@ -64,6 +64,7 @@ tests: prepare $(GRAMMAR) $(LEXER) $(TESTSRC) $(TESTOBJ)
 	$(CC) $(CFLAGS) -o test-bin/test-syntaxer  obj/test-syntaxer.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-semanter  obj/test-semanter.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-ast  obj/test-ast.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o test-bin/test-stackode-exporter  obj/test-stackode-exporter.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-stackode  obj/test-stackode.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-gas  obj/test-gas.o $(OBJECTS)
 	
@@ -145,6 +146,9 @@ obj/test-semanter.o: test/test-semanter.c
 obj/test-ast.o: test/test-ast.c
 	${CC} -c ${CFLAGS} -o $@ -c $<
 	
+obj/test-stackode-exporter.o: test/test-stackode-exporter.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
 obj/test-stackode.o: test/test-stackode.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 	

@@ -1,41 +1,38 @@
 #include <stdio.h>
+
+#include "../gen/lexer.h"
+#include "../gen/syntaxer.h"
+#include "../src/semanter.h"
+
 #include "../src/stackode.h"
 #include "../src/ast-stackode-exporter.h"
 
-void test_program_1(void);
+
 
 int main(int argc, char **argv) {
-	printf("Generating stackode: \n");
+	printf("Running syntaxer, semanter and stackode generator (stdin): \n");
 
-	test_program_1();
+		yyin = stdin;
 
-	printf("Done.\n");
+		struct ast_node_t* root = NULL;
+	    yyparse(&root);
 
-	return 0;
+	    if (!root) {
+	    	printf("Parsing failed.\n");
+	        return 1;
+	    }
+
+		printf("Parsed, analysing.\n");
+		int errors = analyze_tree(root);
+
+		if (errors) {
+			printf("Analysing failed, %d errors found. \n", errors);
+			return 2;
+		}
+
+		printf("Analysed, exporting\n");
+		ast_export_root(stdout, root);
+
+	    return 0;
 }
 
-void test_program_1(void) {
-	sk_program_t* program = create_empty_program();
-
-	add_instruction(program, //
-			create_instruct_with_num(SKI_PUSH_NUMBER, 20));
-
-	 add_instruction(program, //
-			create_instruct_with_str(SKI_PUSH_ADDRES_OF, "x"));
-
-	add_instruction(program, //
-			create_instruction(SKI_ASSIGN));
-
-	add_instruction(program, //
-			create_instruct_with_str(SKI_PUSH_VALUE_OF, "x"));
-
-	add_instruction(program, //
-			create_instruct_with_str(SKI_PUSH_VALUE_OF, "print"));
-
-	add_instruction(program, //
-			create_instruction(SKI_CALL));
-
-	printf("export to stackode not supported\n");
-//	export_stackode(stdout, program);
-
-}
