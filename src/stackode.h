@@ -15,9 +15,8 @@
 		fprintf(stderr, "\n"); \
 	}
 #else
-	#define STACKODE_LOG(...)
+#define STACKODE_LOG(...)
 #endif
-
 
 typedef enum sk_instr_type_t {
 	//TODO and what about the end?
@@ -71,7 +70,7 @@ void node_to_stackode_comment(sk_program_t* program, ast_node_t* node);
 void number_to_stackode(sk_program_t * program, ast_node_t * node);
 void assignment_to_stackode(sk_program_t * program, ast_node_t * node);
 void sizeof_to_stackode(sk_program_t * program, ast_node_t * node);
-void if_to_stackode(sk_program_t * program, ast_node_t * node);
+void if_to_stackode(sk_program_t * program, ast_node_t * node, char* label_base);
 void for_to_stackode(sk_program_t * program, ast_node_t * node);
 void while_to_stackode(sk_program_t * program, ast_node_t * node);
 void do_to_stackode(sk_program_t * program, ast_node_t * node);
@@ -87,6 +86,13 @@ void var_decl_to_stackode(sk_program_t * program, ast_node_t * node);
 void unary_op_to_stackode(sk_program_t * program, ast_node_t * node);
 void binary_op_to_stackode(sk_program_t * program, ast_node_t * node);
 
+void and_to_stackode(sk_program_t * program, ast_node_t * node);
+void or_to_stackode(sk_program_t * program, ast_node_t * node);
+void ternary_to_stackode(sk_program_t * program, ast_node_t * node);
+void dereference_to_stackode(sk_program_t * program, ast_node_t * node);
+void index_to_stackode(sk_program_t * program, ast_node_t * node);
+void reference_to_stackode(sk_program_t * program, ast_node_t * node);
+
 /*********************************************************/
 sk_program_t* create_empty_program(void);
 
@@ -95,13 +101,15 @@ void add_instruction(sk_program_t* program, sk_instruction_t* instruction);
 void check_and_increase_size(sk_program_t* program);
 
 void add_instruction(sk_program_t* program, sk_instruction_t* instruction);
+void remove_last_instr(sk_program_t* program);
 
 sk_instruction_t* create_instruction(sk_instr_type_t type);
 sk_instruction_t* create_instruct_with_str(sk_instr_type_t type, char* str);
 sk_instruction_t* create_instruct_with_num(sk_instr_type_t type, long num);
 sk_instruction_t* create_instruct_with_op(sk_instr_type_t type,
-		TOKEN_TYPE_T oper);
-
+TOKEN_TYPE_T oper);
 
 char* generate_label(char* prefix, char* name, int uid);
+
+char* label_of_proc(ast_node_t* proc);
 #endif

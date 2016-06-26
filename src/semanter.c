@@ -82,6 +82,7 @@ struct ast_node_t* create_predefined_proc_decl(char* name, char* arg1_name) {
 
 	ast_node_t* decl = create_new_node(JST_VARIABLE_DECL);
 	decl->value.child = prepend(id, prepend(proc, NULL));
+
 	return decl;
 
 }
@@ -112,24 +113,27 @@ YYSTYPE find_value_of_meta(struct ast_node_t* node, TOKEN_TYPE_T meta) {
 
 		child = child->next;
 	}
-	fprintf(stderr, "fvom: No value of meta %s of %p (%d) found.\n",
-			to_string(meta), node, node->uid);
+
+	fprintf(stderr, "fvom: No value of meta %s of node %s %p (%d) found.\n",
+			to_string(meta), to_string(node->type), node, node->uid);
 	YYSTYPE result;
 	result.child = NULL;
 	return result;
 }
 
-struct ast_node_t* find_first_nondecl(ast_node_t* identifier) {
-	while (identifier) {
-		if (identifier->type != JST_VARIABLE_DECL) {
-			return identifier;
+struct ast_node_t* find_first_nondecl(ast_node_t* declaration) {
+	ast_node_t* decl = declaration;
+
+	while (decl) {
+		if (decl->type != JST_VARIABLE_DECL) {
+			return decl;
 		}
 
-		YYSTYPE value = find_value_of_meta(identifier, META_PREVIOUS);
-		identifier = value.child;
+		YYSTYPE value = find_value_of_meta(decl, META_PREVIOUS);
+		decl = value.child;
 	}
 
-	fprintf(stderr, "ffn: No nondecl found. Ok, ain't?\n");
+	//fprintf(stderr, "ffn: No nondecl found. Ok, ain't?\n");
 	return NULL;
 }
 
@@ -156,8 +160,8 @@ struct ast_node_t* find_var_decl(ast_node_t* previous, char* name) {
 	return NULL;
 }
 
-var_type_t typeof_var(ast_node_t* identifier) {
-	struct ast_node_t* node = find_first_nondecl(identifier);
+var_type_t typeof_var(ast_node_t* declaration) {
+	struct ast_node_t* node = find_first_nondecl(declaration);
 
 	if (node == NULL) {
 		return VT_GLOBAL;
@@ -187,11 +191,11 @@ int analyze_tree(ast_node_t* root) {
 	return errors;
 }
 
-void analyze_nodes(ast_node_t* node, ast_node_t** previous, ast_node_t* inloop,
+void analyze_nodes(ast_node_t* nodes, ast_node_t** previous, ast_node_t* inloop,
 		int* next_var_at, int *errors) {
-	while (node) {
-		analyze_one_node(node, previous, inloop, next_var_at, errors);
-		node = node->next;
+	while (nodes) {
+		analyze_one_node(nodes, previous, inloop, next_var_at, errors);
+		nodes = nodes->next;
 	}
 }
 
@@ -222,9 +226,12 @@ void analyze_one_node(ast_node_t* node, ast_node_t** previous,
 	case JST_VARIABLE_DECL:
 		analyze_variable_decl(node, previous, next_var_at, 1, errors);
 		break;
+	case STK_ASSIGNMENT:
+		analyze_assignment(node, previous, errors);
+		break;
 	default:
 		if (is_meta(node->type) || is_atomic(node->type)) {
-			return;
+			//nothing to do
 
 		} else if (is_container(node->type)) {
 			analyze_container(node, previous, inloop, next_var_at, errors);
@@ -235,26 +242,42 @@ void analyze_one_node(ast_node_t* node, ast_node_t** previous,
 					errors);
 		}
 	}
+}
 
+void analyze_assignment(ast_node_t* node, ast_node_t** previous, int *errors) {
+	ast_node_t* ref = wrap_place_with_ref(node);
+
+	analyze_nodes(ref, previous, NULL, NULL, errors);
+}
+
+ast_node_t* wrap_place_with_ref(ast_node_t* node) {
+	ast_node_t* place = node->value.child;
+
+	ast_node_t* ref = create_with_1_children(OPT_REFERENCE, place);
+	node->value.child = ref;
+
+	ref->next = place->next;
+	place->next = NULL;
+
+	return ref;
 }
 
 void analyze_identifier_use(ast_node_t* node, ast_node_t** previous,
 		int *errors) {
+
+
 	char* name = node->value.child->value.string;
 	ast_node_t* declaration = find_var_decl(*previous, name);
-
-//	printf(":: -> var (in %p %d) %s decl found? %p\n", node, node->uid, name,
-	//		declaration);
 
 	if (declaration) {
 
 		YYSTYPE decl;
 		decl.child = declaration;
-
 		append_child(node, META_DECLARATION, decl);
 	} else {
 		semantic_error_1("Identifier %s not found", name, node, errors);
 	}
+
 }
 
 void analyze_loop(ast_node_t* node, ast_node_t** previous, int* next_var_at,
@@ -264,17 +287,18 @@ void analyze_loop(ast_node_t* node, ast_node_t** previous, int* next_var_at,
 
 	switch (node->type) {
 	case STK_FOR: {
-		analyze_one_node(child, previous, loop_node, NULL, errors);
+		analyze_one_node(child, previous, NULL, NULL, errors);
+		analyze_one_node(child, previous, NULL, NULL, errors);
 		child = child->next;
-		analyze_one_node(child, previous, loop_node, NULL, errors);
+		analyze_one_node(child, previous, NULL, NULL, errors);
 		child = child->next;
-		analyze_one_node(child, previous, loop_node, NULL, errors);
+		analyze_one_node(child, previous, NULL, NULL, errors);
 		child = child->next;
 		analyze_one_node(child, previous, loop_node, next_var_at, errors);
 		break;
 	}
 	case STK_WHILE: {
-		analyze_one_node(child, previous, loop_node, NULL, errors);
+		analyze_one_node(child, previous, NULL, NULL, errors);
 		child = child->next;
 		analyze_one_node(child, previous, loop_node, next_var_at, errors);
 		break;
@@ -282,7 +306,7 @@ void analyze_loop(ast_node_t* node, ast_node_t** previous, int* next_var_at,
 	case STK_DO: {
 		analyze_one_node(child, previous, loop_node, next_var_at, errors);
 		child = child->next;
-		analyze_one_node(child, previous, loop_node, NULL, errors);
+		analyze_one_node(child, previous, NULL, NULL, errors);
 		break;
 	}
 	default: {
@@ -310,8 +334,17 @@ void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors) {
 	SEMANTER_LOG("Starting to analyze procedure call");
 
 	ast_node_t* proc_var = node->value.child;
+	ast_node_t* params_list = node->value.child->next->value.child;
+
+
+
+	//directly analyze
+	analyze_one_node(proc_var, previous, NULL, NULL, errors);
+fprintf(stderr, "-- checking:  %p %p\n", proc_var, params_list);
+	analyze_nodes(params_list, previous, NULL, NULL, errors);
+
+	//then try to check aritiy
 	if (proc_var->type == JST_VARIABLE) {
-		analyze_identifier_use(proc_var, previous, errors);
 		YYSTYPE proc_var_decl_val = find_value_of_meta(proc_var,
 				META_DECLARATION);
 		if (proc_var_decl_val.child) {
@@ -325,11 +358,10 @@ void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors) {
 								(proc_name_node->type == STK_LAMBDA ?
 										"anonymous" : "?"));
 
-				//finally check the procedure.
+				//ok, target is proc, check arity
 				long args_count = lenght_ignore_meta(
 						proc_name_node->next->value.child);
-				long params_count = lenght_ignore_meta(
-						node->value.child->next->value.child);
+				long params_count = lenght_ignore_meta(params_list);
 
 				if (args_count != params_count) {
 					semantic_error_3(
@@ -345,7 +377,7 @@ void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors) {
 		}
 	}
 
-	SEMANTER_LOG("Analyze of procedure call completed unsuccessfully (cannot determine target of call)");
+	SEMANTER_LOG("Analyze of procedure cannot determine call target, hope it will be working ...");
 }
 
 void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors) {
@@ -400,7 +432,8 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 
 	ast_node_t* existing = find_var_decl(*previous, name);
 	if (existing) {
-		semantic_error_1("Variable %s yet declared", name, node, errors);//TODO FIXME test
+		semantic_error_1("Variable %s yet declared", name, node, errors);//FIXME not displaying
+		return;
 	}
 
 	ast_node_t* value = var->next;
@@ -413,15 +446,33 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 	prev.child = *previous;
 	append_child(node, META_PREVIOUS, prev);
 
+	YYSTYPE type;
+	type.number = (long) typeof_var(node);
+	append_child(node, META_VAR_TYPE, type);
+
 	if (value) {
-		ast_node_t* new_prev = node;
+		ast_node_t* new_prev = node;//TODO val of cannot must not have more decls inside, or no? NULL should be enough, aint...?
 		analyze_one_node(value, &new_prev, NULL, next_var_at, errors);
+
+		if (value->type != JST_PROCEDURE) {
+			//make an assignment from initval
+			ast_node_t* only_var_w_n = duplicate(var);
+
+			only_var_w_n->next->next = NULL;
+			ast_node_t* asg = create_with_1_children(STK_ASSIGNMENT,
+					only_var_w_n);
+
+			asg = prepend(asg, node->next);
+			node->next = asg;
+		}
 	}
 
-	if (next_to_plus) {
-		(*next_var_at)++;	//TODO implement arrays
-	} else {
-		(*next_var_at)--;
+	if (!(value && value->type == JST_PROCEDURE)) {
+		if (next_to_plus) {
+			(*next_var_at)++;	//TODO implement arrays
+		} else {
+			(*next_var_at)--;
+		}
 	}
 	(*previous) = node;
 

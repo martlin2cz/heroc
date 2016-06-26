@@ -284,7 +284,7 @@
   (lambda (context instruction)
   ;  (display "evaluating ") (display instruction) 
   ;  (display " with stack ") (display (stack context)) 
-  ;  (display " and frame pointer ") (display (frame-pointer context)) 
+ ;  (display " and frame pointer ") (display (frame-pointer context)) 
   ;  (newline)
   
     ;DEBUG: 
@@ -293,7 +293,7 @@
     (let* ((instr-name (sc-instr-name instruction))
            (instr-proc (sc-find-instr-proc instr-name))
            (instr-args (sc-instr-args instruction)))
-           
+
       (apply instr-proc context instr-args))))
 
 
@@ -329,22 +329,20 @@
       addr))
 
 (define jump-if-1
-  (lambda (stack predicate)
-    (let* ((addr (pop stack))
-           (cond (pop stack)))
-           (if (predicate cond)
-               addr
-               'next-instruction))))
+  (lambda (stack addr predicate)
+    (let ((cond (pop stack)))
+      (if (predicate cond)
+          addr
+          'next-instruction))))
 
 
 (define jump-if-2
-  (lambda (stack predicate)
-    (let* ((addr (pop stack))
-           (cond1 (pop stack))
-           (cond2 (pop stack)))
-           (if (predicate cond1 cond2)
-               addr
-               'next-instruction))))
+  (lambda (stack addr predicate)
+    (let ((cond1 (pop stack))
+          (cond2 (pop stack)))
+      (if (predicate cond1 cond2)
+          addr
+          'next-instruction))))
 
 (define set-at-absolute-and-continue
   (lambda (stack addr value)
@@ -439,14 +437,20 @@
     'next-instruction))
 
 (define sci-jump-on-non-zero
-  (lambda (context)
-    (jump-if-1 (stack context) 
-               (lambda (c) (not (= c 0))))))
+  (lambda (context label)
+    (let* ((stack (stack context))
+           (program (program context))
+           (addr (sc-address-of-label label program)))
+      (jump-if-1 stack addr
+                 (lambda (c) (not (= c 0)))))))
 
 (define sci-jump-on-zero
-  (lambda (context)
-    (jump-if-1 (stack context) 
-               (lambda (c) (= c 0)))))
+  (lambda (context label)
+    (let* ((stack (stack context))
+           (program (program context))
+           (addr (sc-address-of-label label program)))
+      (jump-if-1 stack addr
+                 (lambda (c) (= c 0))))))
 
 (define sci-jump-to
   (lambda (context label)
@@ -593,18 +597,16 @@
 (define sc-wrap-program
   (lambda (program)
     (append (sc-program 
-             `((push-label-adress start-of-program)
-               (jump-to)
-               
-               (label print-long)
+             `((jump-to start-of-program)
+               (label print_long)
                (invoke-primitive ,print_long 1)
                (return)
                
-               (label print-char)
+               (label print_char)
                (invoke-primitive ,print_char 1)
                (return)
                
-               (label print-nl)
+               (label print_nl)
                (invoke-primitive ,print_nl 0)
                (return)
                

@@ -48,6 +48,6 @@ void test_program_1(void) {
 			create_instruction(SKI_CALL));
 
 	//printf("export to stackode not supported\n");
-	export_stackode(stdout, program); //FIXME cannot compile without stackode linked
+	//export_stackode(stdout, program); //FIXME cannot compile without stackode linked
 
 }

@@ -11,28 +11,33 @@
 		fprintf(stderr,"\n"); \
 	}
 #else
-	#define SEMANTER_LOG(...)
+#define SEMANTER_LOG(...)
 #endif
 
 typedef enum var_type_t {
-	VT_LOCAL = 1,
-	VT_PARAM = 2,
-	VT_GLOBAL = 3
+	VT_LOCAL = 1, VT_PARAM = 2, VT_GLOBAL = 3
 } var_type_t;
 
 int analyze_tree(ast_node_t* root);
 
-void analyze_nodes(ast_node_t* node, ast_node_t** previous, ast_node_t* inloop, int* next_var_at, int *errors);
-void analyze_one_node(ast_node_t* node, ast_node_t** previous, ast_node_t* inloop, int* next_var_at, int *errors);
+void analyze_nodes(ast_node_t* node, ast_node_t** previous, ast_node_t* inloop,
+		int* next_var_at, int *errors);
+void analyze_one_node(ast_node_t* node, ast_node_t** previous,
+		ast_node_t* inloop, int* next_var_at, int *errors);
 
-void analyze_identifier_use(ast_node_t* node, ast_node_t**  previous, int *errors);
-void analyze_loop(ast_node_t* node, ast_node_t**  previous, int* next_var_at, int *errors);
+void analyze_assignment(ast_node_t* node, ast_node_t** previous, int *errors);
+ast_node_t* wrap_place_with_ref(ast_node_t* node);
+void analyze_identifier_use(ast_node_t* node, ast_node_t** previous,
+		int *errors);
+void analyze_loop(ast_node_t* node, ast_node_t** previous, int* next_var_at,
+		int *errors);
 void analyze_loop_keyw(ast_node_t* node, ast_node_t* inloop, int *errors);
 void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors);
 void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors);
-void analyze_variable_decl(ast_node_t* node, ast_node_t** previous, int* next_var_at, int next_to_plus, int *errors);
-void analyze_container(ast_node_t* node, ast_node_t** previous, ast_node_t* inloop, int* next_var_at, int *errors);
-
+void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
+		int* next_var_at, int next_to_plus, int *errors);
+void analyze_container(ast_node_t* node, ast_node_t** previous,
+		ast_node_t* inloop, int* next_var_at, int *errors);
 
 void append_child(struct ast_node_t* node, TOKEN_TYPE_T type, YYSTYPE value);
 struct ast_node_t* create_predefined_proc_decl(char* name, char* arg1_name);
@@ -45,10 +50,11 @@ struct ast_node_t* find_var_decl(ast_node_t* previous, char* name);
 var_type_t typeof_var(ast_node_t* identifier);
 
 void semantic_error_0(char* message, struct ast_node_t* context, int *errors);
-void semantic_error_1(char* message, void* arg1, struct ast_node_t* context, int *errors);
-void semantic_error_2(char* message, void* arg1, void* arg2, struct ast_node_t* context, int *errors);
-void semantic_error_3(char* message, void* arg1, void* arg2, void* arg3, struct ast_node_t* context, int *errors);
-
-
+void semantic_error_1(char* message, void* arg1, struct ast_node_t* context,
+		int *errors);
+void semantic_error_2(char* message, void* arg1, void* arg2,
+		struct ast_node_t* context, int *errors);
+void semantic_error_3(char* message, void* arg1, void* arg2, void* arg3,
+		struct ast_node_t* context, int *errors);
 
 #endif

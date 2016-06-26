@@ -1,0 +1,16 @@
+long x = 10, 
+		 y = 11, 
+		 z;
+long w = 22; 
+
+foo(a, b, c) { 
+	x = 111; 
+	y = 222; 
+	z = 333; 
+	w = 444; 
+	long m, 
+			 n = 555, 
+			 o = 777; 
+	
+	return x + y + z + w + a + b + c + m + n + o; 
+}

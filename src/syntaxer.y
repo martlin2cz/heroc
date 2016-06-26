@@ -94,10 +94,11 @@
 %token<child>	CNT_PARAMETERS	3405	
 
 /* meta nodes */
-%token<child>	META_PREVIOUS	4001
+%token<child>	META_PREVIOUS		4001
 %token<child>	META_DECLARATION	4002
-%token<child>	META_LOOP		4003
-%token<number>	META_ADRESS		4004
+%token<child>	META_LOOP			4003
+%token<number>	META_ADRESS			4004
+%token<number>	META_VAR_TYPE		4005
 
 
 

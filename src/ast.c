@@ -281,7 +281,7 @@ struct ast_node_t* duplicate(struct ast_node_t* node) {
 	struct ast_node_t* copy = create_new_node(node->type);
 	copy->next = duplicate(node->next);
 
-	if (is_atomic(node->type)) {
+	if (is_atomic(node->type) || is_meta(node->type)) {
 		copy->value = node->value;
 	} else {
 		copy->value.child = duplicate(node->value.child);

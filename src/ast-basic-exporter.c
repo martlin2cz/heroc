@@ -60,11 +60,15 @@ void print_meta(FILE* dest, struct ast_node_t* node, int padding) {
 	case META_ADRESS:
 		fprintf(dest, " at %+d ", node->value.number);
 		break;
+	case META_VAR_TYPE:
+		fprintf(dest, " of type %d ", node->value.number);
+		break;
 	case META_DECLARATION:
 	case META_LOOP:
 	case META_PREVIOUS:
 		if (node->value.child) {
-			fprintf(dest, " at %p (%d)", node->value.child, node->value.child->uid);
+			fprintf(dest, " at %p (%d)", node->value.child,
+					node->value.child->uid);
 		} else {
 			fprintf(dest, " at NULL");
 		}

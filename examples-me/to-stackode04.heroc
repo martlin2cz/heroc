@@ -1,0 +1,120 @@
+foo1() {
+	if (4) {
+		return 5;
+	} else {
+		return 6;
+	}
+}
+
+foo2() {
+	if (0) {
+		return 5;
+	} else {
+		return 6;
+	}
+}
+
+//-------------------------------------
+
+bar1() {
+	return 5 || 6;
+}
+
+bar2() {
+	return 0 || 6;
+}
+
+bar3() {
+	return 5 || 0;
+}
+
+bar4() {
+	return 0 || 0;
+}
+
+bar5() {
+	return 5 || (1 / 0);
+}
+
+//-------------------------------------
+
+baz1() {
+	return 5 && 6;
+}
+
+baz2() {
+	return 0 && 6;
+}
+
+baz3() {
+	return 5 && 0;
+}
+
+baz4() {
+	return 0 && 0;
+}
+
+baz5() {
+	return 0 && (1 / 0);
+}
+
+aux1() {
+	return 4 ? 5 : 6;
+}
+
+aux2() {
+	return 0 ? 5 : 6;
+}
+//-------------------------------------
+
+main() {
+	print_long(foo1());
+	print_char(' ');
+
+	print_long(foo2());
+	print_char(' ');
+
+	print_nl();
+	
+	print_long(bar1());
+	print_char(' ');
+
+	print_long(bar2());
+	print_char(' ');
+
+	print_long(bar3());
+	print_char(' ');
+
+	print_long(bar4());
+	print_char(' ');
+
+	print_long(bar5());
+	print_char(' ');
+
+	print_nl();
+	
+	print_long(baz1());
+	print_char(' ');
+
+	print_long(baz2());
+	print_char(' ');
+
+	print_long(baz3());
+	print_char(' ');
+
+	print_long(baz4());
+	print_char(' ');
+
+	print_long(baz5());
+	print_char(' ');
+
+	print_nl();
+
+	print_long(aux1());
+	print_char(' ');
+
+	print_long(aux2());
+	print_char(' ');
+
+	print_nl();
+}

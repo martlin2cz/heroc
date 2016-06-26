@@ -10,7 +10,7 @@
 
 #define JUST_LEXICALS_COUNT 17
 #define COMMONS_COUNT 15
-#define JUST_SEMANTICS_COUNT 14
+#define JUST_SEMANTICS_COUNT 15
 #define OPERATORS_COUNT 28
 #define ASSIGNMENTS_OPS_COUNT 12
 
@@ -82,7 +82,8 @@ const token_str_tuple_t just_semantics[JUST_SEMANTICS_COUNT] = //
 				{ META_ADRESS, "(adress of)" },	//
 				{ META_DECLARATION, "(declaration)" },	//
 				{ META_LOOP, "(loop ref)" },	//
-				{ META_PREVIOUS, "(previous)" }	//
+				{ META_PREVIOUS, "(previous)" },	//
+				{ META_VAR_TYPE, "(type of var)" }	//
 
 		};
 

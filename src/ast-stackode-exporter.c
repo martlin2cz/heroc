@@ -8,6 +8,7 @@
 void ast_export_root(FILE* dest, struct ast_node_t* root) {
 
 	sk_program_t *stackode = ast_to_stackode(root);
+
 	export_stackode(dest, stackode);
 }
 

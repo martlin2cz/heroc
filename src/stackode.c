@@ -22,6 +22,7 @@ void list_to_stackode(sk_program_t* program, ast_node_t* nodes) {
 		if (!is_meta(nodes->type)) {
 			single_node_to_stackode(program, nodes);
 		}
+
 		nodes = nodes->next;
 	}
 }
@@ -40,7 +41,7 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 		sizeof_to_stackode(program, node);
 		break;
 	case STK_IF:
-		if_to_stackode(program, node);
+		if_to_stackode(program, node, "if");
 		break;
 	case STK_FOR:
 		for_to_stackode(program, node);
@@ -78,6 +79,27 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 	case JST_VARIABLE_DECL:
 		var_decl_to_stackode(program, node);
 		break;
+
+		//special operators
+	case OPT_AND:
+		and_to_stackode(program, node);
+		break;
+	case OPT_OR:
+		or_to_stackode(program, node);
+		break;
+	case OPT_TERNARY:
+		ternary_to_stackode(program, node);
+		break;
+	case OPT_DEREFERENCE:
+		dereference_to_stackode(program, node);
+		break;
+	case OPT_INDEX:
+		index_to_stackode(program, node);
+		break;
+	case OPT_REFERENCE:
+		reference_to_stackode(program, node);
+		break;
+
 	default:
 		if (is_meta(node->type)) {
 			//ignore
@@ -127,11 +149,11 @@ void sizeof_to_stackode(sk_program_t * program, ast_node_t * node) {
 	add_instruction(program, instr);
 }
 
-void if_to_stackode(sk_program_t * program, ast_node_t * node) {
+void if_to_stackode(sk_program_t * program, ast_node_t * node, char* label_base) {
 	node_to_stackode_comment(program, node);
 
-	char* else_label = generate_label("else", "if", node->uid);
-	char* after_label = generate_label("after", "if", node->uid);
+	char* else_label = generate_label("else", label_base, node->uid);
+	char* after_label = generate_label("after", label_base, node->uid);
 
 	//condition
 	single_node_to_stackode(program, node->value.child);
@@ -283,28 +305,47 @@ void lambda_to_stackode(sk_program_t * program, ast_node_t * node) {
 	//XXX, no?
 }
 void variable_to_stackode(sk_program_t * program, ast_node_t * node) {
-	sk_instruction_t* xxxx = create_instruct_with_str(SKI_COMMENT,
-			"TODO: variable here ...");
-	add_instruction(program, xxxx);
-	//TODO
+	YYSTYPE decl = find_value_of_meta(node, META_DECLARATION);
+	ast_node_t* init_val = decl.child->value.child->next;
 
+	if (init_val && init_val->type == JST_PROCEDURE) {
+		char* label = label_of_proc(init_val);
+
+		sk_instruction_t* pa = create_instruct_with_str(SKI_PUSH_LABEL_ADRESS,
+				label);
+		add_instruction(program, pa);
+
+	} else {
+		YYSTYPE type = find_value_of_meta(decl.child, META_VAR_TYPE);
+		YYSTYPE addr = find_value_of_meta(decl.child, META_ADRESS);
+
+		sk_instr_type_t instr_type;
+		if (type.number == VT_GLOBAL) {
+			instr_type = SKI_PUSH_ABSOLUTE_ADRESS;
+		} else {
+			instr_type = SKI_PUSH_RELATIVE_ADRESS;
+		}
+
+		sk_instruction_t* pa = create_instruct_with_num(instr_type,
+				addr.number);
+		add_instruction(program, pa);
+
+		sk_instruction_t* load = create_instruction(SKI_LOAD);
+		add_instruction(program, load);
+	}
 }
 void array_to_stackode(sk_program_t * program, ast_node_t * node) {
-	//TODO
+//TODO
 }
 void procedure_to_stackode(sk_program_t * program, ast_node_t * node) {
 	node_to_stackode_comment(program, node);
 
-	//labels
-	char* proc_label;
-	if (node->value.child->type == STK_LAMBDA) {
-		proc_label = generate_label("start", "anonymous", node->uid);
-	} else {
-		proc_label = node->value.child->value.child->value.string;
-	}
+//labels
+	char* proc_label = label_of_proc(node);
+
 	char* after_label = generate_label("after", "procedure", node->uid);
 
-	//heading
+//heading
 	sk_instruction_t* skip_decl = create_instruct_with_str(SKI_JUMP_TO,
 			after_label);
 	add_instruction(program, skip_decl);
@@ -312,10 +353,10 @@ void procedure_to_stackode(sk_program_t * program, ast_node_t * node) {
 	sk_instruction_t* label = create_instruct_with_str(SKI_LABEL, proc_label);
 	add_instruction(program, label);
 
-	//body
+//body
 	single_node_to_stackode(program, node->value.child->next->next);
 
-	//after body
+//after body
 	sk_instruction_t* push_retval = create_instruction(SKI_DECLARE_ATOMIC);
 	add_instruction(program, push_retval);
 
@@ -329,9 +370,9 @@ void procedure_to_stackode(sk_program_t * program, ast_node_t * node) {
 void proccall_to_stackode(sk_program_t * program, ast_node_t * node) {
 	node_to_stackode_comment(program, node);
 
-	single_node_to_stackode(program, node->value.child);
-
 	list_to_stackode(program, node->value.child->next->value.child);
+
+	single_node_to_stackode(program, node->value.child);
 
 	sk_instruction_t* call = create_instruction(SKI_CALL);
 	add_instruction(program, call);
@@ -352,15 +393,6 @@ void var_decl_to_stackode(sk_program_t * program, ast_node_t * node) {
 
 		sk_instruction_t* instr = create_instruction(SKI_DECLARE_ATOMIC);//TODO if array ...
 		add_instruction(program, instr);
-
-		if (node->value.child->next
-				&& !is_meta(node->value.child->next->type)) {
-
-			ast_node_t* asg = create_with_1_children(STK_ASSIGNMENT,
-					node->value.child);
-
-			assignment_to_stackode(program, asg);
-		}
 	}
 
 }
@@ -372,7 +404,7 @@ void unary_op_to_stackode(sk_program_t * program, ast_node_t * node) {
 	add_instruction(program, instr);
 }
 void binary_op_to_stackode(sk_program_t * program, ast_node_t * node) {
-	//TODO FIXME check operands order
+//TODO FIXME check operands order
 	single_node_to_stackode(program, node->value.child);
 	if (node->value.child->next) {
 		single_node_to_stackode(program, node->value.child->next);
@@ -388,6 +420,72 @@ void binary_op_to_stackode(sk_program_t * program, ast_node_t * node) {
 	sk_instruction_t* instr = create_instruct_with_op(SKI_BINARY_OPERATION,
 			node->type);
 	add_instruction(program, instr);
+}
+
+//specials
+
+void and_to_stackode(sk_program_t * program, ast_node_t * node) {
+	ast_node_t* as_if = create_with_1_children(STK_IF, node->value.child);
+
+	YYSTYPE zero = { 0 };
+	append_child(as_if, ATT_NUMBER, zero);
+
+	if_to_stackode(program, as_if, "and");
+}
+
+void or_to_stackode(sk_program_t * program, ast_node_t * node) {
+
+	char* after_label = generate_label("after", "or", node->uid);
+
+	single_node_to_stackode(program, node->value.child);//FIXME double evaluation !!!!
+	single_node_to_stackode(program, node->value.child);
+	sk_instruction_t* jmp1 = create_instruct_with_str(SKI_JUMP_ON_NON_ZERO,
+			after_label);
+	add_instruction(program, jmp1);
+
+	single_node_to_stackode(program, node->value.child->next);
+	single_node_to_stackode(program, node->value.child->next);
+	sk_instruction_t* jmp2 = create_instruct_with_str(SKI_JUMP_ON_NON_ZERO,
+			after_label);
+	add_instruction(program, jmp2);
+
+	sk_instruction_t* zero = create_instruct_with_num(SKI_PUSH_CONSTANT, 0);
+	add_instruction(program, zero);
+
+	sk_instruction_t* lbl_after = create_instruct_with_str(SKI_LABEL,
+			after_label);
+	add_instruction(program, lbl_after);
+
+}
+
+void ternary_to_stackode(sk_program_t * program, ast_node_t * node) {
+	if_to_stackode(program, node, "ternary");
+}
+
+void dereference_to_stackode(sk_program_t * program, ast_node_t * node) {
+	sk_instruction_t* load = create_instruction(SKI_LOAD);
+	add_instruction(program, load);
+}
+void index_to_stackode(sk_program_t * program, ast_node_t * node) {
+	single_node_to_stackode(program, node->value.child);
+	single_node_to_stackode(program, node->value.child->next);
+
+	sk_instruction_t* add = create_instruct_with_op(SKI_BINARY_OPERATION,
+			OPT_PLUS);
+	add_instruction(program, add);
+
+	sk_instruction_t* load = create_instruction(SKI_LOAD);
+	add_instruction(program, load);
+}
+void reference_to_stackode(sk_program_t * program, ast_node_t * node) {
+	single_node_to_stackode(program, node->value.child);
+
+	if (program->instructions[program->count - 1]->type != SKI_LOAD) {
+		fprintf(stderr, "rts: Not a load instruction, it's %x\n",
+				program->instructions[program->count - 1]->type);
+	} else {
+		remove_last_instr(program);
+	}
 }
 
 /*
@@ -425,6 +523,13 @@ void add_instruction(sk_program_t* program, sk_instruction_t* instruction) {
 
 	program->instructions[program->count] = instruction;
 	program->count++;
+}
+
+void remove_last_instr(sk_program_t* program) {
+	free(program->instructions[program->count - 1]);
+	program->instructions[program->count - 1] = NULL;
+
+	program->count--;
 }
 
 void check_and_increase_size(sk_program_t* program) {
@@ -487,6 +592,14 @@ char* generate_label(char* prefix, char* name, int uid) {
 	sprintf(label, "_%s_of_%s_%d", prefix, name, uid);
 
 	return label;
+}
+
+char* label_of_proc(ast_node_t* node) {
+	if (node->value.child->type == STK_LAMBDA) {
+		return generate_label("start", "anonymous", node->uid);
+	} else {
+		return node->value.child->value.child->value.string;
+	}
 }
 
 #endif
