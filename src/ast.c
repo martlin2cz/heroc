@@ -52,8 +52,7 @@ struct ast_node_t* create_array_of_size(long size) {
 	return create_with_2_children(JST_ARRAY, s, NULL);
 }
 struct ast_node_t* create_array_of_value(struct ast_node_t* arrexpr) {
-	long size = lenght_of(arrexpr->value.child);
-	struct ast_node_t* s = create_number(size);
+	struct ast_node_t* s = create_number(0);
 	return create_with_2_children(JST_ARRAY, s, arrexpr);
 }
 
@@ -128,6 +127,11 @@ struct ast_node_t* create_expressions(struct ast_node_t* exprs) {
 
 /*****************************************************************************/
 /* expressions */
+
+struct ast_node_t* create_expression(struct ast_node_t* of) {
+	return create_with_1_children(JST_EXPRESSION, of);
+}
+
 
 struct ast_node_t* create_proccall(struct ast_node_t* proc,
 		struct ast_node_t* args) {

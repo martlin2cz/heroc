@@ -37,6 +37,9 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 	case STK_ASSIGNMENT:
 		assignment_to_stackode(program, node);
 		break;
+	case JST_EXPRESSION:
+		expression_to_stackode(program, node);
+		break;
 	case STK_SIZEOF:
 		sizeof_to_stackode(program, node);
 		break;
@@ -99,7 +102,12 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 	case OPT_REFERENCE:
 		reference_to_stackode(program, node);
 		break;
-
+	case OPT_PRE_INCREMENT:
+	case OPT_PRE_DECREMENT:
+	case OPT_POST_INCREMENT:
+	case OPT_POST_DECREMENT:
+		inc_dec_to_stackode(program, node);
+		break;
 	default:
 		if (is_meta(node->type)) {
 			//ignore
@@ -334,18 +342,36 @@ void variable_to_stackode(sk_program_t * program, ast_node_t * node) {
 		add_instruction(program, load);
 	}
 }
+
 void array_to_stackode(sk_program_t * program, ast_node_t * node) {
-//TODO
+	//HACK: the array is stackoded by pushing its address preceded by its items
+
+	ast_node_t* items_or_meta = node->value.child->next;
+	if (items_or_meta && !is_meta(items_or_meta->type)) {
+		list_to_stackode(program, items_or_meta->value.child);
+	} else {
+		int size = node->value.child->value.number;
+		sk_instruction_t* alloc = create_instruct_with_num(SKI_DECLARE_ARRAY,
+				size);
+		add_instruction(program, alloc);
+	}
+
+	YYSTYPE var_addr = find_value_of_meta(node, META_ADRESS);
+	sk_instruction_t* pav = create_instruct_with_num(SKI_PUSH_RELATIVE_ADRESS,
+			var_addr.number);
+
+	add_instruction(program, pav);
 }
+
 void procedure_to_stackode(sk_program_t * program, ast_node_t * node) {
 	node_to_stackode_comment(program, node);
 
-//labels
+	//labels
 	char* proc_label = label_of_proc(node);
 
 	char* after_label = generate_label("after", "procedure", node->uid);
 
-//heading
+	//heading
 	sk_instruction_t* skip_decl = create_instruct_with_str(SKI_JUMP_TO,
 			after_label);
 	add_instruction(program, skip_decl);
@@ -353,10 +379,10 @@ void procedure_to_stackode(sk_program_t * program, ast_node_t * node) {
 	sk_instruction_t* label = create_instruct_with_str(SKI_LABEL, proc_label);
 	add_instruction(program, label);
 
-//body
+	//body
 	single_node_to_stackode(program, node->value.child->next->next);
 
-//after body
+	//after body
 	sk_instruction_t* push_retval = create_instruction(SKI_DECLARE_ATOMIC);
 	add_instruction(program, push_retval);
 
@@ -391,7 +417,7 @@ void var_decl_to_stackode(sk_program_t * program, ast_node_t * node) {
 		procedure_to_stackode(program, node->value.child->next);
 	} else {
 
-		sk_instruction_t* instr = create_instruction(SKI_DECLARE_ATOMIC);//TODO if array ...
+		sk_instruction_t* instr = create_instruction(SKI_DECLARE_ATOMIC);
 		add_instruction(program, instr);
 	}
 
@@ -437,7 +463,7 @@ void or_to_stackode(sk_program_t * program, ast_node_t * node) {
 
 	char* after_label = generate_label("after", "or", node->uid);
 
-	single_node_to_stackode(program, node->value.child);//FIXME double evaluation !!!!
+	single_node_to_stackode(program, node->value.child); //FIXME double evaluation !!!!
 	single_node_to_stackode(program, node->value.child);
 	sk_instruction_t* jmp1 = create_instruct_with_str(SKI_JUMP_ON_NON_ZERO,
 			after_label);
@@ -463,6 +489,8 @@ void ternary_to_stackode(sk_program_t * program, ast_node_t * node) {
 }
 
 void dereference_to_stackode(sk_program_t * program, ast_node_t * node) {
+	single_node_to_stackode(program, node->value.child);
+
 	sk_instruction_t* load = create_instruction(SKI_LOAD);
 	add_instruction(program, load);
 }
@@ -487,26 +515,20 @@ void reference_to_stackode(sk_program_t * program, ast_node_t * node) {
 		remove_last_instr(program);
 	}
 }
+void inc_dec_to_stackode(sk_program_t * program, ast_node_t * node) {
+	single_node_to_stackode(program, node->value.child);
+}
 
-/*
- if (is_atomic(node->type)) {
- atomic_to_stackode(program, node);
- return;
- }
- if (is_operator(node->type)) {
- operator_to_stackode(program, node);
- return;
- }
+void expression_to_stackode(sk_program_t * program, ast_node_t * node) {
+	sk_instruction_t* comment = create_instruct_with_str(SKI_COMMENT,
+			"Expression");
+	add_instruction(program, comment);
 
- other_to_stackode(program, node);
- return;
- */
+	single_node_to_stackode(program, node->value.child);
 
-/*
- void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
-
- }
- */
+	sk_instruction_t* pop = create_instruction(SKI_POP);
+	add_instruction(program, pop);
+}
 
 /*********************************************************/
 sk_program_t* create_empty_program(void) {

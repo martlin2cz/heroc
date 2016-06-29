@@ -1,0 +1,44 @@
+foo() {
+	long x;
+	long y = 10;
+	long a = {10, 20, 30};
+	long b[10];
+
+	long m, n;
+}
+
+bar() {
+	long a = { 88, 99};
+
+	a[0];
+	a[1];
+}
+
+baz() {
+	long a = {100, 200, 300, 400, 500 };
+
+	print_long(*a);
+	print_nl();
+
+	print_long(a[0]);
+	print_nl();
+
+	print_long(a[1]);
+	print_nl();
+
+	print_long(a[2]);
+	print_nl();
+
+	print_long(a[3]);
+	print_nl();
+
+	print_long(a[4]);
+	print_nl();
+
+	print_long(a[5]);
+	print_nl();
+}
+
+main() {
+	bar();
+}

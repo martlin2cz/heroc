@@ -87,7 +87,7 @@ void export_sk_instruction(FILE* dest, sk_instruction_t *instruction) {
 		print_sk_instr_num(dest, "push-absolute-adress", instruction->value.number);
 		break;
 	case SKI_POP:
-		print_sk_instr_num(dest, "pop", instruction->value.number);
+		print_sk_instr(dest, "pop");
 		break;
 	case SKI_UNARY_OPERATION:
 		print_sk_instr_oper(dest, "unary-operation", instruction->value.number);
@@ -113,8 +113,27 @@ void print_sk_instr_num(FILE* dest, char* name, long num) {
 }
 
 void print_sk_instr_oper(FILE* dest, char* name, TOKEN_TYPE_T oper) {
-	const char* op_str = to_string(oper);
-	fprintf(dest, "\t(%s %s)\n", name, op_str);
+
+	switch (oper) {
+		case OPT_BITWISE_OR:
+		fprintf(dest, "\t(%s op-bit-or)\n", name);
+		break;	
+		case OPT_BITWISE_AND:
+		fprintf(dest, "\t(%s op-bit-and)\n", name);
+		break;
+		default: {
+			const char* op_str = to_string(oper);
+	
+			fprintf(dest, "\t(%s op-%s)\n", name, op_str);
+		}
+	}
+/*
+	if (oper != OPT_BITWISE_AND) {
+		fprintf(dest, "\t(%s op-%s)\n", name, op_str);
+	} else {
+		fprintf(dest, "\t(%s op-\\%s)\n", name, op_str);
+	}
+	*/
 }
 
 #endif

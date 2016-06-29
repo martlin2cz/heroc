@@ -85,6 +85,7 @@
 %token<child>	JST_PROCEDURE		3303
 %token<child>	JST_PROCCALL		3304
 %token<child>	JST_VARIABLE_DECL	3305
+%token<child>	JST_EXPRESSION		3306
 
 
 /* containers */
@@ -289,7 +290,7 @@ statements:
 
 statement:
 	JLT_SEMICOLON					{	*root = $$ = NULL;	SYNTAXER_LOG("empty statement");	}
-	|	expression JLT_SEMICOLON		{	*root = $$ = $1;	SYNTAXER_LOG("statement with expression: %p", $1);	}
+	|	expression JLT_SEMICOLON		{	*root = $$ = create_expression($1);	SYNTAXER_LOG("statement of %p -> %p", $1, $$);	}
 	|	inblock_decl_statement 			{	*root = $$ = $1;	SYNTAXER_LOG("declaration statement: %p", $1);	}
 	|	if_statement 					{	*root = $$ = $1;	SYNTAXER_LOG("if: %p", $1);	}
 	|	for_statement 					{	*root = $$ = $1;	SYNTAXER_LOG("for: %p", $1);	}
@@ -360,7 +361,7 @@ emptyable_expression:
  
 expression:
 		constant 	{ *root = $$ = $1;	}	/* TODO rly? */
-	| 	array 		{ *root = $$ = $1;	}	/* will work? */	
+	| 	array 		{ *root = $$ = $1;	}	/* XXX, or no? */	
 	|	place 		{ *root = $$ = $1;	}	
 	|	operation 	{ *root = $$ = $1;	}
 	|	assignment 	{ *root = $$ = $1;	}
@@ -434,7 +435,8 @@ place:
 
 array:
 	JLT_BLOCK_LEFT_BRA expressions JLT_BLOCK_RIGHT_BRA {
-		*root = $$ = create_expressions($2);
+		ast_node_t* exprs = create_expressions($2);
+		*root = $$ = create_array_of_value(exprs);
 		SYNTAXER_LOG("array of exprs: %p -> %p", $2, $$);
 	}
 ;

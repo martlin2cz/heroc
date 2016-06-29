@@ -23,16 +23,21 @@ int main(int argc, char **argv) {
 
 	printf("Parsed, analysing.\n");
 	int errors = analyze_tree(root);
-	ast_display_root(stdout, root);
+	//ast_display_root(stdout, root);
 
 	if (errors) {
 		printf("Analysing failed, %d errors found. \n", errors);
 		return 2;
 	}
 
-	printf("Analysed, exporting\n");
-	ast_export_root(stdout, root);
+	printf("Analysed, generating stackode\n");
+	sk_program_t *stackode = ast_to_stackode(root);
 
+	printf("Generated (%d lines), rendering:\n", stackode->count);
+
+	export_stackode(stdout, stackode);
+
+	printf("End.\n");
 	return 0;
 }
 

@@ -10,7 +10,7 @@
 
 #define JUST_LEXICALS_COUNT 17
 #define COMMONS_COUNT 15
-#define JUST_SEMANTICS_COUNT 15
+#define JUST_SEMANTICS_COUNT 16
 #define OPERATORS_COUNT 28
 #define ASSIGNMENTS_OPS_COUNT 12
 
@@ -67,7 +67,8 @@ const token_str_tuple_t commons[COMMONS_COUNT] =	//
 const token_str_tuple_t just_semantics[JUST_SEMANTICS_COUNT] = //
 		{ //
 		/* just semantic tokens */
-		{ JST_VARIABLE, "(variable)" },	//
+		{ JST_EXPRESSION, "(expression)" }, //
+				{ JST_VARIABLE, "(variable)" },	//
 				{ JST_PROCEDURE, "(procedure)" },	//
 				{ JST_ARRAY, "(array)" },	//
 				{ JST_PROCCALL, "(procedure call)" },	//

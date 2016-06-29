@@ -11,7 +11,7 @@ LEX	 = flex
 YACC = bison
 
 # -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  -D SEMANTER_VERBOSE  -D STACKODE_VERBOSE
-MACROS	?= -D STACKODE_VERBOSE -D SEMANTER_VERBOSE
+MACROS	?=  -D SEMANTER_VERBOSE -D STACKODE_VERBOSE
 # basic|scheme|stackode|gas
 EXPORT	?= stackode
 #-Wall -d
@@ -57,7 +57,7 @@ all: compiler tests
 
 compiler: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(CMPSRC) $(OBJECTS) $(CMPOBJ)
 	$(CC) -o $(CMPTGT) $(OBJECTS) $(CMPOBJ) $(LIBS)
-	strip $(TARGET)
+	#strip $(TARGET)
 
 tests: prepare $(GRAMMAR) $(LEXER) $(TESTSRC) $(TESTOBJ)
 	$(CC) $(CFLAGS) -o test-bin/test-lexer  obj/test-lexer.o $(OBJECTS)

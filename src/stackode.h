@@ -92,6 +92,8 @@ void ternary_to_stackode(sk_program_t * program, ast_node_t * node);
 void dereference_to_stackode(sk_program_t * program, ast_node_t * node);
 void index_to_stackode(sk_program_t * program, ast_node_t * node);
 void reference_to_stackode(sk_program_t * program, ast_node_t * node);
+void inc_dec_to_stackode(sk_program_t * program, ast_node_t * node);
+void expression_to_stackode(sk_program_t * program, ast_node_t * node);
 
 /*********************************************************/
 sk_program_t* create_empty_program(void);

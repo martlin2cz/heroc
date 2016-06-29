@@ -1,12 +1,16 @@
 #ifndef _SEMANTER_C_
 #define _SEMANTER_C_
 
-#include <stdlib.h>
+#include "semanter.h"
+
+#include <stdio.h>
+//#include <stdlib.h>
 #include <string.h>
 
-#include "semanter.h"
-#include "ast.h"
+#include "../gen/syntaxer.h"
+//#include "ast.h"
 #include "ast-displayer.h"
+#include "tokens.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -227,8 +231,24 @@ void analyze_one_node(ast_node_t* node, ast_node_t** previous,
 		analyze_variable_decl(node, previous, next_var_at, 1, errors);
 		break;
 	case STK_ASSIGNMENT:
-		analyze_assignment(node, previous, errors);
+		analyze_assignment(node, previous, next_var_at, errors);
 		break;
+	case JST_ARRAY:
+		analyze_array(node, previous, next_var_at, errors);
+		break;
+	case OPT_PRE_INCREMENT:
+		analyze_pre_increm_decrem(node, OPT_PLUS, previous, errors);
+		break;
+	case OPT_PRE_DECREMENT:
+		analyze_pre_increm_decrem(node, OPT_MINUS, previous, errors);
+		break;
+	case OPT_POST_INCREMENT:
+		analyze_post_increm_decrem(node, OPT_PLUS, previous, errors);
+		break;
+	case OPT_POST_DECREMENT:
+		analyze_post_increm_decrem(node, OPT_MINUS, previous, errors);
+		break;
+
 	default:
 		if (is_meta(node->type) || is_atomic(node->type)) {
 			//nothing to do
@@ -244,10 +264,11 @@ void analyze_one_node(ast_node_t* node, ast_node_t** previous,
 	}
 }
 
-void analyze_assignment(ast_node_t* node, ast_node_t** previous, int *errors) {
+void analyze_assignment(ast_node_t* node, ast_node_t** previous,
+		int* next_var_at, int *errors) {
 	ast_node_t* ref = wrap_place_with_ref(node);
 
-	analyze_nodes(ref, previous, NULL, NULL, errors);
+	analyze_nodes(ref, previous, NULL, next_var_at, errors);
 }
 
 ast_node_t* wrap_place_with_ref(ast_node_t* node) {
@@ -262,9 +283,50 @@ ast_node_t* wrap_place_with_ref(ast_node_t* node) {
 	return ref;
 }
 
+void analyze_pre_increm_decrem(ast_node_t* node, TOKEN_TYPE_T replace_with_op,
+		ast_node_t** previous, int *errors) {
+	ast_node_t* place = node->value.child;
+	ast_node_t* place_copy = duplicate(place);
+
+	ast_node_t* one = create_number(1);
+	ast_node_t* plused_minused = create_with_2_children(replace_with_op, place,
+			one);
+	ast_node_t* asg = create_with_2_children(STK_ASSIGNMENT, place_copy,
+			plused_minused);
+
+	analyze_one_node(asg, previous, NULL, NULL, errors);
+	node->value.child = asg;
+}
+
+void analyze_post_increm_decrem(ast_node_t* node, TOKEN_TYPE_T replace_with_op,
+		ast_node_t** previous, int *errors) {
+	ast_node_t* place = node->value.child;
+	ast_node_t* place_copy = duplicate(place);
+
+	ast_node_t* one1 = create_number(1);
+	ast_node_t* one2 = create_number(1);
+	ast_node_t* plused_minused = create_with_2_children(replace_with_op, place,
+			one1);
+	ast_node_t* asg = create_with_2_children(STK_ASSIGNMENT, place_copy,
+			plused_minused);
+
+	TOKEN_TYPE_T re_replace_op =
+			(replace_with_op == OPT_PLUS) ?
+					OPT_MINUS :
+					((replace_with_op == OPT_MINUS) ?
+							OPT_PLUS :
+							fprintf(stderr, "apid: Bad replace op: %s\n",
+									to_string(replace_with_op)));
+
+	ast_node_t* reminused_replused = create_with_2_children(re_replace_op, asg,
+			one2);
+
+	analyze_one_node(reminused_replused, previous, NULL, NULL, errors);
+	node->value.child = reminused_replused;
+}
+
 void analyze_identifier_use(ast_node_t* node, ast_node_t** previous,
 		int *errors) {
-
 
 	char* name = node->value.child->value.string;
 	ast_node_t* declaration = find_var_decl(*previous, name);
@@ -287,7 +349,6 @@ void analyze_loop(ast_node_t* node, ast_node_t** previous, int* next_var_at,
 
 	switch (node->type) {
 	case STK_FOR: {
-		analyze_one_node(child, previous, NULL, NULL, errors);
 		analyze_one_node(child, previous, NULL, NULL, errors);
 		child = child->next;
 		analyze_one_node(child, previous, NULL, NULL, errors);
@@ -335,8 +396,6 @@ void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors) {
 
 	ast_node_t* proc_var = node->value.child;
 	ast_node_t* params_list = node->value.child->next->value.child;
-
-
 
 	//directly analyze
 	analyze_one_node(proc_var, previous, NULL, NULL, errors);
@@ -431,44 +490,46 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 
 	ast_node_t* existing = find_var_decl(*previous, name);
 	if (existing) {
-		semantic_error_1("Variable %s yet declared", name, node, errors);//FIXME not displaying
+		semantic_error_1("Variable %s yet declared", name, node, errors);
 		return;
 	}
 
 	ast_node_t* value = var->next;
 
-	YYSTYPE addr;
-	addr.number = *next_var_at;
+	YYSTYPE addr = { (*next_var_at) };
 	append_child(node, META_ADRESS, addr);
 
-	YYSTYPE prev;
-	prev.child = *previous;
+	YYSTYPE prev = { (*previous) };
 	append_child(node, META_PREVIOUS, prev);
 
-	YYSTYPE type;
-	type.number = (long) typeof_var(node);
+	YYSTYPE type = { (long) typeof_var(node) };
 	append_child(node, META_VAR_TYPE, type);
 
 	if (value) {
-		ast_node_t* new_prev = node;//TODO val of cannot must not have more decls inside, or no? NULL should be enough, aint...?
-		analyze_one_node(value, &new_prev, NULL, next_var_at, errors);
+		ast_node_t* new_prev = node;
 
-		if (value->type != JST_PROCEDURE) {
+		if (value->type == JST_PROCEDURE) {
+			analyze_one_node(value, &new_prev, NULL, next_var_at, errors);
+		} else {
 			//make an assignment from initval
 			ast_node_t* only_var_w_n = duplicate(var);
 
 			only_var_w_n->next->next = NULL;
+
 			ast_node_t* asg = create_with_1_children(STK_ASSIGNMENT,
 					only_var_w_n);
+			ast_node_t* asg_expr = create_with_1_children(JST_EXPRESSION, asg);
 
-			asg = prepend(asg, node->next);
-			node->next = asg;
+			asg_expr->next = node->next;
+			node->next = asg_expr;
+
+			//analyze_one_node(asg, &new_prev, NULL, next_var_at, errors);
 		}
 	}
 
 	if (!(value && value->type == JST_PROCEDURE)) {
 		if (next_to_plus) {
-			(*next_var_at)++;	//TODO implement arrays
+			(*next_var_at)++;
 		} else {
 			(*next_var_at)--;
 		}
@@ -476,6 +537,28 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 	(*previous) = node;
 
 	SEMANTER_LOG("Declaration analyzed");
+}
+
+void analyze_array(ast_node_t* node, ast_node_t** previous, int* next_var_at,
+		int* errors) {
+	int size = node->value.child->value.number;
+
+	ast_node_t* init = node->value.child->next;
+	int count = 0;
+	if (init) {
+		count = lenght_of(init->value.child);
+		analyze_nodes(init->value.child, previous, NULL, NULL, errors);
+	}
+
+	size = (size > count) ? size : count;
+	node->value.child->value.number = size;
+
+	YYSTYPE addr = { *next_var_at };
+	append_child(node, META_ADRESS, addr);
+
+	(*next_var_at) += size;
+	SEMANTER_LOG("Array analyzed with size %d", size);
+
 }
 
 void analyze_container(ast_node_t* node, ast_node_t** previous,

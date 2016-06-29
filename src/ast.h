@@ -77,6 +77,7 @@ struct ast_node_t* create_parameters(struct ast_node_t* params);
 struct ast_node_t* create_expressions(struct ast_node_t* exprs);
 
 /* some expressions */
+struct ast_node_t* create_expression(struct ast_node_t* of);
 struct ast_node_t* create_proccall(struct ast_node_t* proc,
 		struct ast_node_t* args);
 struct ast_node_t* create_assignment_with_op(TOKEN_TYPE_T op,

@@ -25,7 +25,8 @@ void analyze_nodes(ast_node_t* node, ast_node_t** previous, ast_node_t* inloop,
 void analyze_one_node(ast_node_t* node, ast_node_t** previous,
 		ast_node_t* inloop, int* next_var_at, int *errors);
 
-void analyze_assignment(ast_node_t* node, ast_node_t** previous, int *errors);
+void analyze_assignment(ast_node_t* node, ast_node_t** previous,
+		int* next_var_at, int *errors);
 ast_node_t* wrap_place_with_ref(ast_node_t* node);
 void analyze_identifier_use(ast_node_t* node, ast_node_t** previous,
 		int *errors);
@@ -36,6 +37,14 @@ void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors);
 void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors);
 void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 		int* next_var_at, int next_to_plus, int *errors);
+void analyze_array(ast_node_t* node, ast_node_t** previous, int* next_var_at,
+		int* errors);
+
+void analyze_pre_increm_decrem(ast_node_t* node, TOKEN_TYPE_T replace_with_op,
+		ast_node_t** previous, int *errors);
+void analyze_post_increm_decrem(ast_node_t* node, TOKEN_TYPE_T replace_with_op,
+		ast_node_t** previous, int *errors);
+
 void analyze_container(ast_node_t* node, ast_node_t** previous,
 		ast_node_t* inloop, int* next_var_at, int *errors);
 
