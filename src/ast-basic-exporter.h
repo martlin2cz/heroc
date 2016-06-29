@@ -7,5 +7,7 @@
 
 
 void ast_export_root(FILE* dest, struct ast_node_t* root);
+void print_preamble(FILE* dest);
+void print_after(FILE* dest);
 
 #endif

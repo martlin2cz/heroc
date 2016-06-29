@@ -3,7 +3,7 @@
 
 int main(int argc, char **argv)
 {
-	printf("Running lexer (stdin): \n");
+	fprintf(stderr, "Running lexer (stdin): \n");
 
 	yyin = stdin;
 
@@ -12,7 +12,7 @@ int main(int argc, char **argv)
     	val = yylex();
     } while (val);
 
-    printf("Done.\n");
+    fprintf(stderr, "Done.\n");
 
     return 0;
 }

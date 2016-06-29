@@ -8,7 +8,7 @@
 
 int main(int argc, char **argv)
 {
-	printf("Running syntaxer & semanter (stdin): \n");
+	fprintf(stderr, "Running syntaxer & semanter (stdin): \n");
 
 
 	yyin = stdin;
@@ -17,21 +17,23 @@ int main(int argc, char **argv)
     yyparse(&root);
 
     if (!root) {
-    	printf("Parsing failed.\n");
+    	fprintf(stderr, "Parsing failed.\n");
         return 1;
     }
 
-	printf("Parsed, analysing.\n");
+	fprintf(stderr, "Parsed, analysing.\n");
 	int errors = analyze_tree(root);
 
 	if (errors) {
-		printf("Analysing failed, %d errors found. Analysed tree would be corrupted or uncomplete:\n", errors);
+		fprintf(stderr, "Analysing failed, %d errors found. Analysed tree would be corrupted or uncomplete:\n", errors);
 		ast_display_root(stdout, root);
 		return 2;
 	}
 
-	printf("Analysed: \n");
+	fprintf(stderr, "Analysed: \n");
 	ast_display_root(stdout, root);
 
+
+	fprintf(stderr, "Done.\n");
     return 0;
 }

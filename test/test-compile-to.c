@@ -9,7 +9,7 @@
 #include "../src/ast-stackode-exporter.h"
 
 int main(int argc, char **argv) {
-	printf("Running syntaxer, semanter and stackode generator (stdin): \n");
+	fprintf(stderr, "Running testing compiler: \n");
 
 	yyin = stdin;
 
@@ -17,27 +17,23 @@ int main(int argc, char **argv) {
 	yyparse(&root);
 
 	if (!root) {
-		printf("Parsing failed.\n");
+		fprintf(stderr, "Parsing failed.\n");
 		return 1;
 	}
 
-	printf("Parsed, analysing.\n");
+	fprintf(stderr, "Parsed, analysing.\n");
 	int errors = analyze_tree(root);
 	//ast_display_root(stdout, root);
 
 	if (errors) {
-		printf("Analysing failed, %d errors found. \n", errors);
+		fprintf(stderr, "Analysing failed, %d errors found. \n", errors);
 		return 2;
 	}
 
-	printf("Analysed, generating stackode\n");
-	sk_program_t *stackode = ast_to_stackode(root);
+	ast_export_root(stdout, root);
 
-	printf("Generated (%d lines), rendering:\n", stackode->count);
+	fprintf(stderr, "Done. Yikes!\n");
 
-	export_stackode(stdout, stackode);
-
-	printf("End.\n");
 	return 0;
 }
 

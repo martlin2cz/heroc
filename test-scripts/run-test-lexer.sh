@@ -1,14 +1,9 @@
 #!/bin/bash
 # runs test-lexer on all examples
+# 29.6.2016
 
-make --eval="EXPORT=basic" tests
+source test-scripts/base-of-run-scripts.sh
 
-mkdir -p tmp
-rm -rf tmp/log.log
+run_tests basic ./test-bin/test-lexer txt "Lexical error"
 
-for F in examples-vychodil/*.heroc counterexamples/*.heroc;	do
-	echo $F:
-	echo $F: >> tmp/log.log
-	./test-bin/test-lexer < $F >> tmp/log.log
-done
-
+exit 0

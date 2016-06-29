@@ -15,9 +15,9 @@ int fileno(FILE* file);
 #ifdef LEXER_VERBOSE
 #define LEXER_LOG(...) \
 	{ \
-		printf("[LEX] "); \
-		printf(__VA_ARGS__); \
-		printf("\n"); \
+		fprintf(stderr, "[LEX] "); \
+		fprintf(stderr, __VA_ARGS__); \
+		fprintf(stderr, "\n"); \
 	}
 #else
 	#define LEXER_LOG(...)

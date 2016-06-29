@@ -2,17 +2,16 @@
 # runs generated (compiled) stackode code (in scheme sintax) with the in-scheme interpreter
 # Martin Jasek, VI/2016
 
-#interpretter
+#interpreter
 SCHEME=scheme-r5rs
 
-make --quiet tests --eval="EXPORT=stackode" --eval="MACROS= "
+make tests --eval="OUTPUTLANG=stackode" --eval="MACROS= "
 
 F=$1
-#examples-me/to-scheme-01.heroc
 
 
 echo "compiling file: $F"
-./bin/compiler < $F > tmp/compiled.scm
+./test-bin/test-compile-to < $F > tmp/compiled.scm
 echo "compiled"
 
 cat \

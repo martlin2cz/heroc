@@ -7,7 +7,7 @@
 
 int main(int argc, char **argv)
 {
-	printf("Running syntaxer (stdin): \n");
+	fprintf(stderr, "Running syntaxer (stdin): \n");
 
 
 	yyin = stdin;
@@ -16,11 +16,13 @@ int main(int argc, char **argv)
     yyparse(&root);
 
     if (root) {
-    	printf("Done with root %p:\n", root);
+    	fprintf(stderr, "Done with root %p:\n", root);
     	ast_display_root(stdout, root);
     } else {
-    	printf("Parsing failed.\n");
+    	fprintf(stderr, "Parsing failed.\n");
     }
+
+    fprintf(stderr, "Done.\n");
 
     return 0;
 }

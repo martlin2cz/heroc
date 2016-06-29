@@ -6,19 +6,19 @@ ast_node_t* create_arithmetic_tree(void);
 ast_node_t* create_some_fn(void);
 
 int main(int argc, char **argv) {
-	printf("Running ast tests: \n");
+	fprintf(stderr, "Running ast tests: \n");
 
-	printf("=== TREE 1: === \n");
+	fprintf(stdout, "=== TREE 1: === \n");
 	ast_node_t* tree1 = create_arithmetic_tree();
 	ast_display_root(stdout, tree1);
 
-	printf("=== TREE 2: === \n");
+	fprintf(stdout, "=== TREE 2: === \n");
 	ast_node_t* tree2 = create_some_fn();
 	ast_display_root(stdout, tree2);
 
 	//TODO test arrays?
 
-	printf("Done.\n");
+	fprintf(stderr, "Done.\n");
 
 	return 0;
 }

@@ -12,7 +12,18 @@
 
 void ast_export_root(FILE* dest, struct ast_node_t* node) {
 
+	print_preamble(dest);
 	ast_display_root(dest, node);
+	print_after(dest);
 }
 
+
+
+void print_preamble(FILE* dest) {
+	fprintf(dest, "Tree: \n");
+}
+
+void print_after(FILE* dest) {
+	fprintf(dest, "End of tree.\n");
+}
 #endif

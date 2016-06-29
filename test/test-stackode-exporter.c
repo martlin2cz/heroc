@@ -5,11 +5,11 @@
 void test_program_1(void);
 
 int main(int argc, char **argv) {
-	printf("Generating stackode: \n");
+	fprintf(stderr, "Generating stackode: \n");
 
 	test_program_1();
 
-	printf("Done.\n");
+	fprintf(stderr, "Done.\n");
 
 	return 0;
 }
@@ -47,7 +47,10 @@ void test_program_1(void) {
 	add_instruction(program, //
 			create_instruction(SKI_CALL));
 
-	//printf("export to stackode not supported\n");
+
+	printf("Link stackode source and uncomment at line %d", (__LINE__ + 1));
+
 	//export_stackode(stdout, program); //FIXME cannot compile without stackode linked
+
 
 }

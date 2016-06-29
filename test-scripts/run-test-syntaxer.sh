@@ -1,14 +1,9 @@
 #!/bin/bash
-# runs test-lexer on all examples
+# runs test-syntaxer on all examples
+# 29.6.2016
 
-make --eval="EXPORT=scheme" tests
+source test-scripts/base-of-run-scripts.sh
 
-mkdir -p tmp
-rm -rf tmp/log.log
+run_tests basic ./test-bin/test-syntaxer txt "Syntax error"
 
-for F in examples-vychodil/*.heroc counterexamples/*.heroc;	do
-	echo $F:
-	echo $F: >> tmp/log.log
- 	./test-bin/test-syntaxer  < $F >> tmp/log.log
-done
-
+exit 0
