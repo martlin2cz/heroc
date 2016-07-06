@@ -431,6 +431,10 @@ place:
 			*root = $$ = create_dereference($2);
 			SYNTAXER_LOG("dereference * %p -> %p", $2, $$);
 		}
+	|	JLT_NORMAL_LEFT_BRA place JLT_NORMAL_RIGHT_BRA {
+			*root = $$ = $2;
+			SYNTAXER_LOG("place in () %p", $$);
+		}
 ;
 
 array:

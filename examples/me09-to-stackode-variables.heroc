@@ -11,6 +11,14 @@ foo(a, b, c) {
 	long m, 
 			 n = 555, 
 			 o = 777; 
-	
+
+	z = 99;
+	m = 999;
+
 	return x + y + z + w + a + b + c + m + n + o; 
+}
+
+main() {
+	print_long(foo(x, y, 11));
+
 }

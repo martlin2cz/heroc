@@ -1,26 +1,26 @@
 long x;
 foo(x) {
-	//duplicate global and param
+	//OK: duplicite global and param
 }
 
 bar(y, y) {
-	//duplicate params
+	//duplicite params
 }
 
 bar() {
-	//duplicate proc name
+	//duplicite proc name
 }
 
 baz() {
 	long x;
-	//duplicate global and local
+	//OK: duplicite global and local
 }
 
 qux() {
 	if (x) {
 		long x;
 	}
-	//duplicate global and internal local
+	//OK: duplicite global and internal local
 }
 
 aux() {
@@ -28,5 +28,5 @@ aux() {
 	if (x) {
 		long y;
 	}
-	//duplicate local and internal
+	//OK: duplicite local and internal
 }

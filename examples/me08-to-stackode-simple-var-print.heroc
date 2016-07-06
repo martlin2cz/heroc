@@ -4,3 +4,7 @@ foo() {
 	print_long(x);
 	print_nl();
 }
+
+main() {
+	foo();
+}

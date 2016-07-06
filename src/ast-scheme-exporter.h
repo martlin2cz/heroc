@@ -8,6 +8,7 @@ int print_single_node(FILE* dest, struct ast_node_t* root, int padding,
 		int wrap);
 
 void print_preamble(FILE* dest);
+void print_after(FILE* dest);
 
 void print_atomic(FILE* dest, struct ast_node_t* node, int padding, int wrap);
 int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap);

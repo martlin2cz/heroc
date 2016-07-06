@@ -35,10 +35,15 @@ baz() {
 	print_long(a[4]);
 	print_nl();
 
+	//array oveflow
+	long x = 99;
+
 	print_long(a[5]);
 	print_nl();
 }
 
 main() {
+	foo();
 	bar();
+	baz();
 }

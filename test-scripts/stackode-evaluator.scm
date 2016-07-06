@@ -314,10 +314,10 @@
     ;(display "\t with stack ") (display (stack context)) 
     ;(display "\t and frame pointer ") (display (frame-pointer context)) 
     ;(newline)
-   ; (print-log "evaluating" instruction (stack context) (frame-pointer context))
-  
-    ;DEBUG: 
-    ;(read)
+  ;  (print-log "evaluating" instruction )
+   ;            (stack context) (frame-pointer context))
+  ;  (read)
+    ;
     
     (let* ((instr-name (sc-instr-name instruction))
            (instr-proc (sc-find-instr-proc instr-name))
@@ -413,27 +413,18 @@
     (push-value-and-continue 
      (stack context) 
      (sc-address-of-label label (program context)))))
-
-
-(define sci-duplicate
-  (lambda (context)
-    (let* ((stack (stack context))
-          (top (pop stack)))
-      (push stack top)
-      (push stack top))
-    'next-instruction))
     
 (define sci-declare-atomic
   (lambda (context)
     (let* ((stack (stack context)))
       (push-undefineds-and-continue stack 1))))
       
-
 (define sci-declare-array
   (lambda (context size)
     (let* ((stack (stack context)))
       (push-undefineds-and-continue stack size))))
     
+
 (define sci-push-relative-adress
   (lambda (context ofset)
     (let* ((stack (stack context))
@@ -445,6 +436,7 @@
   (lambda (context addres)
     (let* ((stack (stack context)))
       (push-value-and-continue stack addres))))
+
 
 (define sci-load
   (lambda (context)
@@ -461,9 +453,19 @@
       (push stack value)
       (set-at-absolute-and-continue stack addr value))))
 
+
 (define sci-pop
   (lambda (context)
-    (pop (stack context))
+    (let ((stack (stack context)))
+      (pop stack))
+    'next-instruction))
+
+(define sci-duplicate
+  (lambda (context)
+    (let* ((stack (stack context))
+           (value (pop stack)))
+      (push stack value)
+      (push stack value))
     'next-instruction))
 
 (define sci-jump-on-non-zero
@@ -545,12 +547,12 @@
        ((op--) -)
        ((op-*) *)
        ((op-/) /)
-       ((op-%) mod)
+       ((op-%) modulo)
        ((op-<) <-of-ints)
        ((op->) >-of-ints)
        ((op-<=) <=-of-ints)
        ((op->=) >=-of-ints)
-       ((op-=) =-of-ints)
+       ((op-==) =-of-ints)
        ((op-!=) !=-of-ints)
        ((op-<<) bit-shift-left)
        ((op->>) bit-shift-right)
@@ -560,25 +562,98 @@
        (else (verbose-error "unknown binary operation" 'operator operator))
        ))))
 
+
+(define pow
+  (lambda (x e)
+    (cond ((= e 0) 1)
+          ((< e 0)  (/ x (pow x (+ e 1))))
+          ((> e 0)  (* x (pow x (- e 1)))))))
+
+;; (pow 4 2)
+;; (pow 4 -2)
+
 (define bool-to-int
   (lambda (bool)
     (if bool 1 0)))
 
+(define int-to-bool
+  (lambda (int)
+    (= int 0)))
+
+(define xor-func
+  (lambda (x y)
+    (eq? x y)))
+
+(define or-func
+  (lambda (x y)
+    (or x y)))
+
+(define and-func
+  (lambda (x y)
+    (and x y)))
+
+
+;; (xor-func #f #t)
+;; (or-func #f #t)
+;; (and-func #f #t)
+
+(define int-to-rev-bits
+  (lambda (int)
+    (if (<= int 0) 
+        '()
+        (cons (int-to-bool (modulo int 2))
+              (int-to-rev-bits (floor (/ int 2)))))))
+
+(define rev-bits-to-int
+  (lambda (bits)
+    (if (null? bits) 
+        0
+        (+ (bool-to-int (car bits))
+           (* 2 (rev-bits-to-int (cdr bits)))))))
+
+;; (rev-bits-to-int (list 0 0 0 1))
+;; (int-to-rev-bits 16)
+
+
+(define simple-build-list
+  (lambda (len item)
+    (if (<= len 0)
+        '()
+        (cons item (simple-build-list (- len 1) item)))))
+
+(define extend-to
+  (lambda (l len item)
+    (append l (simple-build-list (- len (length l)) item))))
+
+;; (simple-build-list 10 'a)
+;; (extend-to '(1 2 3 4) 10 'x)
+
+
+(define run-bitwise-op ;TODO FIXME: not working properly
+   (lambda (op . xs)
+    (let* ((bits-xs (map int-to-rev-bits xs))
+           (max-len (apply max (map length bits-xs)))
+           (bits-xs-ext (map (lambda (x) (extend-to x max-len #f)) bits-xs)))
+           
+      ;(display bits-x-ext)(newline)(display bits-y-ext)(newline)
+      ;(display (map or-func bits-x-ext bits-y-ext))(newline)
+    (rev-bits-to-int (apply map op bits-xs-ext)))))
+
 (define bit-or
   (lambda (x y)
-    (verbose-error bitwise-or-not-supported)))
+   (run-bitwise-op or-func x y)))
 
 (define bit-and
   (lambda (x y)
-    (verbose-error bitwise-or-not-supported)))
+    (run-bitwise-op and-func x y)))
 
 (define bit-not
   (lambda (x)
-    (verbose-error bitwise-not-not-supported)))
+    (run-bitwise-op not x))) ;TODO make n-ary...
 
 (define bit-xor
   (lambda (x y)
-    (verbose-error bitwise-xor-not-supported)))
+    (run-bitwise-op xor-func x y)))
 
 (define bit-shift-left
   (lambda (x y)
@@ -645,6 +720,7 @@
    (list 'push-relative-adress  sci-push-relative-adress)
    (list 'push-absolute-adress  sci-push-absolute-adress)
    (list 'pop sci-pop)
+   (list 'duplicate sci-duplicate)
         
    ;arithmetic instructions
    (list 'unary-operation sci-unary-operation)
@@ -684,7 +760,7 @@
                (label print_nl)
                (invoke-primitive ,print_nl 0)
                (return)
-               
+                              
                (label start-of-program)))
             program
             (sc-program 

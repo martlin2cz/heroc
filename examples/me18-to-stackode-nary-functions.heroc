@@ -1,0 +1,14 @@
+foo(x, y, z) {
+	print_long(x);
+	print_char(' ');
+	print_long(y);
+	print_char(' ');
+	print_long(z);
+	print_char(' ');
+
+	print_nl();
+}
+
+main() {
+	foo(111, 222, 333);
+}

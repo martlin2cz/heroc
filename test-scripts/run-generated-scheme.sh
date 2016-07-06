@@ -7,21 +7,21 @@ SCHEME=scheme-r5rs
 
 make --eval="OUTPUTLANG=scheme" --eval="MACROS= "
 
-F=$1
+for F in $@; do
 
+	echo "compiling file: $F"
+	./test-bin/test-compile-to < $F > tmp/compiled.scm
+	echo "compiled"
 
-echo "compiling file: $F"
-./test-bin/test-compile-to < $F > tmp/compiled.scm
-echo "compiled"
+	cat \
+		test-scripts/eval-generated.scm \
+		lib/herocio.scm \
+		tmp/compiled.scm \
+		test-scripts/run-main.scm \
+		> tmp/to-eval.scm
 
-cat \
-	test-scripts/eval-generated.scm \
-	lib/herocio.scm \
-	tmp/compiled.scm \
-	test-scripts/run-main.scm \
-	> tmp/to-eval.scm
+	echo "================"
+	$SCHEME tmp/to-eval.scm
+	echo "================"
 
-echo "================"
-$SCHEME tmp/to-eval.scm
-echo "================"
-
+done

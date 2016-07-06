@@ -1,0 +1,48 @@
+foo() {
+	long x = 999;
+	print_long(x);
+	print_long(&x);
+	//print_long(x*); // will fail
+}
+
+bar() {
+	long x = 888;
+	long y = &x;
+
+	print_long(*y);
+	print_long(*((y+1) - 1));
+}
+
+
+baz() {
+	long x = 777;
+	long y = &x;
+
+	*y = 778;
+	print_long(x);
+}
+
+aux() {
+	long x = 555;
+	long y = &x;
+	long z = *y;
+
+	*y = 556;
+	print_long(*z);
+}
+
+main() {
+	foo();
+	print_nl();
+
+	bar();
+	print_nl();
+
+	baz();
+	print_nl();
+
+	aux();
+	print_nl();
+
+
+}

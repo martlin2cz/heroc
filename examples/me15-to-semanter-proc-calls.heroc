@@ -1,5 +1,9 @@
 foo(x) {
-	foo(x);
+	if (x > 0) {
+		print_long(x);
+		print_char(' ');
+		foo(x - 1);
+	}
 }
 
 bar(x) {
@@ -16,3 +20,11 @@ aux() {
 	long t = print_nl;
 	t();
 }
+
+main () {
+	foo(4);
+	bar('@');
+	baz('_');
+	aux();
+}
+

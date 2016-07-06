@@ -1,0 +1,15 @@
+main() {
+	long x = '@';
+	
+	if (1) {	//and try to change to 0
+		long a;
+//		long b;
+	}  else {
+		long m,n,o;
+//		long m;
+	}
+
+	long y = x;
+	print_long(y);
+
+}

@@ -1,5 +1,5 @@
 
-long heap [100000];
+long heap [1000];
 long front = &heap;
 
 lalloc (size)

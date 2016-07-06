@@ -2,7 +2,7 @@
 long pc;
 long sp;
 long prgm;
-long stack [65536];
+long stack [1024];
 
 print_stack ()
 {
@@ -32,7 +32,7 @@ rot3 (x, y, z) { push1 (x); push1 (z); push1 (y); }
 eval ()
 {
     long last;
-
+print_long('.');
     do {
 	print_stack ();
 	last = prgm [pc];

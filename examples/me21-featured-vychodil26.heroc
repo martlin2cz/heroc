@@ -1,6 +1,6 @@
 
-long heap [1000];
-long front = &heap;
+long heap [10000];
+long front = heap;
 
 lalloc (size)
 {
@@ -83,29 +83,40 @@ print_elem (elem)
     prt (elem, 1);
 }
 
+append (x, y)
+{
+    return x == 0 ?
+	y :
+	cons (car (x), append (cdr (x), y));
+}
+
+mapcons (elem, x)
+{
+    return x == 0 ?
+	0 :
+	cons (cons (elem, car (x)), mapcons (elem, cdr (x)));
+}
+
+power (x)
+{
+    if (x) {
+	long y = power (cdr (x));
+	return append (mapcons (car (x), y), y);
+    }
+    else {
+	return cons (0, 0);
+    }
+}
+
 main ()
 {
-    /* fancy printer */
-    print_elem (num (10));
+    /* power sets */
+    print_elem (power (0));
     print_nl ();
-    print_elem (cons (num (10), 0));
+    print_elem (power (cons (num (1), 0)));
     print_nl ();
-    print_elem (cons (num (10), num (20)));
+    print_elem (power (cons (num (1), cons (num (2), 0))));
     print_nl ();
-    print_elem (cons (cons (num (10), 0), num (20)));
-    print_nl ();
-    print_elem (cons (cons (num (10), 0), cons (num (20), 0)));
-    print_nl ();
-    print_elem (cons (cons (cons (num (10), 0), cons (num (20), 0)), 0));
-    print_nl ();
-    print_elem (cons (num (10), cons (num (20), num (30))));
-    print_nl ();
-    print_elem (cons (num (10), cons (cons (num (20), 0), num (30))));
-    print_nl ();
-    print_elem (cons (0, 0));
-    print_nl ();
-    print_elem (cons (0, cons (cons (num (20), 0), num (30))));
-    print_nl ();
-    print_elem (cons (num (10), cons (0, num (30))));
+    print_elem (power (cons (num (1), cons (num (2), cons (num (3), 0)))));
     print_nl ();
 }

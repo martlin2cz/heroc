@@ -18,3 +18,8 @@ bar() {
 	print_nl();
 }
 
+
+main() {
+	foo();
+	bar();
+}

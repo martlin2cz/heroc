@@ -62,11 +62,12 @@ struct ast_node_t* find_predefined_var(char* name) {
 		NULL);
 		return print_nl_prpr;
 	}
-	if (strcmp(name, "print_string") == 0) {
-		ast_node_t* print_string_prpr = create_predefined_proc_decl(
-				"print_string", "str");
-		return print_string_prpr;
-	}
+
+	//if (strcmp(name, "print_string") == 0) {
+	//	ast_node_t* print_string_prpr = create_predefined_proc_decl(
+	//			"print_string", "str");
+	//	return print_string_prpr;
+	//}
 
 	return NULL;
 }
@@ -141,7 +142,7 @@ struct ast_node_t* find_first_nondecl(ast_node_t* declaration) {
 	return NULL;
 }
 
-struct ast_node_t* find_var_decl(ast_node_t* previous, char* name) {
+struct ast_node_t* find_var_decl(ast_node_t* previous, char* name, int totally) {
 
 	while (previous) {
 		if (previous->type == JST_VARIABLE_DECL) {
@@ -150,7 +151,12 @@ struct ast_node_t* find_var_decl(ast_node_t* previous, char* name) {
 			if (strcmp(var_name, name) == 0) {
 				return previous;
 			}
+		} else {
+			if (!totally) {
+				return NULL;
+			}
 		}
+
 
 		YYSTYPE value = find_value_of_meta(previous, META_PREVIOUS);
 		previous = value.child;
@@ -329,7 +335,7 @@ void analyze_identifier_use(ast_node_t* node, ast_node_t** previous,
 		int *errors) {
 
 	char* name = node->value.child->value.string;
-	ast_node_t* declaration = find_var_decl(*previous, name);
+	ast_node_t* declaration = find_var_decl(*previous, name, 1);
 
 	if (declaration) {
 
@@ -449,7 +455,7 @@ void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors) {
 	if (name->type == JST_VARIABLE) {
 		SEMANTER_LOG("Starting to analyze procedure %s", name->value.child->value.string);
 	} else if (name->type == STK_LAMBDA) {
-		SEMANTER_LOG("Starting to analyze anonymous procedure", node->uid);
+		SEMANTER_LOG("Starting to analyze anonymous procedure %d", node->uid);
 	} else {
 		fprintf(stderr, "ap: Unknown procedure name type %s\n", name->type);
 		return;
@@ -462,10 +468,11 @@ void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors) {
 	append_child(params, META_PREVIOUS, params_prev);
 
 	ast_node_t* param = params->value.child;
+	int params_count = lenght_of(param);
 	ast_node_t* prev_param = params;
-	int next_param_at = -FRAME_STUFF_SIZE;
+	int next_param_at = - FRAME_STUFF_SIZE - params_count + 1;
 	while (param && !is_meta(param->type)) {
-		analyze_variable_decl(param, &prev_param, &next_param_at, 0, errors);
+		analyze_variable_decl(param, &prev_param, &next_param_at, 1, errors);
 		prev_param = param;
 		param = param->next;
 	}
@@ -488,7 +495,7 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 
 	SEMANTER_LOG("Analyzing declaration of variable %s", name);
 
-	ast_node_t* existing = find_var_decl(*previous, name);
+	ast_node_t* existing = find_var_decl(*previous, name, 0);
 	if (existing) {
 		semantic_error_1("Variable %s yet declared", name, node, errors);
 		return;
@@ -573,7 +580,8 @@ void analyze_container(ast_node_t* node, ast_node_t** previous,
 		append_child(node, META_PREVIOUS, prev);
 
 		ast_node_t* new_previous = node;
-		analyze_nodes(children, &new_previous, inloop, next_var_at, errors);
+		int new_next_var_at = *next_var_at;
+		analyze_nodes(children, &new_previous, inloop, &new_next_var_at, errors);
 
 	} else {
 		analyze_nodes(children, previous, inloop, next_var_at, errors);

@@ -89,6 +89,9 @@ void export_sk_instruction(FILE* dest, sk_instruction_t *instruction) {
 	case SKI_POP:
 		print_sk_instr(dest, "pop");
 		break;
+	case SKI_DUPLICATE:
+		print_sk_instr(dest, "duplicate");
+		break;
 	case SKI_UNARY_OPERATION:
 		print_sk_instr_oper(dest, "unary-operation", instruction->value.number);
 		break;
@@ -96,7 +99,7 @@ void export_sk_instruction(FILE* dest, sk_instruction_t *instruction) {
 		print_sk_instr_oper(dest, "binary-operation", instruction->value.number);
 		break;
 	default:
-		fprintf(dest, "esi: Unknown stackode instruction %d\n", instruction->type);
+		fprintf(stderr, "esi: Unknown stackode instruction %d\n", instruction->type);
 	}
 }
 

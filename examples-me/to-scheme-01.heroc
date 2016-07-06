@@ -1,5 +1,0 @@
-
-main () {
-	print_long(42);
-	print_nl();
-}

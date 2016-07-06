@@ -28,7 +28,8 @@ void list_to_stackode(sk_program_t* program, ast_node_t* nodes) {
 }
 
 void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
-	STACKODE_LOG("Generating stackode of node %d %s", node->uid, to_string(node->type));
+	STACKODE_LOG("Generating stackode of node %d %s", node->uid,
+			to_string(node->type));
 
 	switch (node->type) {
 	case ATT_NUMBER:
@@ -127,7 +128,7 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 void node_to_stackode_comment(sk_program_t* program, ast_node_t* node) {
 	char* text = (char*) malloc(100 * sizeof(char));
 	if (!text) {
-		fprintf(stderr, "ntsc: Cannot alocate memory\n");
+		fprintf(stderr, "ntsc: Cannot allocate memory\n");
 	}
 
 	sprintf(text, "\"Node %d, %s\"", node->uid, to_string(node->type));
@@ -195,7 +196,8 @@ void if_to_stackode(sk_program_t * program, ast_node_t * node, char* label_base)
 void for_to_stackode(sk_program_t * program, ast_node_t * node) {
 	node_to_stackode_comment(program, node);
 
-	char* start_label = generate_label("start", "for", node->uid);
+	char* start_label = generate_label("start", "loop", node->uid);
+	char* body_end_label = generate_label("body_end", "loop", node->uid);
 	char* after_label = generate_label("after", "loop", node->uid);
 
 	//init
@@ -214,6 +216,10 @@ void for_to_stackode(sk_program_t * program, ast_node_t * node) {
 	//body
 	single_node_to_stackode(program, node->value.child->next->next->next);
 
+	sk_instruction_t* lbl_body_end = create_instruct_with_str(SKI_LABEL,
+			body_end_label);
+	add_instruction(program, lbl_body_end);
+
 	//inc
 	single_node_to_stackode(program, node->value.child->next->next);
 
@@ -229,7 +235,8 @@ void for_to_stackode(sk_program_t * program, ast_node_t * node) {
 void while_to_stackode(sk_program_t * program, ast_node_t * node) {
 	node_to_stackode_comment(program, node);
 
-	char* start_label = generate_label("start", "for", node->uid);
+	char* start_label = generate_label("start", "loop", node->uid);
+	char* body_end_label = generate_label("body_end", "loop", node->uid);
 	char* after_label = generate_label("after", "loop", node->uid);
 
 	sk_instruction_t* lbl_start = create_instruct_with_str(SKI_LABEL,
@@ -245,6 +252,10 @@ void while_to_stackode(sk_program_t * program, ast_node_t * node) {
 	//body
 	single_node_to_stackode(program, node->value.child->next);
 
+	sk_instruction_t* lbl_body_end = create_instruct_with_str(SKI_LABEL,
+			body_end_label);
+	add_instruction(program, lbl_body_end);
+
 	sk_instruction_t* jmp2start = create_instruct_with_str(SKI_JUMP_TO,
 			start_label);
 	add_instruction(program, jmp2start);
@@ -257,7 +268,8 @@ void while_to_stackode(sk_program_t * program, ast_node_t * node) {
 void do_to_stackode(sk_program_t * program, ast_node_t * node) {
 	node_to_stackode_comment(program, node);
 
-	char* start_label = generate_label("start", "for", node->uid);
+	char* start_label = generate_label("start", "loop", node->uid);
+	char* body_end_label = generate_label("body_end", "loop", node->uid);
 	char* after_label = generate_label("after", "loop", node->uid);
 
 	sk_instruction_t* lbl_start = create_instruct_with_str(SKI_LABEL,
@@ -266,6 +278,10 @@ void do_to_stackode(sk_program_t * program, ast_node_t * node) {
 
 	//body
 	single_node_to_stackode(program, node->value.child);
+
+	sk_instruction_t* lbl_body_end = create_instruct_with_str(SKI_LABEL,
+			body_end_label);
+	add_instruction(program, lbl_body_end);
 
 	//condition
 	single_node_to_stackode(program, node->value.child->next);
@@ -279,10 +295,15 @@ void do_to_stackode(sk_program_t * program, ast_node_t * node) {
 }
 
 void return_to_stackode(sk_program_t * program, ast_node_t * node) {
-	single_node_to_stackode(program, node->value.child);
+	if (node->value.child) {
+		single_node_to_stackode(program, node->value.child);
+	} else {
+		sk_instruction_t* empty = create_instruction(SKI_DECLARE_ATOMIC);
+		add_instruction(program, empty);
+	}
 
-	sk_instruction_t* instr = create_instruction(SKI_RETURN);
-	add_instruction(program, instr);
+	sk_instruction_t* ret = create_instruction(SKI_RETURN);
+	add_instruction(program, ret);
 }
 void break_to_stackode(sk_program_t * program, ast_node_t * node) {
 	node_to_stackode_comment(program, node);
@@ -302,7 +323,7 @@ void continue_to_stackode(sk_program_t * program, ast_node_t * node) {
 	YYSTYPE loop = find_value_of_meta(node, META_LOOP);
 	ast_node_t* loop_node = loop.child;
 
-	char* start_label = generate_label("start", "loop", loop_node->uid);
+	char* start_label = generate_label("body_end", "loop", loop_node->uid);
 	sk_instruction_t* jmp2start = create_instruct_with_str(SKI_JUMP_TO,
 			start_label);
 	add_instruction(program, jmp2start);
@@ -430,17 +451,20 @@ void unary_op_to_stackode(sk_program_t * program, ast_node_t * node) {
 	add_instruction(program, instr);
 }
 void binary_op_to_stackode(sk_program_t * program, ast_node_t * node) {
-//TODO FIXME check operands order
-	single_node_to_stackode(program, node->value.child);
-	if (node->value.child->next) {
-		single_node_to_stackode(program, node->value.child->next);
-	} else {
+
+	if (!(node->value.child->next)) {
 		sk_instruction_t* zero = create_instruct_with_num(SKI_PUSH_CONSTANT, 0);
 		add_instruction(program, zero);
 
 		sk_instruction_t* cmt = create_instruct_with_str(SKI_COMMENT,
 				"no second operand specified");
 		add_instruction(program, cmt);
+
+	}
+
+	single_node_to_stackode(program, node->value.child);
+	if (node->value.child->next) {
+		single_node_to_stackode(program, node->value.child->next);
 	}
 
 	sk_instruction_t* instr = create_instruct_with_op(SKI_BINARY_OPERATION,
@@ -451,6 +475,7 @@ void binary_op_to_stackode(sk_program_t * program, ast_node_t * node) {
 //specials
 
 void and_to_stackode(sk_program_t * program, ast_node_t * node) {
+	//if a then b else 0
 	ast_node_t* as_if = create_with_1_children(STK_IF, node->value.child);
 
 	YYSTYPE zero = { 0 };
@@ -460,28 +485,27 @@ void and_to_stackode(sk_program_t * program, ast_node_t * node) {
 }
 
 void or_to_stackode(sk_program_t * program, ast_node_t * node) {
+	//if a then a else b
+	// push a; duplicate a as a'; if a' > goto end; pop a; push b; end:
 
 	char* after_label = generate_label("after", "or", node->uid);
 
-	single_node_to_stackode(program, node->value.child); //FIXME double evaluation !!!!
 	single_node_to_stackode(program, node->value.child);
-	sk_instruction_t* jmp1 = create_instruct_with_str(SKI_JUMP_ON_NON_ZERO,
+	sk_instruction_t* duplicate_a = create_instruction(SKI_DUPLICATE);
+	add_instruction(program, duplicate_a);
+
+	sk_instruction_t* jmp = create_instruct_with_str(SKI_JUMP_ON_NON_ZERO,
 			after_label);
-	add_instruction(program, jmp1);
+	add_instruction(program, jmp);
+
+	sk_instruction_t* pop_a = create_instruction(SKI_POP);
+	add_instruction(program, pop_a);
 
 	single_node_to_stackode(program, node->value.child->next);
-	single_node_to_stackode(program, node->value.child->next);
-	sk_instruction_t* jmp2 = create_instruct_with_str(SKI_JUMP_ON_NON_ZERO,
-			after_label);
-	add_instruction(program, jmp2);
-
-	sk_instruction_t* zero = create_instruct_with_num(SKI_PUSH_CONSTANT, 0);
-	add_instruction(program, zero);
 
 	sk_instruction_t* lbl_after = create_instruct_with_str(SKI_LABEL,
 			after_label);
 	add_instruction(program, lbl_after);
-
 }
 
 void ternary_to_stackode(sk_program_t * program, ast_node_t * node) {
@@ -508,11 +532,16 @@ void index_to_stackode(sk_program_t * program, ast_node_t * node) {
 void reference_to_stackode(sk_program_t * program, ast_node_t * node) {
 	single_node_to_stackode(program, node->value.child);
 
-	if (program->instructions[program->count - 1]->type != SKI_LOAD) {
-		fprintf(stderr, "rts: Not a load instruction, it's %x\n",
-				program->instructions[program->count - 1]->type);
-	} else {
+	sk_instruction_t* last_instr = program->instructions[program->count - 1];
+	if (last_instr->type == SKI_LOAD) {
 		remove_last_instr(program);
+
+	} else if (last_instr->type == SKI_PUSH_LABEL_ADRESS) {
+		//ok, no reference needed
+
+	} else {
+		fprintf(stderr, "rts: Not a load instruction, it's %s\n",
+				to_string(last_instr->type));
 	}
 }
 void inc_dec_to_stackode(sk_program_t * program, ast_node_t * node) {

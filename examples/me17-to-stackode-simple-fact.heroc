@@ -1,0 +1,12 @@
+fact(x) {
+	if (x > 0) {
+		return x * fact(x - 1);
+	} else {
+		return 1;
+	}
+}
+
+main() {
+	print_long(fact(5));
+	print_nl();
+}

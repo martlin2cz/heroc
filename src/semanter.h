@@ -55,7 +55,7 @@ YYSTYPE find_value_of_meta(struct ast_node_t* child, TOKEN_TYPE_T meta);
 struct ast_node_t* find_first_nondecl(ast_node_t* identifier);
 
 struct ast_node_t* find_predefined_var(char* name);
-struct ast_node_t* find_var_decl(ast_node_t* previous, char* name);
+struct ast_node_t* find_var_decl(ast_node_t* previous, char* name, int totally);
 var_type_t typeof_var(ast_node_t* identifier);
 
 void semantic_error_0(char* message, struct ast_node_t* context, int *errors);
