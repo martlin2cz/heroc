@@ -47,10 +47,8 @@ void test_program_1(void) {
 	add_instruction(program, //
 			create_instruction(SKI_CALL));
 
-
-	printf("Link stackode source and uncomment at line %d", (__LINE__ + 1));
-
-	//export_stackode(stdout, program); //FIXME cannot compile without stackode linked
-
+	//export_stackode(stdout, program);
+	fprintf(stderr, "Link stackode source and uncomment at line %d\n",
+			(__LINE__ - 1));
 
 }

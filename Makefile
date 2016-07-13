@@ -13,7 +13,7 @@ YACC = bison
 # -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  -D SEMANTER_VERBOSE  -D STACKODE_VERBOSE
 MACROS	?=
 # basic|scheme|stackode|gas
-OUTPUTLANG ?= stackode
+OUTPUTLANG ?= gas
 #-Wall -d
 CFLAGS	= -ansi -pedantic -std=c11 $(MACROS) 
 LIBS	= -lfl -lm
@@ -32,8 +32,8 @@ CMPSRC	=  src/compiler-main.c
 CMPOBJ	=  obj/compiler-main.o  
 CMPTGT	=  bin/compiler 
 
-TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-semanter.c test/test-ast.c test/test-stackode-exporter.c   test/test-compile-to.c      
-TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o obj/test-semanter.o  obj/test-ast.o  obj/test-stackode-exporter.o obj/test-compile-to.o
+TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-semanter.c test/test-ast.c test/test-stackode-exporter.c test/test-gas-exporter.c   test/test-compile-to.c      
+TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o obj/test-semanter.o  obj/test-ast.o  obj/test-stackode-exporter.o obj/test-gas-exporter.o     obj/test-compile-to.o
 TESTTGT	=  test-bin/test-lexer test-bin/text-syntaxer test-bin/text-semanter test-bin/test-ast test-bin/test-stackode-exporter test-bin/test-compile-to
   
 
@@ -65,6 +65,7 @@ tests: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(OBJECTS) $(TESTSRC) $(TESTOBJ)
 	$(CC) $(CFLAGS) -o test-bin/test-syntaxer  obj/test-syntaxer.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-semanter  obj/test-semanter.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-stackode-exporter  obj/test-stackode-exporter.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o test-bin/test-gas-exporter  obj/test-gas-exporter.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-compile-to  obj/test-compile-to.o $(OBJECTS)
 	
 syntaxgraph: prepare gen/syntaxer.dot
@@ -154,6 +155,9 @@ obj/test-ast.o: test/test-ast.c
 	${CC} -c ${CFLAGS} -o $@ -c $<
 	
 obj/test-stackode-exporter.o: test/test-stackode-exporter.c
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+
+obj/test-gas-exporter.o: test/test-gas-exporter.c
 	${CC} -c ${CFLAGS} -o $@ -c $<	
 
 

@@ -8,6 +8,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; stack
 
+(define *max-stack-size* 1000000)
+
 (define create-stack
   (lambda ()
     (list 'top 'bottom)))
@@ -16,6 +18,7 @@
 
 (define push
   (lambda (stack x)
+    (check-stack-max-size stack)
     (set-cdr! stack (cons x (cdr stack)))
     stack))
 
@@ -25,21 +28,24 @@
 (define pop
   (lambda (stack)
     (let ((head (cadr stack)))
+      (check-stack stack 0)
       (set-cdr! stack (cddr stack))
       head)))
 
 ; (pop s)
 ; (pop s)
 
-(define stack-top 
+(define stack-size
   (lambda (stack)
     (- (length stack) 2)))
 
-; (stack-top s)
+; (stack-size s)
+
 
 (define at-stack-absolute
   (lambda (stack index)
-    (list-ref stack (- (length stack) index 2))))
+    (check-stack stack index)
+    (list-ref stack (- (- (length stack) index) 2))))
 
 ; (at-stack-absolute s 0)
 ; (at-stack-absolute s 1)
@@ -47,8 +53,9 @@
 
 (define set-at-stack-absolute
   (lambda (stack index value)
+    (check-stack stack index)
     (let* ((substack (cdr stack))
-          (subindex (- (length stack) index 3))
+          (subindex (- (- (length stack) index) 3))
           (replaced (replace-nth substack subindex value)))
     (set-cdr! stack replaced))))
 
@@ -57,6 +64,7 @@
 
 (define pop-n
   (lambda (stack count)
+    (check-stack stack 0)
     (if (<= count 0) 
         stack
         (begin
@@ -92,6 +100,8 @@
 
 (define substract
   (lambda (stack offset n)
+    (check-stack stack offset)
+    (check-stack stack (+ offset n))
     (letrec ((sublist (lambda (list from to)
                      (cond ((> from 0)
                             (sublist (cdr list) (- from 1) to))
@@ -102,6 +112,23 @@
                              
 ; (pop-n s 0 0)
 ; (pop-n s 1 2)
+
+
+(define check-stack
+  (lambda (stack index)
+    (if (or (< index 0) (>= index (- (length stack) 2)))
+        (verbose-error "Out of stack" 'index index 'stack stack)
+        'OK)))
+
+; (check-stack s 2)
+
+(define check-stack-max-size
+  (lambda (stack)
+    (if (>= (stack-size stack) *max-stack-size*)
+        (verbose-error "Stack overflow, max stack size elapsed" 'max-size *max-stack-size* 'stack stack)
+        'OK)))
+
+; (check-stack-max-size s)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; instruction(s) and program
@@ -135,7 +162,7 @@
   (lambda (program)
     (if (list? program)
         program
-    (('error 'program-must-be-list-of-instructions program)))))
+    (verbose-error "program must be list of instructions" 'program program))))
 
 ; (sc-program '((push-constant 1) (push-constant 2) (add)))
 
@@ -162,7 +189,7 @@
            (found (sc-loop-over-program program finder-proc adress)))
       (if (sc-instr? found)
           found
-          'no-such-instruction))))
+          (verbose-error "No such instruction at adress" 'adress adress 'program program 'program-size (length program))))))
                   
                   
   
@@ -183,7 +210,7 @@
            (found-adress (cdr found)))
       (if (not found-label)
           found-adress
-          'label-not-found))))
+         (verbose-error "Label not found" 'label label 'program program)))))
 
 ; (sc-address-of-label 'start-loop p) 
 
@@ -221,18 +248,19 @@
 (define push-frame 
   (lambda (context)
     (let* ((stack (stack context))
-           (current-frame-addr (frame-pointer context))
-           (new-frame-addr (stack-top stack)))
+           (current-frame-addr (frame-pointer context)))
+      
       (push stack current-frame-addr)
-      (change-frame-pointer context new-frame-addr))))
+      (let ((new-frame-addr (stack-size stack)))        
+        (change-frame-pointer context new-frame-addr)))))
 
 (define pop-frame
   (lambda (context)
     (let* ((stack (stack context))
-           (current-stack-top (stack-top stack))
+           (current-stack-size (stack-size stack))
            (current-frame-addr (frame-pointer context))
-           (previous-frame-addr (at-stack-absolute stack current-frame-addr))
-           (remove-count (- current-stack-top current-frame-addr)))
+           (previous-frame-addr (at-stack-absolute stack (- current-frame-addr 1)))
+           (remove-count (+ (- current-stack-size current-frame-addr) 1)))
       (pop-n stack remove-count)
       (change-frame-pointer context previous-frame-addr))))
 
@@ -282,18 +310,19 @@
 
 (define sc-do-run-instr
   (lambda (context instruction)
-  ;  (display "evaluating ") (display instruction) 
-  ;  (display " with stack ") (display (stack context)) 
-  ;  (display " and frame pointer ") (display (frame-pointer context)) 
-  ;  (newline)
-  
-    ;DEBUG: 
-    ;(read)
+    ;(display "evaluating ") (display instruction) 
+    ;(display "\t with stack ") (display (stack context)) 
+    ;(display "\t and frame pointer ") (display (frame-pointer context)) 
+    ;(newline)
+  ;  (print-log "evaluating" instruction ;)
+   ;            (stack context) (frame-pointer context))
+  ;  (read)
+    ;
     
     (let* ((instr-name (sc-instr-name instruction))
            (instr-proc (sc-find-instr-proc instr-name))
            (instr-args (sc-instr-args instruction)))
-           
+
       (apply instr-proc context instr-args))))
 
 
@@ -325,27 +354,24 @@
     'next-instruction))
 
 (define just-jump
-  (lambda (stack)
-    (let* ((addr (pop stack)))    
-      addr)))
+  (lambda (stack addr)
+      addr))
 
 (define jump-if-1
-  (lambda (stack predicate)
-    (let* ((addr (pop stack))
-           (cond (pop stack)))
-           (if (predicate cond)
-               addr
-               'next-instruction))))
+  (lambda (stack addr predicate)
+    (let ((cond (pop stack)))
+      (if (predicate cond)
+          addr
+          'next-instruction))))
 
 
 (define jump-if-2
-  (lambda (stack predicate)
-    (let* ((addr (pop stack))
-           (cond1 (pop stack))
-           (cond2 (pop stack)))
-           (if (predicate cond1 cond2)
-               addr
-               'next-instruction))))
+  (lambda (stack addr predicate)
+    (let ((cond1 (pop stack))
+          (cond2 (pop stack)))
+      (if (predicate cond1 cond2)
+          addr
+          'next-instruction))))
 
 (define set-at-absolute-and-continue
   (lambda (stack addr value)
@@ -370,13 +396,17 @@
 
 (define sci-end
   (lambda (context)
-    ;(display "I'm done.") ;XXX debug
-    ;(newline)    
+    (display "I'm done.") ;XXX debug
+    (newline)    
     'end-of-program))
 
 (define sci-label 
   (lambda (context label)
     (ignore-1-and-continue (stack context) label)))
+
+(define sci-comment
+  (lambda (context . comments)
+    (ignore-1-and-continue (stack context) comments)))
 
 (define sci-push-label-adress
   (lambda (context label)
@@ -428,6 +458,7 @@
     (let* ((stack (stack context))
            (addr (pop stack))
            (value (pop stack)))
+      (push stack value)
       (set-at-absolute-and-continue stack addr value))))
 
 (define sci-pop
@@ -436,19 +467,27 @@
     'next-instruction))
 
 (define sci-jump-on-non-zero
-  (lambda (context)
-    (jump-if-1 (stack context) 
-               (lambda (c) (not (= c 0))))))
+  (lambda (context label)
+    (let* ((stack (stack context))
+           (program (program context))
+           (addr (sc-address-of-label label program)))
+      (jump-if-1 stack addr
+                 (lambda (c) (not (= c 0)))))))
 
 (define sci-jump-on-zero
-  (lambda (context)
-    (jump-if-1 (stack context) 
-               (lambda (c) (= c 0)))))
+  (lambda (context label)
+    (let* ((stack (stack context))
+           (program (program context))
+           (addr (sc-address-of-label label program)))
+      (jump-if-1 stack addr
+                 (lambda (c) (= c 0))))))
 
 (define sci-jump-to
-  (lambda (context)
-    (let* ((stack (stack context)))
-      (just-jump stack))))
+  (lambda (context label)
+    (let* ((stack (stack context))
+           (program (program context))
+           (addr (sc-address-of-label label program)))
+      (just-jump stack addr))))
 
 (define sci-call
   (lambda (context)
@@ -486,35 +525,177 @@
       (push stack (apply procedure arguments))
       'next-instruction)))
 
+(define sci-unary-operation
+  (lambda (context operator)
+    (join-1-and-continue 
+     (stack context)
+     (case operator
+       ((op-!) not-of-ints)
+       ((op-~) bit-not)
+       (else (verbose-error "unknown unary operation" 'operator operator))
+       ))))
 
 
-(define sci-add
-  (lambda (context)
-    (join-2-and-continue (stack context) +)))
+(define sci-binary-operation
+  (lambda (context operator)
+    (join-2-and-continue   
+     (stack context)
+     (case operator
+       ((op-+) +)
+       ((op--) -)
+       ((op-*) *)
+       ((op-/) /)
+       ((op-%) mod)
+       ((op-<) <-of-ints)
+       ((op->) >-of-ints)
+       ((op-<=) <=-of-ints)
+       ((op->=) >=-of-ints)
+       ((op-==) =-of-ints)
+       ((op-!=) !=-of-ints)
+       ((op-<<) bit-shift-left)
+       ((op->>) bit-shift-right)
+       ((op-bit-or) bit-or)
+       ((op-bit-and) bit-and)
+       ((op-^) bit-xor)
+       (else (verbose-error "unknown binary operation" 'operator operator))
+       ))))
 
-(define sci-sub
-  (lambda (context)
-    (join-2-and-continue (stack context) -)))
 
-(define sci-mul
-  (lambda (context)
-    (join-2-and-continue (stack context) *)))
+(define pow
+  (lambda (x e)
+    (cond ((= e 0) 1)
+          ((< e 0)  (/ x (pow x (+ e 1))))
+          ((> e 0)  (* x (pow x (- e 1)))))))
 
-(define sci-div
-  (lambda (context)
-    (join-2-and-continue (stack context) /)))
+;; (pow 4 2)
+;; (pow 4 -2)
 
-(define sci-mod
-  (lambda (context)
-    (join-2-and-continue (stack context) mod)))
+(define bool-to-int
+  (lambda (bool)
+    (if bool 1 0)))
+
+(define int-to-bool
+  (lambda (int)
+    (= int 0)))
+
+(define xor-func
+  (lambda (x y)
+    (eq? x y)))
+
+(define or-func
+  (lambda (x y)
+    (or x y)))
+
+(define and-func
+  (lambda (x y)
+    (and x y)))
 
 
+;; (xor-func #f #t)
+;; (or-func #f #t)
+;; (and-func #f #t)
+
+(define int-to-rev-bits
+  (lambda (int)
+    (if (<= int 0) 
+        '()
+        (cons (int-to-bool (modulo int 2))
+              (int-to-rev-bits (floor (/ int 2)))))))
+
+(define rev-bits-to-int
+  (lambda (bits)
+    (if (null? bits) 
+        0
+        (+ (bool-to-int (car bits))
+           (* 2 (rev-bits-to-int (cdr bits)))))))
+
+;; (rev-bits-to-int (list 0 0 0 1))
+;; (int-to-rev-bits 16)
+
+
+(define simple-build-list
+  (lambda (len item)
+    (if (<= len 0)
+        '()
+        (cons item (simple-build-list (- len 1) item)))))
+
+(define extend-to
+  (lambda (l len item)
+    (append l (simple-build-list (- len (length l)) item))))
+
+;; (simple-build-list 10 'a)
+;; (extend-to '(1 2 3 4) 10 'x)
+
+
+(define run-bitwise-op ;TODO FIXME: not working properly
+   (lambda (op . xs)
+    (let* ((bits-xs (map int-to-rev-bits xs))
+           (max-len (apply max (map length bits-xs)))
+           (bits-xs-ext (map (lambda (x) (extend-to x max-len #f)) bits-xs)))
+           
+      ;(display bits-x-ext)(newline)(display bits-y-ext)(newline)
+      ;(display (map or-func bits-x-ext bits-y-ext))(newline)
+    (rev-bits-to-int (apply map op bits-xs-ext)))))
+
+(define bit-or
+  (lambda (x y)
+   (run-bitwise-op or-func x y)))
+
+(define bit-and
+  (lambda (x y)
+    (run-bitwise-op and-func x y)))
+
+(define bit-not
+  (lambda (x)
+    (run-bitwise-op not x))) ;TODO make n-ary...
+
+(define bit-xor
+  (lambda (x y)
+    (run-bitwise-op xor-func x y)))
+
+(define bit-shift-left
+  (lambda (x y)
+    (* x (pow 2 y))))
+
+(define bit-shift-right
+  (lambda (x y)
+    (/ x (pow 2 y))))
+
+
+(define not-of-ints
+  (lambda (x)
+    (if (= 0 x) 1 0)))
+
+(define <-of-ints
+  (lambda (x y)
+    (bool-to-int  (< x y))))
+    
+(define >-of-ints
+  (lambda (x y)
+    (bool-to-int  (> x y))))
+
+(define <=-of-ints
+  (lambda (x y)
+    (bool-to-int  (<= x y))))
+
+(define >=-of-ints
+  (lambda (x y)
+    (bool-to-int  (>= x y))))
+
+(define =-of-ints
+  (lambda (x y)
+    (bool-to-int  (= x y))))
+
+(define !=-of-ints
+  (lambda (x y)
+    (bool-to-int  (not (= x y)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; instruction set
 (define *sc-instructions*
   (list 
    ;control instructions 
+   (list 'comment sci-comment)
    (list 'end sci-end)
    (list 'label sci-label)
    
@@ -537,17 +718,11 @@
    (list 'push-relative-adress  sci-push-relative-adress)
    (list 'push-absolute-adress  sci-push-absolute-adress)
    (list 'pop sci-pop)
-   
-   
         
    ;arithmetic instructions
-   (list 'add sci-add)
-   (list 'sub sci-sub)
-   (list 'mul sci-mul)
-   (list 'div sci-div)
+   (list 'unary-operation sci-unary-operation)
+   (list 'binary-operation sci-binary-operation)
    
-   ;(list '  )
-   ;;TODO
    ))
 
 
@@ -558,7 +733,7 @@
       ((name instruction)
        (instructions *sc-instructions*))
       (if (null? instructions)
-          (('error 'instruction-not-found name))
+          (verbose-error "instruction not found" 'instruction name)
           
           (if (eq? name (car (car instructions)))
               (cadar instructions)
@@ -570,24 +745,43 @@
 (define sc-wrap-program
   (lambda (program)
     (append (sc-program 
-             `((push-label-adress start-of-program)
-               (jump-to)
-               
-               (label print-long)
+             `((jump-to start-of-program)
+               (label print_long)
                (invoke-primitive ,print_long 1)
                (return)
                
-               (label print-char)
+               (label print_char)
                (invoke-primitive ,print_char 1)
                (return)
                
-               (label print-nl)
+               (label print_nl)
                (invoke-primitive ,print_nl 0)
                (return)
                
                (label start-of-program)))
             program
             (sc-program 
-             '((end))))))
+             '((push-label-adress main)
+               (call)
+               (end))))))
 
 ; (sc-wrap-program (sc-program '((push-constant 1) (push-constant 2) (add))))
+
+(define verbose-error
+  (lambda (cause . info)
+    (display "Error: ")
+    (apply print-log cause info)
+    (throw-error))) ;undefined, will make fail
+
+;(verbose-error "Oops!" 'dont-know 42)
+
+(define print-log 
+  (lambda data
+    (if (null? data)
+        (newline)
+        (begin (display "\t")
+               (display (car data))
+               (newline)
+               (apply print-log (cdr data))))))
+  
+;(print-log "Happened" 'at "16:21:55" 'something)

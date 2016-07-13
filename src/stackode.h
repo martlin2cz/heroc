@@ -4,6 +4,7 @@
 #include "ast.h"
 
 #define SK_INCREASE_SIZE 3
+#define CELL_SIZE 8
 
 /*********************************************************/
 

@@ -382,7 +382,7 @@ void analyze_loop_keyw(ast_node_t* node, ast_node_t* inloop, int *errors) {
 	append_child(node, META_LOOP, val);
 }
 
-void analyze_proccall(ast_node_t* node, ast_node_t** previous, ast_node_t** next_var_at, int *errors) {
+void analyze_proccall(ast_node_t* node, ast_node_t** previous, int* next_var_at, int *errors) {
 	SEMANTER_LOG("Starting to analyze procedure call");
 
 	ast_node_t* proc_var = node->value.child;

@@ -1,8 +1,8 @@
-% {
+%{
 
 #include "../src/syntaxer-headers.h"
 
-	%}
+%}
 /* settings */
 
 %output "gen/syntaxer.c"

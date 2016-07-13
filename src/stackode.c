@@ -152,9 +152,9 @@ void assignment_to_stackode(sk_program_t * program, ast_node_t * node) {
 }
 
 void sizeof_to_stackode(sk_program_t * program, ast_node_t * node) {
-	long value = sizeof(long);
+	long value = CELL_SIZE;
 	sk_instruction_t* instr = create_instruct_with_num(SKI_PUSH_CONSTANT,
-			value);	//TODO sizeof, what to do?
+			value);
 	add_instruction(program, instr);
 }
 

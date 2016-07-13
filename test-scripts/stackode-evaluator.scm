@@ -314,8 +314,8 @@
     ;(display "\t with stack ") (display (stack context)) 
     ;(display "\t and frame pointer ") (display (frame-pointer context)) 
     ;(newline)
-  ;  (print-log "evaluating" instruction )
-   ;            (stack context) (frame-pointer context))
+    ;(print-log "evaluating" instruction ;)
+    ;           (stack context) (frame-pointer context))
   ;  (read)
     ;
     
