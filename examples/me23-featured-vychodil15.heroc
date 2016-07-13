@@ -1,0 +1,23 @@
+long fa, fb;
+
+main () {
+    /* factorial: mutual linear recursion + ternary operator */
+	fa = lambda (n) {
+	    return n <= 1 ?
+		1 :
+		n * fb (n - 1);
+	};
+
+	fb = lambda (n) {
+	    return n <= 1 ?
+		1 :
+		n * fa (n - 1);
+	};
+
+
+	long n;
+    for (n = 0; n < 10; n ++) {
+	print_long (fa (n));
+	print_nl ();
+    }
+}

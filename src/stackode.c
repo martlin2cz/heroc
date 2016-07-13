@@ -331,19 +331,19 @@ void continue_to_stackode(sk_program_t * program, ast_node_t * node) {
 }
 void lambda_to_stackode(sk_program_t * program, ast_node_t * node) {
 	node_to_stackode_comment(program, node);
-	//XXX, no?
+	//XXX
 }
 void variable_to_stackode(sk_program_t * program, ast_node_t * node) {
 	YYSTYPE decl = find_value_of_meta(node, META_DECLARATION);
 	ast_node_t* init_val = decl.child->value.child->next;
 
-	if (init_val && init_val->type == JST_PROCEDURE) {
+	if (init_val && init_val->type == JST_PROCEDURE
+			&& init_val->value.child->type == JST_VARIABLE) {
 		char* label = label_of_proc(init_val);
 
 		sk_instruction_t* pa = create_instruct_with_str(SKI_PUSH_LABEL_ADRESS,
 				label);
 		add_instruction(program, pa);
-
 	} else {
 		YYSTYPE type = find_value_of_meta(decl.child, META_VAR_TYPE);
 		YYSTYPE addr = find_value_of_meta(decl.child, META_ADRESS);
@@ -412,6 +412,12 @@ void procedure_to_stackode(sk_program_t * program, ast_node_t * node) {
 
 	sk_instruction_t* after = create_instruct_with_str(SKI_LABEL, after_label);
 	add_instruction(program, after);
+
+	if (node->value.child->type == STK_LAMBDA) {
+		sk_instruction_t* push_label = create_instruct_with_str(
+				SKI_PUSH_LABEL_ADRESS, proc_label);
+		add_instruction(program, push_label);
+	}
 }
 
 void proccall_to_stackode(sk_program_t * program, ast_node_t * node) {
@@ -432,10 +438,12 @@ void proccall_to_stackode(sk_program_t * program, ast_node_t * node) {
 }
 
 void var_decl_to_stackode(sk_program_t * program, ast_node_t * node) {
-	if (node->value.child->next
-			&& node->value.child->next->type == JST_PROCEDURE) {
+	ast_node_t* init_val = node->value.child->next;
 
-		procedure_to_stackode(program, node->value.child->next);
+	if (init_val && init_val->type == JST_PROCEDURE
+			&& init_val->value.child->type == JST_VARIABLE) {
+
+		procedure_to_stackode(program, init_val);
 	} else {
 
 		sk_instruction_t* instr = create_instruction(SKI_DECLARE_ATOMIC);

@@ -33,7 +33,8 @@ void analyze_identifier_use(ast_node_t* node, ast_node_t** previous,
 void analyze_loop(ast_node_t* node, ast_node_t** previous, int* next_var_at,
 		int *errors);
 void analyze_loop_keyw(ast_node_t* node, ast_node_t* inloop, int *errors);
-void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors);
+void analyze_proccall(ast_node_t* node, ast_node_t** previous,
+		ast_node_t** next_var_at, int *errors);
 void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors);
 void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 		int* next_var_at, int next_to_plus, int *errors);

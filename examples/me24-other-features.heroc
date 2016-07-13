@@ -1,0 +1,52 @@
+foo() {
+	//characters constants
+	print_char('m');
+	print_char('e');
+	print_char(64); // @
+	print_char('u');
+	print_char('o' + 1);
+	print_char('O');
+	print_char('l');
+	print_nl();
+}
+
+fun(x) {
+	//return (with ret val, with default retval, implicit return) 
+	if (x == 0) {
+		return 0;
+	} 
+	if (x == 1) {
+		return;
+	}
+	
+	//return [DEFAULT_VALUE]; is added here
+}
+
+bar() {
+	print_long(fun(0));
+	print_char(' ');
+	print_long(fun(1));
+	print_char(' ');
+	print_long(fun(2));
+	print_nl();
+}
+
+
+baz() {
+	//lazy evaluation of || and &&
+
+	long x = (4 + 5) || (1 / 0);
+	long y = (1 - 1) && (1 / 0);
+
+	print_long(x);
+	print_char(' ');
+	print_long(y);
+
+	print_nl();
+}
+
+main() {
+	foo();
+	bar();
+	baz();
+}

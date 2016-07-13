@@ -20,7 +20,7 @@ struct ast_node_t* prepend(struct ast_node_t* item, struct ast_node_t* list);
 long lenght_of(struct ast_node_t* node);
 long lenght_ignore_meta(struct ast_node_t* node);
 struct ast_node_t* duplicate(struct ast_node_t* node);
-
+void append_child(struct ast_node_t* node, TOKEN_TYPE_T type, YYSTYPE value);
 
 /* constructors of lists */
 struct ast_node_t* create_with_0_children(TOKEN_TYPE_T type);
@@ -34,7 +34,6 @@ struct ast_node_t* create_with_3_children(TOKEN_TYPE_T type,
 struct ast_node_t* create_with_4_children(TOKEN_TYPE_T type,
 		struct ast_node_t* expr1, struct ast_node_t* expr2,
 		struct ast_node_t* expr3, struct ast_node_t* expr4);
-
 
 /*****************************************************************************/
 /* atomics */
@@ -54,7 +53,8 @@ struct ast_node_t* create_array_of_value(struct ast_node_t* arrexpr);
 struct ast_node_t* create_declaration(struct ast_node_t* var,
 		struct ast_node_t* value);
 
-struct ast_node_t* create_decl_of_proc(struct ast_node_t* name, struct ast_node_t* proc);
+struct ast_node_t* create_decl_of_proc(struct ast_node_t* name,
+		struct ast_node_t* proc);
 
 /* syntactic constructs */
 struct ast_node_t* create_assignment(struct ast_node_t* place,

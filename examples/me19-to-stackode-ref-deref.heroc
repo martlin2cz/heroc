@@ -2,7 +2,7 @@ foo() {
 	long x = 999;
 	print_long(x);
 	print_long(&x);
-	//print_long(x*); // will fail
+	//print_long(x*); // would fail
 }
 
 bar() {
@@ -10,7 +10,7 @@ bar() {
 	long y = &x;
 
 	print_long(*y);
-	print_long(*((y+1) - 1));
+//	print_long(*((y+1) - 1)); //dereference of expression: removed feature
 }
 
 
@@ -28,7 +28,7 @@ aux() {
 	long z = *y;
 
 	*y = 556;
-	print_long(*z);
+	print_long(*y);
 }
 
 main() {

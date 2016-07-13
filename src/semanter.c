@@ -92,21 +92,7 @@ struct ast_node_t* create_predefined_proc_decl(char* name, char* arg1_name) {
 
 }
 
-void append_child(struct ast_node_t* node, TOKEN_TYPE_T type, YYSTYPE value) {
-	ast_node_t* new = create_new_node(type);
-	new->value = value;
 
-	ast_node_t* child = node->value.child;
-
-	if (child) {
-		while (child->next) {
-			child = child->next;
-		}
-		child->next = new;
-	} else {
-		node->value.child = new;
-	}
-}
 
 YYSTYPE find_value_of_meta(struct ast_node_t* node, TOKEN_TYPE_T meta) {
 	ast_node_t* child = node->value.child;
@@ -156,7 +142,6 @@ struct ast_node_t* find_var_decl(ast_node_t* previous, char* name, int totally) 
 				return NULL;
 			}
 		}
-
 
 		YYSTYPE value = find_value_of_meta(previous, META_PREVIOUS);
 		previous = value.child;
@@ -231,7 +216,7 @@ void analyze_one_node(ast_node_t* node, ast_node_t** previous,
 		analyze_procedure(node, previous, errors);
 		break;
 	case JST_PROCCALL:
-		analyze_proccall(node, previous, errors);
+		analyze_proccall(node, previous, next_var_at, errors);
 		break;
 	case JST_VARIABLE_DECL:
 		analyze_variable_decl(node, previous, next_var_at, 1, errors);
@@ -397,15 +382,15 @@ void analyze_loop_keyw(ast_node_t* node, ast_node_t* inloop, int *errors) {
 	append_child(node, META_LOOP, val);
 }
 
-void analyze_proccall(ast_node_t* node, ast_node_t** previous, int *errors) {
+void analyze_proccall(ast_node_t* node, ast_node_t** previous, ast_node_t** next_var_at, int *errors) {
 	SEMANTER_LOG("Starting to analyze procedure call");
 
 	ast_node_t* proc_var = node->value.child;
 	ast_node_t* params_list = node->value.child->next->value.child;
 
 	//directly analyze
-	analyze_one_node(proc_var, previous, NULL, NULL, errors);
-	analyze_nodes(params_list, previous, NULL, NULL, errors);
+	analyze_one_node(proc_var, previous, NULL, next_var_at, errors);
+	analyze_nodes(params_list, previous, NULL, next_var_at, errors);
 
 	//then try to check aritiy
 	if (proc_var->type == JST_VARIABLE) {
@@ -484,7 +469,7 @@ void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors) {
 	ast_node_t* body_prev = prev_param;
 	analyze_one_node(body, &body_prev, NULL, &next_var_at, errors);
 
-	SEMANTER_LOG("Procedure analyze complete, its local variables takes %d cells on stack", next_var_at);
+	SEMANTER_LOG("Procedure analyze complete");
 }
 
 void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
@@ -503,10 +488,12 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 
 	ast_node_t* value = var->next;
 
-	YYSTYPE addr = { (*next_var_at) };
+	YYSTYPE addr;
+	addr.number = (*next_var_at);
 	append_child(node, META_ADRESS, addr);
 
-	YYSTYPE prev = { (*previous) };
+	YYSTYPE prev;
+	prev.child = (*previous);
 	append_child(node, META_PREVIOUS, prev);
 
 	YYSTYPE type = { (long) typeof_var(node) };
@@ -515,7 +502,7 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 	if (value) {
 		ast_node_t* new_prev = node;
 
-		if (value->type == JST_PROCEDURE) {
+		if (value->type == JST_PROCEDURE && value->value.child->type != STK_LAMBDA) {
 			analyze_one_node(value, &new_prev, NULL, next_var_at, errors);
 		} else {
 			//make an assignment from initval
@@ -534,7 +521,7 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 		}
 	}
 
-	if (!(value && value->type == JST_PROCEDURE)) {
+	if (!(value && value->type == JST_PROCEDURE && value->value.child->type != STK_LAMBDA)) {
 		if (next_to_plus) {
 			(*next_var_at)++;
 		} else {
@@ -581,7 +568,8 @@ void analyze_container(ast_node_t* node, ast_node_t** previous,
 
 		ast_node_t* new_previous = node;
 		int new_next_var_at = *next_var_at;
-		analyze_nodes(children, &new_previous, inloop, &new_next_var_at, errors);
+		analyze_nodes(children, &new_previous, inloop, &new_next_var_at,
+				errors);
 
 	} else {
 		analyze_nodes(children, previous, inloop, next_var_at, errors);

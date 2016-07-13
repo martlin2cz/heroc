@@ -11,7 +11,7 @@ LEX	 = flex
 YACC = bison
 
 # -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  -D SEMANTER_VERBOSE  -D STACKODE_VERBOSE
-MACROS	?= 
+MACROS	?=
 # basic|scheme|stackode|gas
 OUTPUTLANG ?= stackode
 #-Wall -d
@@ -67,6 +67,8 @@ tests: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(OBJECTS) $(TESTSRC) $(TESTOBJ)
 	$(CC) $(CFLAGS) -o test-bin/test-stackode-exporter  obj/test-stackode-exporter.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-compile-to  obj/test-compile-to.o $(OBJECTS)
 	
+syntaxgraph: prepare gen/syntaxer.dot
+	dot -Tpng gen/syntaxer.dot -o gen/syntaxer.png
 
 prepare:
 	mkdir -p gen obj bin test-bin tmp
@@ -83,10 +85,13 @@ gen/lexer.c: src/lexer.l
 gen/syntaxer.c: src/syntaxer.y
 	$(YACC) -Wall -o$@ $<
 
+gen/syntaxer.dot: src/syntaxer.y
+	$(YACC) -Wall --graph -v $<
 ###########################
 ### compile libs
 obj/syntaxer.o: gen/syntaxer.c
 	${CC} -c ${CFLAGS} -o $@ -c $<
+	
 	
 
 obj/lexer.o: gen/lexer.c
@@ -153,4 +158,6 @@ obj/test-stackode-exporter.o: test/test-stackode-exporter.c
 
 
 obj/test-compile-to.o: test/test-compile-to.c
-	${CC} -c ${CFLAGS} -o $@ -c $<			
+	${CC} -c ${CFLAGS} -o $@ -c $<	
+	
+		

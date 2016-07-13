@@ -17,8 +17,25 @@ struct ast_node_t* create_number(long value) {
 }
 
 struct ast_node_t* create_string(char* value) {
-	struct ast_node_t* node = create_new_node(ATT_STRING);
-	node->value.string = value;
+	struct ast_node_t* node = create_new_node(JST_ARRAY);
+
+	ast_node_t* count = create_number(0);
+	ast_node_t* items = create_expressions(NULL);
+
+	int i;
+	for (i = 0; value[i] != '\0'; i++) {
+		YYSTYPE char_val = { ((long) value[i]) };
+		append_child(items, ATT_NUMBER, char_val);
+	}
+
+	YYSTYPE terminator = { (long) 0 };
+	append_child(items, ATT_NUMBER, terminator);
+
+	count->value.number = i + 1;
+
+	node->value.child = count;
+	node->value.child->next = items;
+
 	return node;
 }
 
@@ -38,11 +55,12 @@ struct ast_node_t* create_identifier(char* name) {
 struct ast_node_t* create_procedure(struct ast_node_t* name,
 		struct ast_node_t* params, struct ast_node_t* body) {
 
-	if (name == NULL) {
-		ast_node_t* name = create_keyword(STK_LAMBDA); //TODO FIXME won't work, no? not tested yet! will create new var and recycle it
-	} else {
+	if (name) {
 		name = duplicate(name);
+	} else {
+		name = create_keyword(STK_LAMBDA);
 	}
+
 	return create_with_3_children(JST_PROCEDURE, name, params, body);
 }
 
@@ -131,7 +149,6 @@ struct ast_node_t* create_expressions(struct ast_node_t* exprs) {
 struct ast_node_t* create_expression(struct ast_node_t* of) {
 	return create_with_1_children(JST_EXPRESSION, of);
 }
-
 
 struct ast_node_t* create_proccall(struct ast_node_t* proc,
 		struct ast_node_t* args) {
@@ -294,4 +311,19 @@ struct ast_node_t* duplicate(struct ast_node_t* node) {
 	return copy;
 }
 
+void append_child(struct ast_node_t* node, TOKEN_TYPE_T type, YYSTYPE value) {
+	ast_node_t* new = create_new_node(type);
+	new->value = value;
+
+	ast_node_t* child = node->value.child;
+
+	if (child) {
+		while (child->next) {
+			child = child->next;
+		}
+		child->next = new;
+	} else {
+		node->value.child = new;
+	}
+}
 #endif

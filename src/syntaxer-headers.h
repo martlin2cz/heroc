@@ -30,13 +30,13 @@ int yyerror (struct ast_node_t** tree, char *s);
 #define BINARY_OP($1, $3, $$, OP) \
 	{ \
 		*root = $$ = create_binary(OP, $1, $3); \
-		SYNTAXER_LOG("%04d of %p %p -> %p", OP, $1, $3, $$); \
+		SYNTAXER_LOG("%s of %p %p -> %p", to_string(OP), $1, $3, $$); \
 	}
 
 #define UNARY_OP($2, $$, OP) \
 	{ \
 		*root = $$ = create_unary(OP, $2); \
-		SYNTAXER_LOG("%04d of %p -> %p", OP, $2, $$); \
+		SYNTAXER_LOG("%s of %p -> %p", to_string(OP), $2, $$); \
 	}
 
 

@@ -60,7 +60,7 @@ const token_str_tuple_t commons[COMMONS_COUNT] =	//
 				{ STK_BREAK, "break" },	//
 				{ STK_CONTINUE, "continue" },	//
 				{ STK_GOTO, "goto" },	//
-				{ STK_LAMBDA, "lambda?" }	//
+				{ STK_LAMBDA, "lambda" }	//
 
 		};
 

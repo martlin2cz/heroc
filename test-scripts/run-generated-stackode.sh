@@ -6,7 +6,7 @@
 SCHEME=scheme-r5rs
 
 #timeout (in secs) to test run
-TIMEOUT=100
+TIMEOUT=1000
 
 make tests --eval="OUTPUTLANG=stackode" --eval="MACROS= "
 

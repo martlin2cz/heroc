@@ -1,0 +1,45 @@
+foo() {
+	//basic lambda expression
+	long f = lambda(x) { return x * x; };
+
+	print_long(f(5));
+	print_nl();
+}
+	
+
+bar() {
+	//more complex lambda expression
+	long g = lambda(x) { 
+		if (x > 0) {
+			return +1;
+		}
+		if (x < 0) {
+			return -1;
+		}
+		return 0;
+	};
+
+	print_long(g(-4));
+	print_nl();
+	print_long(g(42));
+	print_nl();
+	print_long(g(0));
+	print_nl();
+}
+	
+long f,g; 
+
+baz() {
+	f = lambda () { return g(); }; 
+	g = lambda () { return 42; }; 
+	
+	print_long( f() + g());
+	print_nl();
+}
+
+
+main() {
+	foo();
+	bar();
+	baz();
+}
