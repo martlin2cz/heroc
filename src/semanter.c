@@ -14,18 +14,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// frame pointer + return adress
-#define FRAME_STUFF_SIZE 2
-
-#define SEMANTIC_ERROR_BODY(...) \
-	fprintf(stderr, "Semantic error: "); \
-	fprintf(stderr, __VA_ARGS__); \
-	fprintf(stderr, " near to:\n", message); \
-	ast_display_root(stderr, context); \
-	\
-	(*errors)++; \
-
-
 void semantic_error_0(char* message, struct ast_node_t* context, int *errors) {
 	SEMANTIC_ERROR_BODY(message);
 }
@@ -91,8 +79,6 @@ struct ast_node_t* create_predefined_proc_decl(char* name, char* arg1_name) {
 	return decl;
 
 }
-
-
 
 YYSTYPE find_value_of_meta(struct ast_node_t* node, TOKEN_TYPE_T meta) {
 	ast_node_t* child = node->value.child;
@@ -178,6 +164,8 @@ int analyze_tree(ast_node_t* root) {
 	int errors = 0;
 
 	analyze_nodes(root, &previous, NULL, &next_var_at, &errors);
+
+	add_invoke_main_and_stuff(root, &previous, &next_var_at, &errors);
 
 	SEMANTER_LOG("Global scope requires %d cells on stack.", next_var_at);
 
@@ -382,7 +370,8 @@ void analyze_loop_keyw(ast_node_t* node, ast_node_t* inloop, int *errors) {
 	append_child(node, META_LOOP, val);
 }
 
-void analyze_proccall(ast_node_t* node, ast_node_t** previous, int* next_var_at, int *errors) {
+void analyze_proccall(ast_node_t* node, ast_node_t** previous, int* next_var_at,
+		int *errors) {
 	SEMANTER_LOG("Starting to analyze procedure call");
 
 	ast_node_t* proc_var = node->value.child;
@@ -502,7 +491,8 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 	if (value) {
 		ast_node_t* new_prev = node;
 
-		if (value->type == JST_PROCEDURE && value->value.child->type != STK_LAMBDA) {
+		if (value->type == JST_PROCEDURE
+				&& value->value.child->type != STK_LAMBDA) {
 			analyze_one_node(value, &new_prev, NULL, next_var_at, errors);
 		} else {
 			//make an assignment from initval
@@ -521,7 +511,8 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 		}
 	}
 
-	if (!(value && value->type == JST_PROCEDURE && value->value.child->type != STK_LAMBDA)) {
+	if (!(value && value->type == JST_PROCEDURE
+			&& value->value.child->type != STK_LAMBDA)) {
 		if (next_to_plus) {
 			(*next_var_at)++;
 		} else {
@@ -574,7 +565,23 @@ void analyze_container(ast_node_t* node, ast_node_t** previous,
 	} else {
 		analyze_nodes(children, previous, inloop, next_var_at, errors);
 	}
+}
 
+void add_invoke_main_and_stuff(ast_node_t* root, ast_node_t** previous,
+		int* next_var_at, int* errors) {
+
+	ast_node_t* var = create_identifier("main");
+	analyze_identifier_use(var, previous, errors);
+
+	ast_node_t* args = create_with_0_children(CNT_EXPRESSIONS);
+	ast_node_t* call = create_with_2_children(JST_PROCCALL, var, args);
+
+	ast_node_t* node = root;
+	while (node->next) {
+		node = node->next;
+	}
+
+	node->next = call;
 }
 
 #endif

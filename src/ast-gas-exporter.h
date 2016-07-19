@@ -1,7 +1,9 @@
 #ifndef _AST_STACKODE_EXPORTER_H_
 #define _AST_STACKODE_EXPORTER_H_
 
+#include <stdlib.h>
 #include <stdio.h>
+
 #include "ast-exporter.h"
 #include "stackode.h"
 
@@ -15,6 +17,15 @@
 #else
 #define GAS_LOG(...)
 #endif
+
+#define ALLOC_PRINT_RETURN(...) \
+	char* buff = (char*) malloc(100 * sizeof(char)); \
+	if (!buff) { \
+		fprintf(stderr, "Cannot allocate memory\n"); \
+		return NULL; \
+	} \
+	sprintf(buff, __VA_ARGS__); \
+	return buff;
 
 void ast_export_root(FILE* dest, struct ast_node_t* root);
 void export_stackode_to_gas(FILE* dest, sk_program_t* program);
@@ -44,13 +55,18 @@ void sk_duplicate_to_gas(FILE* dest);
 void sk_unary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper);
 void sk_binary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper);
 
+char* gas_reg(char* name);
+char* gas_reg_call(char* name);
+char* gas_reg_ref(int offset, char* name);
+char* gas_num(long value);
+char* gas_label(char* name);
+char* gas_label_addr(char* name);
 
 void gas_new_instructiction(FILE* dest, char* comment);
-void gas_add_instr(FILE* dest, char* name);
-void gas_add_instr_r(FILE* dest, char* name, char* reg);
-void gas_add_instr_n(FILE* dest, char* name, long value);
-void gas_add_instr_l(FILE* dest, char* name, char* label);
-void gas_add_instr_rr(FILE* dest, char* name, char* reg1, char* reg2);
-void gas_add_instr_nr(FILE* dest, char* name, long number, char* reg);
+void gas_add_instr_0(FILE* dest, char* name);
+void gas_add_instr_1(FILE* dest, char* name, char* arg1);
+void gas_add_instr_2(FILE* dest, char* name, char* arg1, char* arg2);
+void gas_add_label(FILE* dest, char* label);
+void gas_add_comment(FILE* dest, char* comment);
 
 #endif

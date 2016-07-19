@@ -3,7 +3,7 @@
 ;;
 
 
-(load "../lib/herocio.scm")
+(load "./lib/herocio.scm")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; stack
@@ -314,8 +314,8 @@
     ;(display "\t with stack ") (display (stack context)) 
     ;(display "\t and frame pointer ") (display (frame-pointer context)) 
     ;(newline)
-  ;  (print-log "evaluating" instruction ;)
-   ;            (stack context) (frame-pointer context))
+    ;(print-log "evaluating" instruction ;)
+    ;           (stack context) (frame-pointer context))
   ;  (read)
     ;
     
@@ -413,27 +413,18 @@
     (push-value-and-continue 
      (stack context) 
      (sc-address-of-label label (program context)))))
-
-
-(define sci-duplicate
-  (lambda (context)
-    (let* ((stack (stack context))
-          (top (pop stack)))
-      (push stack top)
-      (push stack top))
-    'next-instruction))
     
 (define sci-declare-atomic
   (lambda (context)
     (let* ((stack (stack context)))
       (push-undefineds-and-continue stack 1))))
       
-
 (define sci-declare-array
   (lambda (context size)
     (let* ((stack (stack context)))
       (push-undefineds-and-continue stack size))))
     
+
 (define sci-push-relative-adress
   (lambda (context ofset)
     (let* ((stack (stack context))
@@ -445,6 +436,7 @@
   (lambda (context addres)
     (let* ((stack (stack context)))
       (push-value-and-continue stack addres))))
+
 
 (define sci-load
   (lambda (context)
@@ -461,9 +453,19 @@
       (push stack value)
       (set-at-absolute-and-continue stack addr value))))
 
+
 (define sci-pop
   (lambda (context)
-    (pop (stack context))
+    (let ((stack (stack context)))
+      (pop stack))
+    'next-instruction))
+
+(define sci-duplicate
+  (lambda (context)
+    (let* ((stack (stack context))
+           (value (pop stack)))
+      (push stack value)
+      (push stack value))
     'next-instruction))
 
 (define sci-jump-on-non-zero
@@ -545,7 +547,7 @@
        ((op--) -)
        ((op-*) *)
        ((op-/) /)
-       ((op-%) mod)
+       ((op-%) modulo)
        ((op-<) <-of-ints)
        ((op->) >-of-ints)
        ((op-<=) <=-of-ints)
@@ -718,6 +720,7 @@
    (list 'push-relative-adress  sci-push-relative-adress)
    (list 'push-absolute-adress  sci-push-absolute-adress)
    (list 'pop sci-pop)
+   (list 'duplicate sci-duplicate)
         
    ;arithmetic instructions
    (list 'unary-operation sci-unary-operation)
@@ -757,7 +760,7 @@
                (label print_nl)
                (invoke-primitive ,print_nl 0)
                (return)
-               
+                              
                (label start-of-program)))
             program
             (sc-program 

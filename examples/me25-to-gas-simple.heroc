@@ -1,0 +1,9 @@
+foo() {
+	return 42;
+}
+
+main() {
+	foo();
+
+	return 0;
+}

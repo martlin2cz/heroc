@@ -10,8 +10,9 @@ foo() {
 bar() {
 	long a = { 88, 99};
 
-	a[0];
-	a[1];
+	print_long(a[0]);
+	print_long(a[1]);
+	print_nl();
 }
 
 baz() {

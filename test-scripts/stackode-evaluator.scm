@@ -64,10 +64,10 @@
 
 (define pop-n
   (lambda (stack count)
-    (check-stack stack 0)
     (if (<= count 0) 
         stack
         (begin
+          (check-stack stack 0)
           (pop stack)
           (pop-n stack (- count 1))))))
 
@@ -764,9 +764,7 @@
                (label start-of-program)))
             program
             (sc-program 
-             '((push-label-adress main)
-               (call)
-               (end))))))
+             '((end))))))
 
 ; (sc-wrap-program (sc-program '((push-constant 1) (push-constant 2) (add))))
 

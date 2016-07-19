@@ -530,8 +530,18 @@ void index_to_stackode(sk_program_t * program, ast_node_t * node) {
 	single_node_to_stackode(program, node->value.child);
 	single_node_to_stackode(program, node->value.child->next);
 
+
+	sk_instruction_t* cnst = create_instruct_with_num(SKI_PUSH_CONSTANT, CELL_SIZE);
+			add_instruction(program, cnst);
+
+
+	sk_instruction_t* mul = create_instruct_with_op(SKI_BINARY_OPERATION,
+				OPT_TIMES); //FIXME HACK !!!!
+		add_instruction(program, mul);
+
+
 	sk_instruction_t* add = create_instruct_with_op(SKI_BINARY_OPERATION,
-			OPT_PLUS);
+			OPT_MINUS);
 	add_instruction(program, add);
 
 	sk_instruction_t* load = create_instruction(SKI_LOAD);
