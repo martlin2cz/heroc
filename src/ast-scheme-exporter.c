@@ -71,15 +71,10 @@ int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap) 
 	int new_pad = padding + (wrap ? 1 : 1);	//TODO lol, wtf?
 
 	switch (node->type) {
-	//XXX
-	//case CNT_VARS_DECLS: {
-	//	int skip = print_vars_decls(dest, node, padding, wrap);
-	//	return skip;
-	//	break;
-	//}
-
 	//absolutelly syntactically specifically printed
-
+	case JST_PROGRAM:
+		print_whole_program(dest, child, padding, wrap);
+		break;
 	case JST_VARIABLE_DECL: {
 		int done = print_variable_decl(dest, node, padding, wrap);
 		return done;
@@ -120,16 +115,16 @@ int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap) 
 		break;
 		// renaming
 	case STK_ASSIGNMENT:
-		print_renamed(dest, "set!", child, new_pad, 0);
+		print_renamed(dest, "set-at", child, new_pad, 0);
 		break;
 	case OPT_INDEX:
 		print_renamed(dest, "at", child, new_pad, 0);
 		break;
 	case OPT_DEREFERENCE:
-		print_renamed(dest, "address-of", child, new_pad, 0);
+		print_renamed(dest, "adress-of", child, new_pad, 0);
 		break;
 	case OPT_REFERENCE:
-		print_renamed(dest, "at-address", child, new_pad, 0);
+		print_renamed(dest, "at-adress", child, new_pad, 0);
 		break;
 	case OPT_TERNARY:
 		print_renamed(dest, "if", child, new_pad, 0);
@@ -176,6 +171,10 @@ int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap) 
 	}
 	}
 	return 0;
+}
+
+void print_whole_program(FILE* dest, struct ast_node_t* decls, int padding, int wrap) {
+	print_naked_list(dest, decls, padding, wrap);
 }
 
 void print_procedure(FILE* dest, struct ast_node_t* node, int padding, int wrap) {

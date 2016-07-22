@@ -6,6 +6,8 @@
 #include "stackode.h"
 
 void ast_export_root(FILE* dest, struct ast_node_t* root) {
+	//TODO check platform
+
 	sk_program_t* sk = ast_to_stackode(root);
 	export_stackode_to_gas(dest, sk);
 
@@ -43,21 +45,24 @@ void export_gas_preamble(FILE* dest) {
 	gas_add_comment(dest, "save the stack frame begin");
 	gas_add_instr_2(dest, "movq", gas_reg("sp"), gas_reg("12"));
 
-	gas_add_comment(dest, " redeclaring the predefined commands");
-	gas_add_instr_1(dest, "jmp", gas_label("skip_initial_decls"));
+	/*
+	 * XXX
+	 gas_add_comment(dest, " redeclaring the predefined commands");
+	 gas_add_instr_1(dest, "jmp", gas_label("skip_initial_decls"));
 
-	gas_add_label(dest, "print_long");
-	gas_add_instr_2(dest, "movq", gas_reg_ref(CELL_SIZE, "bp"), gas_reg("di"));
-	gas_add_instr_1(dest, "jmp", "print_long");
+	 gas_add_label(dest, "print_long");
+	 gas_add_instr_2(dest, "movq", gas_reg_ref(CELL_SIZE, "bp"), gas_reg("di"));
+	 gas_add_instr_1(dest, "jmp", "print_long");
 
-	gas_add_label(dest, "print_char");
-	gas_add_instr_2(dest, "movq", gas_reg_ref(CELL_SIZE, "bp"), gas_reg("di"));
-	gas_add_instr_1(dest, "jmp", "print_char");
+	 gas_add_label(dest, "print_char");
+	 gas_add_instr_2(dest, "movq", gas_reg_ref(CELL_SIZE, "bp"), gas_reg("di"));
+	 gas_add_instr_1(dest, "jmp", "print_char");
 
-	gas_add_label(dest, "print_nl");
-	gas_add_instr_1(dest, "jmp", "print_nl");
+	 gas_add_label(dest, "print_nl");
+	 gas_add_instr_1(dest, "jmp", "print_nl");
 
-	gas_add_label(dest, "skip_initial_decls");
+	 gas_add_label(dest, "skip_initial_decls");
+	 */
 }
 
 void export_gas_footer(FILE* dest) {
@@ -66,7 +71,9 @@ void export_gas_footer(FILE* dest) {
 	gas_add_instr_1(dest, "popq", gas_reg("ax"));
 
 	gas_add_comment(dest, "restore original stack pointer");
-		gas_add_instr_2(dest, "movq", gas_reg("12"), gas_reg("sp"));
+	gas_add_instr_2(dest, "movq", gas_reg("12"), gas_reg("sp"));
+
+	//TODO exit program?
 
 	gas_add_comment(dest, "#                               ");
 	gas_add_comment(dest, "# end of generated code         ");
@@ -135,6 +142,15 @@ void stackode_instr_to_gas(FILE* dest, sk_instruction_t* instr) {
 		break;
 	case SKI_BINARY_OPERATION:
 		sk_binary_operation_to_gas(dest, instr->value.number);
+		break;
+	case SKI_PUSH_CELL_SIZE:
+		sk_push_cell_size(dest);
+		break;
+	case SKI_INVOKE_EXTERNAL:
+		sk_invoke_external(dest, instr->value.string, instr->value2.number);
+		break;
+	case SKI_END:
+		sk_end(dest);
 		break;
 	default:
 		fprintf(stderr, "sitg: Unknown stackode instruction %x\n", instr->type);
@@ -255,7 +271,8 @@ void sk_push_relative_adress_to_gas(FILE* dest, long adress) {
 void sk_push_absolute_adress_to_gas(FILE* dest, long adress) {
 	gas_new_instructiction(dest, "push absolute adress");
 
-	long offset = -adress * CELL_SIZE;
+	//+ 1 ? Adress 0 is last cell of previously stack shit
+	long offset = -(adress + 1) * CELL_SIZE;
 	gas_add_instr_2(dest, "movq", gas_reg("12"), gas_reg("ax"));
 	gas_add_instr_2(dest, "addq", gas_num(offset), gas_reg("ax"));
 	gas_add_instr_1(dest, "pushq", gas_reg("ax"));
@@ -272,13 +289,44 @@ void sk_duplicate_to_gas(FILE* dest) {
 	gas_add_instr_2(dest, "movq", gas_reg_ref(0, "sp"), gas_reg("ax"));
 	gas_add_instr_1(dest, "pushq", gas_reg("ax"));
 }
+
+void sk_invoke_external(FILE* dest, char* name, long arity) {
+	gas_new_instructiction(dest, "invoke external");
+
+	switch (arity) {
+	//case 2: move another param into %rsi? or where ...
+	case 1: {
+		long offset = -((-1) * CELL_SIZE);	//TODO FIXME TEST offset
+		gas_add_instr_2(dest, "movq", gas_reg_ref(offset, "bp"), gas_reg("di"));
+	}
+		/* no break */
+	case 0:
+		//nothing to do, hopefully
+		break;
+	default:
+		fprintf(stderr, "sie: Unsupported arity %ld\n", arity);
+		return;
+	}
+
+	gas_add_instr_1(dest, "jmp", name);
+
+}
+void sk_end(FILE* dest) {
+	gas_new_instructiction(dest, "That's all folks!");
+}
+void sk_push_cell_size(FILE* dest) {
+	gas_new_instructiction(dest, "push cell size");
+
+	gas_add_instr_1(dest, "pushq", gas_num(CELL_SIZE));
+}
+
 void sk_unary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper) {
 	gas_new_instructiction(dest, "unary operation");
 
 	char* op;
 	switch (oper) {
 	case OPT_NOT:
-		op = "negq";
+		op = "negq";	//FIXME negation
 		break;
 	case OPT_BITWISE_NOT:
 		op = "notq";
@@ -407,6 +455,17 @@ void sk_binary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper) {
 	}
 	if (op_other) {
 		switch (op_other) {
+		case OPT_INDEX:
+			gas_add_instr_1(dest, "popq", gas_reg("ax"));	//offset
+			gas_add_instr_1(dest, "popq", gas_reg("bx"));	//base
+
+			gas_add_instr_2(dest, "imulq", gas_num(CELL_SIZE), gas_reg("ax"));
+			gas_add_instr_1(dest, "negq", gas_reg("ax"));
+
+			gas_add_instr_2(dest, "addq", gas_reg("bx"), gas_reg("ax"));
+			gas_add_instr_1(dest, "pushq", gas_reg("ax"));
+			break;
+
 		case OPT_DIVIDE:
 		case OPT_MODULO:
 			gas_add_instr_1(dest, "popq", gas_reg("bx"));

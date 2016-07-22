@@ -11,11 +11,11 @@ LEX	 = flex
 YACC = bison
 
 # -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  -D SEMANTER_VERBOSE  -D STACKODE_VERBOSE -D GAS_VERBOSE
-MACROS	?= 
+MACROS	?=  
 # basic|scheme|stackode|gas
-OUTPUTLANG ?= gas
+OUTPUTLANG ?= stackode
 #-Wall -d
-CFLAGS	= -ansi -pedantic -std=c11 $(MACROS) 
+CFLAGS	= -ansi -pedantic -std=c11 $(MACROS) --debug ## XXX --debug
 LIBS	= -lfl -lm
 
 

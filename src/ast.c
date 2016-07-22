@@ -41,8 +41,10 @@ struct ast_node_t* create_string(char* value) {
 
 /*****************************************************************************/
 /* the whole program and declarations */
+
 struct ast_node_t* create_program(struct ast_node_t* decls) {
-	return decls;
+	ast_node_t* program = create_with_1_children(JST_PROGRAM, decls);
+	return program;
 }
 
 struct ast_node_t* create_identifier(char* name) {
@@ -74,11 +76,6 @@ struct ast_node_t* create_array_of_value(struct ast_node_t* arrexpr) {
 	return create_with_2_children(JST_ARRAY, s, arrexpr);
 }
 
-//struct ast_node_t* create_variables_decl(struct ast_node_t* decls) {
-//	//TESTING return create_with_1_children(CNT_VARS_DECLS, decls);
-//	return decls;
-//}
-
 struct ast_node_t* create_declaration(struct ast_node_t* var,
 		struct ast_node_t* value) {
 
@@ -89,6 +86,14 @@ struct ast_node_t* create_decl_of_proc(struct ast_node_t* var,
 		struct ast_node_t* proc) {
 
 	return create_declaration(var, proc);
+}
+
+struct ast_node_t* create_invoke_external(char* name) {
+	ast_node_t* name_node = create_identifier(name);
+	ast_node_t* inv_ext = create_with_1_children(JST_INVOKE_EXTERNAL,
+			name_node);
+
+	return inv_ext;
 }
 
 /*****************************************************************************/
@@ -311,7 +316,7 @@ struct ast_node_t* duplicate(struct ast_node_t* node) {
 	return copy;
 }
 
-void append_child(struct ast_node_t* node, TOKEN_TYPE_T type, YYSTYPE value) {
+struct ast_node_t* append_child(struct ast_node_t* node, TOKEN_TYPE_T type, YYSTYPE value) {
 	ast_node_t* new = create_new_node(type);
 	new->value = value;
 
@@ -325,5 +330,37 @@ void append_child(struct ast_node_t* node, TOKEN_TYPE_T type, YYSTYPE value) {
 	} else {
 		node->value.child = new;
 	}
+
+	return new;
 }
+
+void replace_child(ast_node_t* parent, ast_node_t* old_child,
+		ast_node_t* new_child) {
+
+	//fprintf(stderr, "qqq %p -> %p, %p  %p -> %p\n", parent, parent->value.child, parent->value.child->next, old_child, new_child);
+	//ast_display_root(stderr, parent);
+
+
+
+	ast_node_t* child = parent->value.child;
+	if (child == old_child) {
+		parent->value.child = new_child;
+		new_child->next = child->next;
+
+		return;
+	}
+
+	while (child->next) {
+		ast_node_t* previous = child;
+		child = child->next;
+
+		if (child == old_child) {
+			previous->next = new_child;
+			new_child->next = old_child->next;
+
+			return;
+		}
+	}
+}
+
 #endif

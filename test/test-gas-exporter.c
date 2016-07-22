@@ -156,9 +156,9 @@ void test_program_1(void) {
 	add_instruction(program, //
 			create_instruct_with_str(SKI_LABEL, "after_main"));
 
-	export_stackode_to_gas(stdout, program);
+	//export_stackode_to_gas(stdout, program);
 	//export_stackode(stdout, program);
-	//fprintf(stderr, "Link stackode source and uncomment at line %d\n",
-	//		(__LINE__ - 1));
+	fprintf(stderr, "Link stackode source and uncomment at line %d\n",
+			(__LINE__ - 1));
 
 }

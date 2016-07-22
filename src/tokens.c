@@ -10,7 +10,7 @@
 
 #define JUST_LEXICALS_COUNT 17
 #define COMMONS_COUNT 15
-#define JUST_SEMANTICS_COUNT 16
+#define JUST_SEMANTICS_COUNT 19
 #define OPERATORS_COUNT 28
 #define ASSIGNMENTS_OPS_COUNT 12
 
@@ -73,6 +73,8 @@ const token_str_tuple_t just_semantics[JUST_SEMANTICS_COUNT] = //
 				{ JST_ARRAY, "(array)" },	//
 				{ JST_PROCCALL, "(procedure call)" },	//
 				{ JST_VARIABLE_DECL, "(variable declaration)" },	//
+				{ JST_PROGRAM, "(program)" },	//
+				{ JST_INVOKE_EXTERNAL, "(invoke external)" },
 
 				/* containers */
 				{ CNT_STATEMENTS, "(block of statements)" },	//
@@ -84,7 +86,8 @@ const token_str_tuple_t just_semantics[JUST_SEMANTICS_COUNT] = //
 				{ META_DECLARATION, "(declaration)" },	//
 				{ META_LOOP, "(loop ref)" },	//
 				{ META_PREVIOUS, "(previous)" },	//
-				{ META_VAR_TYPE, "(type of var)" }	//
+				{ META_VAR_TYPE, "(type of var)" },	//
+				{ META_ARITY_OF_EXTERNAL, "(arity of external)" } //
 
 		};
 

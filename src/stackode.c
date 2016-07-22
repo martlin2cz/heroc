@@ -12,7 +12,10 @@
 sk_program_t* ast_to_stackode(ast_node_t* root) {
 	sk_program_t *program = create_empty_program();
 
-	list_to_stackode(program, root);
+	single_node_to_stackode(program, root);
+
+	sk_instruction_t* end_instr = create_instruction(SKI_END);
+	add_instruction(program, end_instr);
 
 	return program;
 }
@@ -32,6 +35,9 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 			to_string(node->type));
 
 	switch (node->type) {
+	case JST_PROGRAM:
+		program_to_sackode(program, node);
+		break;
 	case ATT_NUMBER:
 		number_to_stackode(program, node);
 		break;
@@ -65,9 +71,6 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 	case STK_CONTINUE:
 		continue_to_stackode(program, node);
 		break;
-	case STK_LAMBDA:
-		lambda_to_stackode(program, node);
-		break;
 	case JST_VARIABLE:
 		variable_to_stackode(program, node);
 		break;
@@ -97,9 +100,6 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 	case OPT_DEREFERENCE:
 		dereference_to_stackode(program, node);
 		break;
-	case OPT_INDEX:
-		index_to_stackode(program, node);
-		break;
 	case OPT_REFERENCE:
 		reference_to_stackode(program, node);
 		break;
@@ -108,6 +108,9 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 	case OPT_POST_INCREMENT:
 	case OPT_POST_DECREMENT:
 		inc_dec_to_stackode(program, node);
+		break;
+	case JST_INVOKE_EXTERNAL:
+		invoke_external_to_stackode(program, node);
 		break;
 	default:
 		if (is_meta(node->type)) {
@@ -123,6 +126,11 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node) {
 					to_string(node->type));
 		}
 	}
+}
+
+void program_to_sackode(sk_program_t* program, ast_node_t* node) {
+	ast_node_t* decls = node->value.child;
+	list_to_stackode(program, decls);
 }
 
 void node_to_stackode_comment(sk_program_t* program, ast_node_t* node) {
@@ -152,9 +160,8 @@ void assignment_to_stackode(sk_program_t * program, ast_node_t * node) {
 }
 
 void sizeof_to_stackode(sk_program_t * program, ast_node_t * node) {
-	long value = CELL_SIZE;
-	sk_instruction_t* instr = create_instruct_with_num(SKI_PUSH_CONSTANT,
-			value);
+
+	sk_instruction_t* instr = create_instruction(SKI_PUSH_CELL_SIZE);
 	add_instruction(program, instr);
 }
 
@@ -329,39 +336,37 @@ void continue_to_stackode(sk_program_t * program, ast_node_t * node) {
 	add_instruction(program, jmp2start);
 
 }
-void lambda_to_stackode(sk_program_t * program, ast_node_t * node) {
-	node_to_stackode_comment(program, node);
-	//XXX
-}
 void variable_to_stackode(sk_program_t * program, ast_node_t * node) {
 	YYSTYPE decl = find_value_of_meta(node, META_DECLARATION);
 	ast_node_t* init_val = decl.child->value.child->next;
 
-	if (init_val && init_val->type == JST_PROCEDURE
-			&& init_val->value.child->type == JST_VARIABLE) {
-		char* label = label_of_proc(init_val);
+	/*if (init_val && init_val->type == JST_PROCEDURE
+	 && init_val->value.child->type == JST_VARIABLE) {
+	 char* label = label_of_proc(init_val);
 
-		sk_instruction_t* pa = create_instruct_with_str(SKI_PUSH_LABEL_ADRESS,
-				label);
-		add_instruction(program, pa);
+	 sk_instruction_t* pa = create_instruct_with_str(SKI_PUSH_LABEL_ADRESS,
+	 label);
+	 add_instruction(program, pa);
+	 } else {
+	 */
+	YYSTYPE type = find_value_of_meta(decl.child, META_VAR_TYPE);
+	YYSTYPE addr = find_value_of_meta(decl.child, META_ADRESS);
+
+	sk_instr_type_t instr_type;
+	if (type.number == VT_GLOBAL) {
+		instr_type = SKI_PUSH_ABSOLUTE_ADRESS;
 	} else {
-		YYSTYPE type = find_value_of_meta(decl.child, META_VAR_TYPE);
-		YYSTYPE addr = find_value_of_meta(decl.child, META_ADRESS);
-
-		sk_instr_type_t instr_type;
-		if (type.number == VT_GLOBAL) {
-			instr_type = SKI_PUSH_ABSOLUTE_ADRESS;
-		} else {
-			instr_type = SKI_PUSH_RELATIVE_ADRESS;
-		}
-
-		sk_instruction_t* pa = create_instruct_with_num(instr_type,
-				addr.number);
-		add_instruction(program, pa);
-
-		sk_instruction_t* load = create_instruction(SKI_LOAD);
-		add_instruction(program, load);
+		instr_type = SKI_PUSH_RELATIVE_ADRESS;
 	}
+
+	sk_instruction_t* pa = create_instruct_with_num(instr_type, addr.number);
+	add_instruction(program, pa);
+
+	//sk_instruction_t* load = create_instruction(SKI_LOAD);
+	//add_instruction(program, load);
+	/*
+	 }
+	 */
 }
 
 void array_to_stackode(sk_program_t * program, ast_node_t * node) {
@@ -378,7 +383,16 @@ void array_to_stackode(sk_program_t * program, ast_node_t * node) {
 	}
 
 	YYSTYPE var_addr = find_value_of_meta(node, META_ADRESS);
-	sk_instruction_t* pav = create_instruct_with_num(SKI_PUSH_RELATIVE_ADRESS,
+	YYSTYPE var_type = find_value_of_meta(node, META_VAR_TYPE);
+
+	sk_instr_type_t pav_instr_type;
+	if (var_type.number == VT_GLOBAL) {	//TODO FIXME code redundancy (with var and maybe lambda?)
+		pav_instr_type = SKI_PUSH_ABSOLUTE_ADRESS;
+	} else {
+		pav_instr_type = SKI_PUSH_RELATIVE_ADRESS;
+	}
+
+	sk_instruction_t* pav = create_instruct_with_num(pav_instr_type,
 			var_addr.number);
 
 	add_instruction(program, pav);
@@ -389,6 +403,10 @@ void procedure_to_stackode(sk_program_t * program, ast_node_t * node) {
 
 	//labels
 	char* proc_label = label_of_proc(node);
+
+	sk_instruction_t* push_addr = create_instruct_with_str(
+			SKI_PUSH_LABEL_ADRESS, proc_label);
+	add_instruction(program, push_addr);
 
 	char* after_label = generate_label("after", "procedure", node->uid);
 
@@ -404,6 +422,10 @@ void procedure_to_stackode(sk_program_t * program, ast_node_t * node) {
 	single_node_to_stackode(program, node->value.child->next->next);
 
 	//after body
+	sk_instruction_t* ret_cmt = create_instruct_with_str(SKI_COMMENT,
+			"\"implicit return\"");
+	add_instruction(program, ret_cmt);
+
 	sk_instruction_t* push_retval = create_instruction(SKI_DECLARE_ATOMIC);
 	add_instruction(program, push_retval);
 
@@ -526,41 +548,22 @@ void dereference_to_stackode(sk_program_t * program, ast_node_t * node) {
 	sk_instruction_t* load = create_instruction(SKI_LOAD);
 	add_instruction(program, load);
 }
-void index_to_stackode(sk_program_t * program, ast_node_t * node) {
-	single_node_to_stackode(program, node->value.child);
-	single_node_to_stackode(program, node->value.child->next);
 
-
-	sk_instruction_t* cnst = create_instruct_with_num(SKI_PUSH_CONSTANT, CELL_SIZE);
-			add_instruction(program, cnst);
-
-
-	sk_instruction_t* mul = create_instruct_with_op(SKI_BINARY_OPERATION,
-				OPT_TIMES); //FIXME HACK !!!!
-		add_instruction(program, mul);
-
-
-	sk_instruction_t* add = create_instruct_with_op(SKI_BINARY_OPERATION,
-			OPT_MINUS);
-	add_instruction(program, add);
-
-	sk_instruction_t* load = create_instruction(SKI_LOAD);
-	add_instruction(program, load);
-}
 void reference_to_stackode(sk_program_t * program, ast_node_t * node) {
 	single_node_to_stackode(program, node->value.child);
+	/*
+	 sk_instruction_t* last_instr = program->instructions[program->count - 1];
+	 if (last_instr->type == SKI_LOAD) {
+	 remove_last_instr(program);
 
-	sk_instruction_t* last_instr = program->instructions[program->count - 1];
-	if (last_instr->type == SKI_LOAD) {
-		remove_last_instr(program);
+	 } else if (last_instr->type == SKI_PUSH_LABEL_ADRESS) {
+	 //ok, no reference needed
 
-	} else if (last_instr->type == SKI_PUSH_LABEL_ADRESS) {
-		//ok, no reference needed
-
-	} else {
-		fprintf(stderr, "rts: Not a load instruction, it's %s\n",
-				to_string(last_instr->type));
-	}
+	 } else {
+	 fprintf(stderr, "rts: Not a load instruction, it's %x\n",
+	 last_instr->type);
+	 }
+	 */
 }
 void inc_dec_to_stackode(sk_program_t * program, ast_node_t * node) {
 	single_node_to_stackode(program, node->value.child);
@@ -568,13 +571,26 @@ void inc_dec_to_stackode(sk_program_t * program, ast_node_t * node) {
 
 void expression_to_stackode(sk_program_t * program, ast_node_t * node) {
 	sk_instruction_t* comment = create_instruct_with_str(SKI_COMMENT,
-			"Expression");
+			"\"-- expression --\"");
 	add_instruction(program, comment);
 
 	single_node_to_stackode(program, node->value.child);
 
 	sk_instruction_t* pop = create_instruction(SKI_POP);
 	add_instruction(program, pop);
+}
+
+void invoke_external_to_stackode(sk_program_t * program, ast_node_t * node) {
+	sk_instruction_t* comment = create_instruct_with_str(SKI_COMMENT,
+			"\"invoke external procedure\"");
+	add_instruction(program, comment);
+
+	char* name = node->value.child->value.child->value.string;
+	YYSTYPE argc = find_value_of_meta(node, META_ARITY_OF_EXTERNAL);
+
+	sk_instruction_t* invoke = create_instruct_with_str_num(SKI_INVOKE_EXTERNAL,
+			name, argc.number);
+	add_instruction(program, invoke);
 }
 
 /*********************************************************/
@@ -653,6 +669,17 @@ sk_instruction_t* create_instruct_with_num(sk_instr_type_t type, long num) {
 sk_instruction_t* create_instruct_with_op(sk_instr_type_t type,
 TOKEN_TYPE_T oper) {
 	return create_instruct_with_num(type, oper);
+}
+
+sk_instruction_t* create_instruct_with_str_num(sk_instr_type_t type, char* str,
+		long num) {
+	sk_instruction_t* instr = (sk_instruction_t*) malloc(
+			sizeof(sk_instr_type_t));
+
+	instr->type = type;
+	instr->value.string = str;
+	instr->value2.number = num;
+	return instr;
 }
 
 char* generate_label(char* prefix, char* name, int uid) {

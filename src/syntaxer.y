@@ -45,7 +45,7 @@
 
 /* atomic values' tokens */
 %token<number> ATT_NUMBER 2101
-%token<string> ATT_STRING 2102	//ok, variable/proc name
+%token<string> ATT_STRING 2102	//ok, in fact variable/proc name
 
 /* keywords and their particular control statements */
 %token<child> STK_ASSIGNMENT 2201
@@ -69,6 +69,8 @@
 %token<child> JST_PROCCALL 3304
 %token<child> JST_VARIABLE_DECL 3305
 %token<child> JST_EXPRESSION 3306
+%token<child> JST_PROGRAM 3307
+%token<child> JST_INVOKE_EXTERNAL 3308
 
 /* containers */
 %token<child> CNT_STATEMENTS 3401
@@ -82,6 +84,7 @@
 %token<child> META_LOOP 4003
 %token<number> META_ADRESS 4004
 %token<number> META_VAR_TYPE 4005
+%token<number> META_ARITY_OF_EXTERNAL 4006
 
 /* operators/operations */
 %token<child> OPT_PLUS 1101
@@ -216,7 +219,7 @@ JST_VARIABLE {
 }
 | JST_VARIABLE JLT_INDEX_LEFT_BRA JLT_INDEX_RIGHT_BRA JLT_ASSIGNMENT array {
 	ast_node_t* var = create_identifier($1);
-	ast_node_t* array = create_array_of_value($5);
+	ast_node_t* array = $5;
 	*root = $$ = create_declaration(var, array);
 	SYNTAXER_LOG("decl of array %p [] := %p -> %p", var, $5, $$);
 }
@@ -331,7 +334,7 @@ STK_CONTINUE JLT_SEMICOLON {
 	SYNTAXER_LOG("return %p -> %p", $2, $$);
 }
 | STK_GOTO emptyable_expression JLT_SEMICOLON {
-	fprintf(stderr, "You shall not use goto!\n");
+	fprintf(stderr, "Every time you use goto the kitten dies. Don't kill kittens!\n");
 	$$ = NULL;
 }
 ;

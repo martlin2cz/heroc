@@ -3,7 +3,10 @@
 # Martin Jasek, VII/2016
 
 #timeout (in secs) to test run
-TIMEOUT=100
+TIMEOUT=20
+
+#run in gdb? comment out or set to empty if not
+#GDB=gdbtui
 
 make tests --eval="OUTPUTLANG=gas" --eval="MACROS= "
 
@@ -14,11 +17,13 @@ for F in $@; do
 	echo "compiled"
 
 	echo "compiling gas"
-	gcc lib/herocio.c tmp/compiled.s -o tmp/to-run.bin
+	gcc --debug lib/herocio.c tmp/compiled.s -o tmp/to-run.bin
 	echo "compiled"
 
 
 	echo "================"
-	timeout $TIMEOUT ./tmp/to-run.bin
+	# choose one:
+	#timeout $TIMEOUT ./tmp/to-run.bin
+	$GDB ./tmp/to-run.bin
 	echo "================"
 done

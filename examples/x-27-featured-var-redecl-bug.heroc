@@ -1,0 +1,18 @@
+
+foo() {
+	long fn = lambda() { return 45; };
+	
+	fn = 42;
+	fn();	//hehe, semanter thinks its call of initial lambda
+}
+
+bar() {
+	foo = 99;	//you can easilly redefine (global) procedure identifier
+	foo();	//and it will does not recognize it
+}
+
+main() {
+	//will fail in horrible pain ...
+	foo();
+	bar();
+}

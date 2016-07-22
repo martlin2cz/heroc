@@ -33,51 +33,35 @@ void semantic_error_3(char* message, void* arg1, void* arg2, void* arg3,
 	SEMANTIC_ERROR_BODY(message, arg1, arg2, arg3);
 }
 
-struct ast_node_t* find_predefined_var(char* name) {
-
-	if (strcmp(name, "print_long") == 0) {
-		ast_node_t* print_long_prpr = create_predefined_proc_decl("print_long",
-				"x");
-		return print_long_prpr;
-	}
-	if (strcmp(name, "print_char") == 0) {
-		ast_node_t* print_char_prpr = create_predefined_proc_decl("print_char",
-				"c");
-		return print_char_prpr;
-	}
-	if (strcmp(name, "print_nl") == 0) {
-		ast_node_t* print_nl_prpr = create_predefined_proc_decl("print_nl",
-		NULL);
-		return print_nl_prpr;
-	}
-
-	//if (strcmp(name, "print_string") == 0) {
-	//	ast_node_t* print_string_prpr = create_predefined_proc_decl(
-	//			"print_string", "str");
-	//	return print_string_prpr;
-	//}
-
-	return NULL;
-}
-
 struct ast_node_t* create_predefined_proc_decl(char* name, char* arg1_name) {
 	ast_node_t* id = create_identifier(name);
+	ast_node_t* id_copy = duplicate(id);
 
 	ast_node_t* params;
+	long argc;
 	if (arg1_name) {
 		ast_node_t* arg1 = create_identifier(arg1_name);
-		params = create_parameters(arg1);
+		ast_node_t* arg1_decl = create_declaration(arg1, NULL);
+		params = create_parameters(arg1_decl);
+		argc = 1;
 	} else {
 		params = create_parameters(NULL);
+		argc = 0;
 	}
 
-	ast_node_t* proc = create_procedure(id, params, NULL);
+	ast_node_t* body = create_invoke_external(name);
+	ast_node_t* proc = create_procedure(id_copy, params, body);
+
+	YYSTYPE argc_val;
+	argc_val.number = argc;
+	append_child(body, META_ARITY_OF_EXTERNAL, argc_val);
 
 	ast_node_t* decl = create_new_node(JST_VARIABLE_DECL);
 	decl->value.child = prepend(id, prepend(proc, NULL));
 
-	return decl;
+	//note: the analyzis is done in processing of the whole tree, yo damn!
 
+	return decl;
 }
 
 YYSTYPE find_value_of_meta(struct ast_node_t* node, TOKEN_TYPE_T meta) {
@@ -133,11 +117,6 @@ struct ast_node_t* find_var_decl(ast_node_t* previous, char* name, int totally) 
 		previous = value.child;
 	}
 
-	ast_node_t* predef = find_predefined_var(name);
-	if (predef) {
-		return predef;
-	}
-
 	return NULL;
 }
 
@@ -163,7 +142,9 @@ int analyze_tree(ast_node_t* root) {
 	ast_node_t* previous = NULL;
 	int errors = 0;
 
-	analyze_nodes(root, &previous, NULL, &next_var_at, &errors);
+	add_decl_predefineds(root, &previous, &next_var_at, &errors);
+
+	analyze_one_node(root, NULL, &previous, NULL, &next_var_at, &errors);
 
 	add_invoke_main_and_stuff(root, &previous, &next_var_at, &errors);
 
@@ -174,194 +155,298 @@ int analyze_tree(ast_node_t* root) {
 	return errors;
 }
 
-void analyze_nodes(ast_node_t* nodes, ast_node_t** previous, ast_node_t* inloop,
-		int* next_var_at, int *errors) {
-	while (nodes) {
-		analyze_one_node(nodes, previous, inloop, next_var_at, errors);
-		nodes = nodes->next;
+void analyze_nodes(ast_node_t* deprecated_nodes, ast_node_t* parent,
+		ast_node_t** previous, ast_node_t* inloop, int* next_var_at,
+		int *errors) {
+
+	ast_node_t* real_nodes = parent->value.child;
+	if (deprecated_nodes != real_nodes) {
+		fprintf(stderr, "an: Child mismatch in parent (%d) \n", parent->uid);
+	}
+
+	if (real_nodes) {
+		analyze_one_node(real_nodes, parent, previous, inloop, next_var_at,
+				errors);
+		real_nodes = parent->value.child;
+	} else {
+		return;
+	}
+
+	while (real_nodes->next) {
+		analyze_one_node(real_nodes->next, parent, previous, inloop,
+				next_var_at, errors);
+
+		real_nodes = real_nodes->next;
 	}
 }
 
-void analyze_one_node(ast_node_t* node, ast_node_t** previous,
-		ast_node_t* inloop, int* next_var_at, int *errors) {
+void analyze_one_node(ast_node_t* node, ast_node_t* parent,
+		ast_node_t** previous, ast_node_t* inloop, int* next_var_at,
+		int *errors) {
 
 	SEMANTER_LOG("Analyzing node %d of type %s", node->uid, to_string(node->type));
 
 	switch (node->type) {
+	case JST_PROGRAM:
+		analyze_whole_program_node(node, parent, previous, next_var_at, errors);
+		break;
 	case JST_VARIABLE:
-		analyze_identifier_use(node, previous, errors);
+		analyze_identifier_use(node, parent, previous, errors);
 		break;
 	case STK_FOR:
 	case STK_WHILE:
 	case STK_DO:
-		analyze_loop(node, previous, next_var_at, errors);
+		analyze_loop(node, parent, previous, next_var_at, errors);
 		break;
 	case STK_BREAK:
 	case STK_CONTINUE:
-		analyze_loop_keyw(node, inloop, errors);
+		analyze_loop_keyw(node, parent, inloop, errors);
 		break;
 	case JST_PROCEDURE:
-		analyze_procedure(node, previous, errors);
+		analyze_procedure(node, parent, previous, errors);
 		break;
 	case JST_PROCCALL:
-		analyze_proccall(node, previous, next_var_at, errors);
+		analyze_proccall(node, parent, previous, next_var_at, errors);
 		break;
 	case JST_VARIABLE_DECL:
-		analyze_variable_decl(node, previous, next_var_at, 1, errors);
+		analyze_variable_decl(node, parent, previous, next_var_at, 1, errors);
 		break;
 	case STK_ASSIGNMENT:
-		analyze_assignment(node, previous, next_var_at, errors);
+		analyze_assignment(node, parent, previous, next_var_at, errors);
 		break;
 	case JST_ARRAY:
-		analyze_array(node, previous, next_var_at, errors);
+		analyze_array(node, parent, previous, next_var_at, errors);
 		break;
 	case OPT_PRE_INCREMENT:
-		analyze_pre_increm_decrem(node, OPT_PLUS, previous, errors);
+		analyze_pre_increm_decrem(node, parent, OPT_PLUS, previous, errors);
 		break;
 	case OPT_PRE_DECREMENT:
-		analyze_pre_increm_decrem(node, OPT_MINUS, previous, errors);
+		analyze_pre_increm_decrem(node, parent, OPT_MINUS, previous, errors);
 		break;
 	case OPT_POST_INCREMENT:
-		analyze_post_increm_decrem(node, OPT_PLUS, previous, errors);
+		analyze_post_increm_decrem(node, parent, OPT_PLUS, previous, errors);
 		break;
 	case OPT_POST_DECREMENT:
-		analyze_post_increm_decrem(node, OPT_MINUS, previous, errors);
+		analyze_post_increm_decrem(node, parent, OPT_MINUS, previous, errors);
 		break;
-
+	case OPT_INDEX:
+		analyze_index_oper(node, parent, previous, errors);
+		break;
+	case OPT_REFERENCE:
+		analyze_reference(node, parent, previous, errors);
+		break;
+	case OPT_DEREFERENCE:
+		analyze_dereference(node, parent, previous, errors);
+		break;
+	case JST_INVOKE_EXTERNAL:
+		//skip, ingnore, do nothing ...
+		break;
 	default:
 		if (is_meta(node->type) || is_atomic(node->type)) {
 			//nothing to do
 
 		} else if (is_container(node->type)) {
-			analyze_container(node, previous, inloop, next_var_at, errors);
+			analyze_container(node, parent, previous, inloop, next_var_at,
+					errors);
 
 		} else {
-			//printf("!!!! TRACE: The node: %s\n", to_string(node->type));
-			analyze_nodes(node->value.child, previous, inloop, next_var_at,
-					errors);
+			//fprintf(stderr, "!!!! TRACE: The node: %s\n", to_string(node->type));
+			analyze_nodes(node->value.child, node, previous, inloop,
+					next_var_at, errors);
 		}
 	}
 }
 
-void analyze_assignment(ast_node_t* node, ast_node_t** previous,
-		int* next_var_at, int *errors) {
-	ast_node_t* ref = wrap_place_with_ref(node);
+void analyze_whole_program_node(ast_node_t* node, ast_node_t* parent,
+		ast_node_t** previous, int* next_var_at, int *errors) {
 
-	analyze_nodes(ref, previous, NULL, next_var_at, errors);
+	ast_node_t* decls = node->value.child;
+	analyze_nodes(decls, node, previous, NULL, next_var_at, errors);
 }
 
-ast_node_t* wrap_place_with_ref(ast_node_t* node) {
-	ast_node_t* place = node->value.child;
+void analyze_assignment(ast_node_t* asg, ast_node_t* parent,
+		ast_node_t** previous, int* next_var_at, int *errors) {
 
-	ast_node_t* ref = create_with_1_children(OPT_REFERENCE, place);
-	node->value.child = ref;
+	ast_node_t* place = asg->value.child;
 
-	ref->next = place->next;
-	place->next = NULL;
+	analyze_nodes(place, asg, previous, NULL, next_var_at, errors);
 
-	return ref;
+	ast_node_t* place_use = asg->value.child;
+	ast_node_t* re_place = asg->value.child->value.child;
+
+	//overjumps place's dereference
+	//replace_child(asg, place_use, place);
+	asg->value.child = re_place;
+	re_place->next = place_use->next;
 }
 
-void analyze_pre_increm_decrem(ast_node_t* node, TOKEN_TYPE_T replace_with_op,
-		ast_node_t** previous, int *errors) {
+void analyze_pre_increm_decrem(ast_node_t* node, ast_node_t* parent,
+TOKEN_TYPE_T replace_with_op, ast_node_t** previous, int *errors) {
+
 	ast_node_t* place = node->value.child;
+	analyze_one_node(place, node, previous, NULL, NULL, errors);
+	ast_node_t* place_use = node->value.child;
+
 	ast_node_t* place_copy = duplicate(place);
+	ast_node_t* place_copy_use = duplicate(place_use);
 
 	ast_node_t* one = create_number(1);
-	ast_node_t* plused_minused = create_with_2_children(replace_with_op, place,
-			one);
+	ast_node_t* plused_minused = create_with_2_children(replace_with_op,
+			place_copy_use, one);
 	ast_node_t* asg = create_with_2_children(STK_ASSIGNMENT, place_copy,
 			plused_minused);
 
-	analyze_one_node(asg, previous, NULL, NULL, errors);
-	node->value.child = asg;
+	replace_child(parent, node, asg);
 }
 
-void analyze_post_increm_decrem(ast_node_t* node, TOKEN_TYPE_T replace_with_op,
-		ast_node_t** previous, int *errors) {
+void analyze_post_increm_decrem(ast_node_t* node, ast_node_t* parent,
+TOKEN_TYPE_T replace_with_op, ast_node_t** previous, int *errors) {
+
 	ast_node_t* place = node->value.child;
+	analyze_one_node(place, node, previous, NULL, NULL, errors);
+	ast_node_t* place_use = node->value.child;
+
 	ast_node_t* place_copy = duplicate(place);
+	ast_node_t* place_use_copy = duplicate(place_use);
 
 	ast_node_t* one1 = create_number(1);
 	ast_node_t* one2 = create_number(1);
-	ast_node_t* plused_minused = create_with_2_children(replace_with_op, place,
-			one1);
+
+	TOKEN_TYPE_T re_replace_op;
+	switch (replace_with_op) {
+	case OPT_MINUS:
+		re_replace_op = OPT_PLUS;
+		break;
+	case OPT_PLUS:
+		re_replace_op = OPT_MINUS;
+		break;
+	default:
+		fprintf(stderr, "apid: Bad replace op: %s\n",
+				to_string(replace_with_op));
+		return;
+	}
+
+	ast_node_t* plused_minused = create_with_2_children(replace_with_op,
+			place_use_copy, one1);
 	ast_node_t* asg = create_with_2_children(STK_ASSIGNMENT, place_copy,
 			plused_minused);
-
-	TOKEN_TYPE_T re_replace_op =
-			(replace_with_op == OPT_PLUS) ?
-					OPT_MINUS :
-					((replace_with_op == OPT_MINUS) ?
-							OPT_PLUS :
-							fprintf(stderr, "apid: Bad replace op: %s\n",
-									to_string(replace_with_op)));
 
 	ast_node_t* reminused_replused = create_with_2_children(re_replace_op, asg,
 			one2);
 
-	analyze_one_node(reminused_replused, previous, NULL, NULL, errors);
-	node->value.child = reminused_replused;
+	replace_child(parent, node, reminused_replused);
 }
 
-void analyze_identifier_use(ast_node_t* node, ast_node_t** previous,
-		int *errors) {
+void analyze_index_oper(ast_node_t* index, ast_node_t* parent,
+		ast_node_t** previous, int *errors) {
 
-	char* name = node->value.child->value.string;
+	ast_node_t* place = index->value.child;
+	ast_node_t* addr = place->next;
+
+	analyze_one_node(addr, index, previous, NULL, NULL, errors);
+	analyze_one_node(place, index, previous, NULL, NULL, errors);
+
+	ast_node_t* deref = create_with_1_children(OPT_DEREFERENCE, index);
+	replace_child(parent, index, deref);
+
+}
+
+void analyze_reference(ast_node_t* ref, ast_node_t* parent,
+		ast_node_t** previous, int *errors) {
+
+	ast_node_t* place = ref->value.child;
+
+	analyze_one_node(place, ref, previous, NULL, NULL, errors);
+
+	ast_node_t* place_use = ref->value.child;
+	replace_child(parent, ref, place);
+
+}
+
+void analyze_dereference(ast_node_t* deref, ast_node_t* parent,
+		ast_node_t** previous, int *errors) {
+
+	ast_node_t* place = deref->value.child;
+
+	analyze_one_node(place, deref, previous, NULL, NULL, errors);
+
+	ast_node_t* place_use = deref->value.child;
+	ast_node_t* deref_of_deref = create_with_1_children(OPT_DEREFERENCE,
+			place_use);
+	replace_child(parent, deref_of_deref, place);
+}
+
+void analyze_identifier_use(ast_node_t* var, ast_node_t* parent,
+		ast_node_t** previous, int *errors) {
+
+	analyze_identifier_ref(var, parent, previous, errors);
+
+	ast_node_t* deref = create_with_1_children(OPT_DEREFERENCE, var);
+	replace_child(parent, var, deref);
+
+	var->next = NULL;
+}
+
+void analyze_identifier_ref(ast_node_t* var, ast_node_t* parent,
+		ast_node_t** previous, int *errors) {
+
+	char* name = var->value.child->value.string;
 	ast_node_t* declaration = find_var_decl(*previous, name, 1);
 
 	if (declaration) {
-
 		YYSTYPE decl;
 		decl.child = declaration;
-		append_child(node, META_DECLARATION, decl);
+		append_child(var, META_DECLARATION, decl);
 	} else {
-		semantic_error_1("Identifier %s not found", name, node, errors);
+		semantic_error_1("Identifier %s not found", name, var, errors);
+		return;
 	}
-
 }
 
-void analyze_loop(ast_node_t* node, ast_node_t** previous, int* next_var_at,
-		int *errors) {
+void analyze_loop(ast_node_t* node, ast_node_t* parent, ast_node_t** previous,
+		int* next_var_at, int *errors) {
 	ast_node_t* loop_node = node;
 	ast_node_t* child = node->value.child;
 
-	switch (node->type) {
-	case STK_FOR: {
-		analyze_one_node(child, previous, NULL, NULL, errors);
-		child = child->next;
-		analyze_one_node(child, previous, NULL, NULL, errors);
-		child = child->next;
-		analyze_one_node(child, previous, NULL, NULL, errors);
-		child = child->next;
-		analyze_one_node(child, previous, loop_node, next_var_at, errors);
-		break;
-	}
-	case STK_WHILE: {
-		analyze_one_node(child, previous, NULL, NULL, errors);
-		child = child->next;
-		analyze_one_node(child, previous, loop_node, next_var_at, errors);
-		break;
-	}
-	case STK_DO: {
-		analyze_one_node(child, previous, loop_node, next_var_at, errors);
-		child = child->next;
-		analyze_one_node(child, previous, NULL, NULL, errors);
-		break;
-	}
-	default: {
-		fprintf(stderr, "al: Unknown loop: %s\n", to_string(node->type));
-	}
-	}
+	// but this semantically allows break and continue everywhere in da loop (in for's init), but it's 100x simplier
+	analyze_nodes(child, loop_node, previous, loop_node, next_var_at, errors);
+
+	/*
+	 switch (node->type) {
+	 case STK_FOR: {
+	 analyze_one_node(child, node, previous, NULL, NULL, errors);
+	 child = child->next;
+	 analyze_one_node(child, node, previous, NULL, NULL, errors);
+	 child = child->next;
+	 analyze_one_node(child, node, previous, NULL, NULL, errors);
+	 child = child->next;
+	 analyze_one_node(child, node, previous, loop_node, next_var_at, errors);
+	 break;
+	 }
+	 case STK_WHILE: {
+	 analyze_one_node(child, node, previous, NULL, NULL, errors);
+	 child = child->next;
+	 analyze_one_node(child, node, previous, loop_node, next_var_at, errors);
+	 break;
+	 }
+	 case STK_DO: {
+	 analyze_one_node(child, node, previous, loop_node, next_var_at, errors);
+	 child = child->next;
+	 analyze_one_node(child, node, previous, NULL, NULL, errors);
+	 break;
+	 }
+	 default: {
+	 fprintf(stderr, "al: Unknown loop: %s\n", to_string(node->type));
+	 }
+	 }
+	 */
 }
 
-void analyze_loop_keyw(ast_node_t* node, ast_node_t* inloop, int *errors) {
+void analyze_loop_keyw(ast_node_t* node, ast_node_t* parent, ast_node_t* inloop,
+		int *errors) {
 	if (!inloop) {
 		semantic_error_1("Keyword %s outside of the loop",
-				(node->type == STK_CONTINUE ?
-						"continue" :
-						(node->type == STK_BREAK ? "break" : "unknown")), node,
-				errors);
+				(char*) to_string(node->type), node, errors);
 		return;
 	}
 
@@ -370,20 +455,26 @@ void analyze_loop_keyw(ast_node_t* node, ast_node_t* inloop, int *errors) {
 	append_child(node, META_LOOP, val);
 }
 
-void analyze_proccall(ast_node_t* node, ast_node_t** previous, int* next_var_at,
-		int *errors) {
+void analyze_proccall(ast_node_t* node, ast_node_t* parent,
+		ast_node_t** previous, int* next_var_at, int *errors) {
 	SEMANTER_LOG("Starting to analyze procedure call");
 
-	ast_node_t* proc_var = node->value.child;
-	ast_node_t* params_list = node->value.child->next->value.child;
+	ast_node_t* proc_var_raw = node->value.child;
+	ast_node_t* params_node = node->value.child->next;
+	ast_node_t* params_list = params_node->value.child;
 
 	//directly analyze
-	analyze_one_node(proc_var, previous, NULL, next_var_at, errors);
-	analyze_nodes(params_list, previous, NULL, next_var_at, errors);
+	analyze_one_node(proc_var_raw, node, previous, NULL, next_var_at, errors);
+	analyze_nodes(params_list, params_node, previous, NULL, next_var_at,
+			errors);
 
-	//then try to check aritiy
-	if (proc_var->type == JST_VARIABLE) {
-		YYSTYPE proc_var_decl_val = find_value_of_meta(proc_var,
+	ast_node_t* params_list_analyzed = params_node->value.child;
+	ast_node_t* proc_target = node->value.child;
+	//then try to check arity
+	if (proc_target->type == OPT_DEREFERENCE
+			&& proc_target->value.child->type == JST_VARIABLE) {
+		ast_node_t* proc_var_really = proc_target->value.child;
+		YYSTYPE proc_var_decl_val = find_value_of_meta(proc_var_really,
 				META_DECLARATION);
 		if (proc_var_decl_val.child) {
 			ast_node_t* proc_var_decl = proc_var_decl_val.child;
@@ -399,7 +490,7 @@ void analyze_proccall(ast_node_t* node, ast_node_t** previous, int* next_var_at,
 				//ok, target is proc, check arity
 				long args_count = lenght_ignore_meta(
 						proc_name_node->next->value.child);
-				long params_count = lenght_ignore_meta(params_list);
+				long params_count = lenght_ignore_meta(params_list_analyzed);
 
 				if (args_count != params_count) {
 					semantic_error_3(
@@ -418,7 +509,8 @@ void analyze_proccall(ast_node_t* node, ast_node_t** previous, int* next_var_at,
 	SEMANTER_LOG("Analyze of procedure cannot determine call target, hope it will be working ...");
 }
 
-void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors) {
+void analyze_procedure(ast_node_t* node, ast_node_t* parent,
+		ast_node_t** previous, int *errors) {
 	//previous, needs to be firstly
 	YYSTYPE proc_prev;
 	proc_prev.child = *previous;
@@ -435,6 +527,8 @@ void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors) {
 		return;
 	}
 
+	//TODO local vs. global. No?
+
 	//params list
 	ast_node_t* params = name->next;
 	YYSTYPE params_prev;
@@ -446,7 +540,9 @@ void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors) {
 	ast_node_t* prev_param = params;
 	int next_param_at = - FRAME_STUFF_SIZE - params_count + 1;
 	while (param && !is_meta(param->type)) {
-		analyze_variable_decl(param, &prev_param, &next_param_at, 1, errors);
+		analyze_variable_decl(param, node, &prev_param, &next_param_at, 1,
+				errors);
+
 		prev_param = param;
 		param = param->next;
 	}
@@ -456,13 +552,13 @@ void analyze_procedure(ast_node_t* node, ast_node_t** previous, int *errors) {
 	int next_var_at = 0;
 
 	ast_node_t* body_prev = prev_param;
-	analyze_one_node(body, &body_prev, NULL, &next_var_at, errors);
+	analyze_one_node(body, node, &body_prev, NULL, &next_var_at, errors);
 
 	SEMANTER_LOG("Procedure analyze complete");
 }
 
-void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
-		int* next_var_at, int next_to_plus, int *errors) {
+void analyze_variable_decl(ast_node_t* node, ast_node_t* parent,
+		ast_node_t** previous, int* next_var_at, int next_to_plus, int *errors) {
 
 	ast_node_t* var = node->value.child;
 	char* name = var->value.child->value.string;
@@ -485,7 +581,8 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 	prev.child = (*previous);
 	append_child(node, META_PREVIOUS, prev);
 
-	YYSTYPE type = { (long) typeof_var(node) };
+	YYSTYPE type;
+	type.number = typeof_var(node);
 	append_child(node, META_VAR_TYPE, type);
 
 	if (value) {
@@ -493,7 +590,7 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 
 		if (value->type == JST_PROCEDURE
 				&& value->value.child->type != STK_LAMBDA) {
-			analyze_one_node(value, &new_prev, NULL, next_var_at, errors);
+			analyze_one_node(value, node, &new_prev, NULL, next_var_at, errors);
 		} else {
 			//make an assignment from initval
 			ast_node_t* only_var_w_n = duplicate(var);
@@ -511,43 +608,50 @@ void analyze_variable_decl(ast_node_t* node, ast_node_t** previous,
 		}
 	}
 
-	if (!(value && value->type == JST_PROCEDURE
-			&& value->value.child->type != STK_LAMBDA)) {
-		if (next_to_plus) {
-			(*next_var_at)++;
-		} else {
-			(*next_var_at)--;
-		}
+	//if (!(value && value->type == JST_PROCEDURE
+	//		&& value->value.child->type != STK_LAMBDA)) {
+	if (next_to_plus) {
+		(*next_var_at)++;
+	} else {
+		(*next_var_at)--;
 	}
+	//}
 	(*previous) = node;
 
 	SEMANTER_LOG("Declaration analyzed");
 }
 
-void analyze_array(ast_node_t* node, ast_node_t** previous, int* next_var_at,
-		int* errors) {
+void analyze_array(ast_node_t* node, ast_node_t* parent, ast_node_t** previous,
+		int* next_var_at, int* errors) {
+
 	int size = node->value.child->value.number;
 
 	ast_node_t* init = node->value.child->next;
 	int count = 0;
 	if (init) {
 		count = lenght_of(init->value.child);
-		analyze_nodes(init->value.child, previous, NULL, NULL, errors);
+		analyze_nodes(init->value.child, init, previous, NULL, NULL, errors);
 	}
 
 	size = (size > count) ? size : count;
 	node->value.child->value.number = size;
 
-	YYSTYPE addr = { *next_var_at };
+	YYSTYPE addr;
+	addr.number = (*next_var_at);
 	append_child(node, META_ADRESS, addr);
 
-	(*next_var_at) += size;
-	SEMANTER_LOG("Array analyzed with size %d", size);
+	YYSTYPE type;
+	type.number = typeof_var(*previous);
+	append_child(node, META_VAR_TYPE, type);
 
+	(*next_var_at) += size;
+
+	SEMANTER_LOG("Array analyzed with size %d", size);
 }
 
-void analyze_container(ast_node_t* node, ast_node_t** previous,
-		ast_node_t* inloop, int* next_var_at, int *errors) {
+void analyze_container(ast_node_t* node, ast_node_t* parent,
+		ast_node_t** previous, ast_node_t* inloop, int* next_var_at,
+		int *errors) {
 
 	ast_node_t* children = node->value.child;
 
@@ -559,29 +663,49 @@ void analyze_container(ast_node_t* node, ast_node_t** previous,
 
 		ast_node_t* new_previous = node;
 		int new_next_var_at = *next_var_at;
-		analyze_nodes(children, &new_previous, inloop, &new_next_var_at,
+		analyze_nodes(children, node, &new_previous, inloop, &new_next_var_at,
 				errors);
 
 	} else {
-		analyze_nodes(children, previous, inloop, next_var_at, errors);
+		analyze_nodes(children, node, previous, inloop, next_var_at, errors);
 	}
+}
+
+void add_decl_predefineds(ast_node_t* root, ast_node_t** previous,
+		int* next_var_at, int* errors) {
+
+	ast_node_t* print_long_prpr = create_predefined_proc_decl("print_long",
+			"x");
+
+	ast_node_t* print_char_prpr = create_predefined_proc_decl("print_char",
+			"c");
+
+	ast_node_t* print_nl_prpr = create_predefined_proc_decl("print_nl", NULL);
+
+	ast_node_t* rest = root->value.child;
+	ast_node_t* predefs = //
+			prepend(print_long_prpr, //
+					prepend(print_char_prpr, //
+							prepend(print_nl_prpr, //
+									rest)));
+
+	root->value.child = predefs;
 }
 
 void add_invoke_main_and_stuff(ast_node_t* root, ast_node_t** previous,
 		int* next_var_at, int* errors) {
 
 	ast_node_t* var = create_identifier("main");
-	analyze_identifier_use(var, previous, errors);
-
 	ast_node_t* args = create_with_0_children(CNT_EXPRESSIONS);
-	ast_node_t* call = create_with_2_children(JST_PROCCALL, var, args);
+	//ast_node_t* call = create_with_2_children(JST_PROCCALL, var, args);
 
-	ast_node_t* node = root;
-	while (node->next) {
-		node = node->next;
-	}
+	ast_node_t* proccal_children = prepend(var, prepend(args, NULL));
+	YYSTYPE proccal_children_val;
+	proccal_children_val.child = proccal_children;
+	ast_node_t* proccal = append_child(root, JST_PROCCALL,
+			proccal_children_val);
 
-	node->next = call;
+	analyze_identifier_use(var, proccal, previous, errors);
 }
 
 #endif

@@ -7,6 +7,8 @@
 #include "ast-exporter.h"
 #include "stackode.h"
 
+#define CELL_SIZE 8 /* //TODO FIXME replace with sizeof(long) ? */
+
 #ifdef GAS_VERBOSE
 #define GAS_LOG(...) \
 	{ \
@@ -54,6 +56,10 @@ void sk_pop_to_gas(FILE* dest);
 void sk_duplicate_to_gas(FILE* dest);
 void sk_unary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper);
 void sk_binary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper);
+
+void sk_invoke_external(FILE* dest, char* name, long arity);
+void sk_end(FILE* dest);
+void sk_push_cell_size(FILE* dest);
 
 char* gas_reg(char* name);
 char* gas_reg_call(char* name);

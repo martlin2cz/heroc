@@ -1,0 +1,6 @@
+main() {
+	long x[] = {11, 22, 33};
+
+//	print_long(x);
+	print_long(x[2]);
+}

@@ -279,8 +279,7 @@
 
 (define sc-run
   (lambda (program)
-    (let* ((wrapped (sc-wrap-program program))
-          (context (create-context wrapped)))
+    (let* ((context (create-context program)))
       (sc-run-context context))))
 
 (define sc-run-context
@@ -315,7 +314,7 @@
     ;(display "\t and frame pointer ") (display (frame-pointer context)) 
     ;(newline)
     ;(print-log "evaluating" instruction ;)
-    ;           (stack context) (frame-pointer context))
+     ;          (stack context) (frame-pointer context))
   ;  (read)
     ;
     
@@ -520,7 +519,7 @@
       (push stack retval)
       'next-instruction)))
 
-(define sci-invoke-primitive
+(define sci-invoke-external
   (lambda (context procedure arity)
     (let* ((stack (stack context))
            (arguments (substract stack 2 arity)))
@@ -559,6 +558,7 @@
        ((op-bit-or) bit-or)
        ((op-bit-and) bit-and)
        ((op-^) bit-xor)
+       ((op-index) +)
        (else (verbose-error "unknown binary operation" 'operator operator))
        ))))
 
@@ -705,7 +705,7 @@
    (list 'call sci-call)
    (list 'return sci-return)
    (list 'cleanup-after-call sci-cleanup-after-call)
-   (list 'invoke-primitive sci-invoke-primitive)
+   (list 'invoke-external sci-invoke-external)
    (list 'jump-on-non-zero sci-jump-on-non-zero)
    (list 'jump-on-zero sci-jump-on-zero)
    (list 'jump-to sci-jump-to)
@@ -745,28 +745,6 @@
 ; (sc-find-instr-proc 'add)
 ; (sc-find-instr-proc 'make-world-peace)
            
-(define sc-wrap-program
-  (lambda (program)
-    (append (sc-program 
-             `((jump-to start-of-program)
-               (label print_long)
-               (invoke-primitive ,print_long 1)
-               (return)
-               
-               (label print_char)
-               (invoke-primitive ,print_char 1)
-               (return)
-               
-               (label print_nl)
-               (invoke-primitive ,print_nl 0)
-               (return)
-                              
-               (label start-of-program)))
-            program
-            (sc-program 
-             '((end))))))
-
-; (sc-wrap-program (sc-program '((push-constant 1) (push-constant 2) (add))))
 
 (define verbose-error
   (lambda (cause . info)

@@ -27,11 +27,14 @@ void export_stackode(FILE* dest, sk_program_t *program) {
 void export_sk_header(FILE* dest) {
 	fprintf(dest, ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n");
 	fprintf(dest, ";; Stackode program, generated \n");
-	fprintf(dest, "(sc-program '(\n");
+	fprintf(dest, ";; \n");
+	fprintf(dest, "\n");
+	fprintf(dest, "(sc-program `(\n");
 }
 
 void export_sk_footer(FILE* dest) {
 	fprintf(dest, "))\n");
+	fprintf(dest, "\n");
 	fprintf(dest, ";; end of generated Stackode program\n");
 	fprintf(dest, ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n");
 }
@@ -51,7 +54,8 @@ void export_sk_instruction(FILE* dest, sk_instruction_t *instruction) {
 		print_sk_instr(dest, "return");
 		break;
 	case SKI_CLEANUP_AFTER_CALL:
-		print_sk_instr_num(dest, "cleanup-after-call", instruction->value.number);
+		print_sk_instr_num(dest, "cleanup-after-call",
+				instruction->value.number);
 		break;
 	case SKI_JUMP_ON_ZERO:
 		print_sk_instr_str(dest, "jump-on-zero", instruction->value.string);
@@ -74,17 +78,23 @@ void export_sk_instruction(FILE* dest, sk_instruction_t *instruction) {
 	case SKI_DECLARE_ARRAY:
 		print_sk_instr_num(dest, "declare-array", instruction->value.number);
 		break;
+	case SKI_PUSH_CELL_SIZE:
+		print_sk_instr_num(dest, "push-constant", 1);
+		break;
 	case SKI_PUSH_CONSTANT:
 		print_sk_instr_num(dest, "push-constant", instruction->value.number);
 		break;
 	case SKI_PUSH_LABEL_ADRESS:
-		print_sk_instr_str(dest, "push-label-adress", instruction->value.string);
+		print_sk_instr_str(dest, "push-label-adress",
+				instruction->value.string);
 		break;
 	case SKI_PUSH_RELATIVE_ADRESS:
-		print_sk_instr_num(dest, "push-relative-adress", instruction->value.number);
+		print_sk_instr_num(dest, "push-relative-adress",
+				instruction->value.number);
 		break;
 	case SKI_PUSH_ABSOLUTE_ADRESS:
-		print_sk_instr_num(dest, "push-absolute-adress", instruction->value.number);
+		print_sk_instr_num(dest, "push-absolute-adress",
+				instruction->value.number);
 		break;
 	case SKI_POP:
 		print_sk_instr(dest, "pop");
@@ -96,10 +106,19 @@ void export_sk_instruction(FILE* dest, sk_instruction_t *instruction) {
 		print_sk_instr_oper(dest, "unary-operation", instruction->value.number);
 		break;
 	case SKI_BINARY_OPERATION:
-		print_sk_instr_oper(dest, "binary-operation", instruction->value.number);
+		print_sk_instr_oper(dest, "binary-operation",
+				instruction->value.number);
+		break;
+	case SKI_INVOKE_EXTERNAL:
+		print_sk_instr_unquot_num(dest, "invoke-external",
+				instruction->value.string, instruction->value2.number);
+		break;
+	case SKI_END:
+		print_sk_instr(dest, "end");
 		break;
 	default:
-		fprintf(stderr, "esi: Unknown stackode instruction %d\n", instruction->type);
+		fprintf(stderr, "esi: Unknown stackode instruction %d\n",
+				instruction->type);
 	}
 }
 
@@ -115,28 +134,28 @@ void print_sk_instr_num(FILE* dest, char* name, long num) {
 	fprintf(dest, "\t(%s %ld)\n", name, num);
 }
 
+void print_sk_instr_unquot_num(FILE* dest, char* name, char* arg1, long arg2) {
+	fprintf(dest, "\t(%s ,%s %ld)\n", name, arg1, arg2);
+}
+
 void print_sk_instr_oper(FILE* dest, char* name, TOKEN_TYPE_T oper) {
 
 	switch (oper) {
-		case OPT_BITWISE_OR:
+	case OPT_BITWISE_OR:
 		fprintf(dest, "\t(%s op-bit-or)\n", name);
-		break;	
-		case OPT_BITWISE_AND:
+		break;
+	case OPT_BITWISE_AND:
 		fprintf(dest, "\t(%s op-bit-and)\n", name);
 		break;
-		default: {
-			const char* op_str = to_string(oper);
-	
-			fprintf(dest, "\t(%s op-%s)\n", name, op_str);
-		}
-	}
-/*
-	if (oper != OPT_BITWISE_AND) {
+	case OPT_INDEX:
+		fprintf(dest, "\t(%s op-index)\n", name);
+		break;
+	default: {
+		const char* op_str = to_string(oper);
+
 		fprintf(dest, "\t(%s op-%s)\n", name, op_str);
-	} else {
-		fprintf(dest, "\t(%s op-\\%s)\n", name, op_str);
 	}
-	*/
+	}
 }
 
 #endif

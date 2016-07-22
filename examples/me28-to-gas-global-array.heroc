@@ -1,0 +1,33 @@
+long x[10];
+
+main() {
+	print_long(x[0]);
+	print_char(' ');
+	
+	x[0] = 11;
+	
+	print_long(x[0]);
+	print_nl();
+	
+
+	print_long(x[1]);
+	print_char(' ');
+	
+	x[1] = 22;
+	
+	print_long(x[1]);
+	print_nl();
+	
+	print_long(x[9]);
+	print_char(' ');
+	
+	x[9] = 99;
+	
+	print_long(x[9]);
+	print_nl();
+	
+
+
+
+
+}

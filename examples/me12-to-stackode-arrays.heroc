@@ -37,7 +37,7 @@ baz() {
 	print_nl();
 
 	//array oveflow
-	long x = 99;
+	long x = 9;
 
 	print_long(a[5]);
 	print_nl();

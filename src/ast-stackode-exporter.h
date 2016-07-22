@@ -18,5 +18,6 @@ void print_sk_instr(FILE* dest, char* name);
 void print_sk_instr_str(FILE* dest, char* name, char* str);
 void print_sk_instr_num(FILE* dest, char* name, long num);
 void print_sk_instr_oper(FILE* dest, char* name, TOKEN_TYPE_T oper);
+void print_sk_instr_unquot_num(FILE* dest, char* name, char* arg1, long arg2);
 
 #endif

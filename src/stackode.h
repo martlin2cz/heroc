@@ -4,7 +4,6 @@
 #include "ast.h"
 
 #define SK_INCREASE_SIZE 3
-#define CELL_SIZE 8
 
 /*********************************************************/
 
@@ -20,27 +19,35 @@
 #endif
 
 typedef enum sk_instr_type_t {
-	//TODO and what about the end?
-	SKI_COMMENT = 0x101,
-	SKI_LABEL = 0x102,
-	SKI_CALL = 0x103,
-	SKI_RETURN = 0x104,
-	SKI_CLEANUP_AFTER_CALL = 0x105,
-	SKI_JUMP_ON_ZERO = 0x106,
-	SKI_JUMP_ON_NON_ZERO = 0x107,
-	SKI_JUMP_TO = 0x108,
-	SKI_LOAD = 0x201,
-	SKI_ASSIGN = 0x202,
-	SKI_DECLARE_ATOMIC = 0x203,
-	SKI_DECLARE_ARRAY = 0x204,
-	SKI_PUSH_CONSTANT = 0x205,
-	SKI_PUSH_LABEL_ADRESS = 0x206,
-	SKI_PUSH_RELATIVE_ADRESS = 0x207,
-	SKI_PUSH_ABSOLUTE_ADRESS = 0x208,
-	SKI_POP = 0x209,
-	SKI_DUPLICATE = 0x20A,
-	SKI_UNARY_OPERATION = 0x301,
-	SKI_BINARY_OPERATION = 0x302,
+	SKI_COMMENT = 0x111,
+	SKI_LABEL = 0x112,
+
+	SKI_CALL = 0x121,
+	SKI_RETURN = 0x122,
+	SKI_CLEANUP_AFTER_CALL = 0x123,
+	SKI_JUMP_ON_ZERO = 0x131,
+	SKI_JUMP_ON_NON_ZERO = 0x132,
+	SKI_JUMP_TO = 0x133,
+
+	SKI_LOAD = 0x211,
+	SKI_ASSIGN = 0x212,
+	SKI_DECLARE_ATOMIC = 0x213,
+	SKI_DECLARE_ARRAY = 0x214,
+
+	SKI_PUSH_CELL_SIZE = 0x221,
+	SKI_PUSH_CONSTANT = 0x222,
+	SKI_PUSH_LABEL_ADRESS = 0x223,
+	SKI_PUSH_RELATIVE_ADRESS = 0x224,
+	SKI_PUSH_ABSOLUTE_ADRESS = 0x225,
+
+	SKI_POP = 0x231,
+	SKI_DUPLICATE = 0x232,
+
+	SKI_UNARY_OPERATION = 0x311,
+	SKI_BINARY_OPERATION = 0x312,
+
+	SKI_INVOKE_EXTERNAL = 0x411,
+	SKI_END = 0x412,
 } sk_instr_type_t;
 
 typedef union sk_instr_value_t {
@@ -51,6 +58,7 @@ typedef union sk_instr_value_t {
 typedef struct sk_instruction_t {
 	sk_instr_type_t type;
 	sk_instr_value_t value;
+	sk_instr_value_t value2;
 } sk_instruction_t;
 
 typedef struct sk_program_t {
@@ -58,8 +66,6 @@ typedef struct sk_program_t {
 	long count;
 	sk_instruction_t** instructions;
 } sk_program_t;
-
-//TODO declare context here ...
 
 /*********************************************************/
 sk_program_t* ast_to_stackode(ast_node_t* root);
@@ -69,6 +75,7 @@ void single_node_to_stackode(sk_program_t* program, ast_node_t* node);
 
 void node_to_stackode_comment(sk_program_t* program, ast_node_t* node);
 
+void program_to_sackode(sk_program_t* program, ast_node_t* node);
 void number_to_stackode(sk_program_t * program, ast_node_t * node);
 void assignment_to_stackode(sk_program_t * program, ast_node_t * node);
 void sizeof_to_stackode(sk_program_t * program, ast_node_t * node);
@@ -79,7 +86,6 @@ void do_to_stackode(sk_program_t * program, ast_node_t * node);
 void return_to_stackode(sk_program_t * program, ast_node_t * node);
 void break_to_stackode(sk_program_t * program, ast_node_t * node);
 void continue_to_stackode(sk_program_t * program, ast_node_t * node);
-void lambda_to_stackode(sk_program_t * program, ast_node_t * node);
 void variable_to_stackode(sk_program_t * program, ast_node_t * node);
 void array_to_stackode(sk_program_t * program, ast_node_t * node);
 void procedure_to_stackode(sk_program_t * program, ast_node_t * node);
@@ -92,10 +98,10 @@ void and_to_stackode(sk_program_t * program, ast_node_t * node);
 void or_to_stackode(sk_program_t * program, ast_node_t * node);
 void ternary_to_stackode(sk_program_t * program, ast_node_t * node);
 void dereference_to_stackode(sk_program_t * program, ast_node_t * node);
-void index_to_stackode(sk_program_t * program, ast_node_t * node);
 void reference_to_stackode(sk_program_t * program, ast_node_t * node);
 void inc_dec_to_stackode(sk_program_t * program, ast_node_t * node);
 void expression_to_stackode(sk_program_t * program, ast_node_t * node);
+void invoke_external_to_stackode(sk_program_t * program, ast_node_t * node);
 
 /*********************************************************/
 sk_program_t* create_empty_program(void);
@@ -112,6 +118,8 @@ sk_instruction_t* create_instruct_with_str(sk_instr_type_t type, char* str);
 sk_instruction_t* create_instruct_with_num(sk_instr_type_t type, long num);
 sk_instruction_t* create_instruct_with_op(sk_instr_type_t type,
 TOKEN_TYPE_T oper);
+sk_instruction_t* create_instruct_with_str_num(sk_instr_type_t type, char* str,
+		long num);
 
 char* generate_label(char* prefix, char* name, int uid);
 

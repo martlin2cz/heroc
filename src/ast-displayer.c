@@ -1,5 +1,5 @@
-#ifndef _AST_BASIC_EXPORTER_C_
-#define _AST_BASIC_EXPORTER_C_
+#ifndef _AST_DISPLAYER_C_
+#define _AST_DISPLAYER_C_
 
 #include <stdio.h>
 
@@ -61,6 +61,9 @@ void ast_display_meta(FILE* dest, struct ast_node_t* node, int padding) {
 	fprintf(dest, "[Meta] %s", to_string(node->type));
 
 	switch (node->type) {
+	case META_ARITY_OF_EXTERNAL:
+			fprintf(dest, " of arity %d ", node->value.number);
+			break;
 	case META_ADRESS:
 		fprintf(dest, " at %+d ", node->value.number);
 		break;
