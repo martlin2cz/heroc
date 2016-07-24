@@ -2,11 +2,14 @@
 # compiles and runs generated (compiled) gas code
 # Martin Jasek, VII/2016
 
-#timeout (in secs) to test run
-TIMEOUT=20
+#timeout (in secs) to test run (if enabled, see next)
+TIMEOUT=5
 
-#run in gdb? comment out or set to empty if not
-#GDB=gdbtui
+#run specifier (run in gdb, run with timeout, run normally), uncomment one
+#RUN_SPEC=gdbtui
+RUN_SPEC="timeout $TIMEOUT"
+#RUN_SPEC=
+
 
 make tests --eval="OUTPUTLANG=gas" --eval="MACROS= "
 
@@ -22,8 +25,6 @@ for F in $@; do
 
 
 	echo "================"
-	# choose one:
-	#timeout $TIMEOUT ./tmp/to-run.bin
-	$GDB ./tmp/to-run.bin
+	$RUN_SPEC ./tmp/to-run.bin
 	echo "================"
 done

@@ -1,0 +1,36 @@
+main() {
+	long arr = {11, 22, 33, 44, 55};
+	long ptr = arr;
+
+	print_long(arr[0]);
+	print_char(' ');
+	print_long(*ptr);
+	ptr += sizeof(long);
+	print_nl();
+
+	print_long(arr[1]);
+	print_char(' ');
+	print_long(*ptr);
+	ptr += sizeof(long);
+	print_nl();
+	
+	print_long(arr[2]);
+	print_char(' ');
+	print_long(*ptr);
+	ptr += sizeof(long);
+	print_nl();
+
+	
+	print_long(arr[3]);
+	print_char(' ');
+	print_long(*ptr);
+	ptr += sizeof(long);
+	print_nl();
+
+	print_long(arr[4]);
+	print_char(' ');
+	print_long(*ptr);
+	ptr += sizeof(long);
+	print_nl();
+	
+}

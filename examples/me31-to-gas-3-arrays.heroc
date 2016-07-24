@@ -1,0 +1,44 @@
+
+
+long a1[3];
+long a2 = {11, 22, 33};
+long a3[] = {44, 55, 66};
+
+
+print_array(arr) {
+
+	print_long(arr[0]);
+	print_char(' ');
+	
+	print_long(arr[1]);
+	print_char(' ');
+	
+	print_long(arr[2]);
+	print_nl();
+}
+
+foo() {
+	long c1[3];
+	long c2 = {7777, 8888, 9999};
+	long c3[] = {1111, 2222, 3333};
+
+	print_array(c1);
+	print_array(c2);
+	print_array(c3);
+}
+
+main() {
+	print_array(a1);
+	print_array(a2);
+	print_array(a3);
+
+	long b1[3];
+	long b2 = {444, 555, 666};
+	long b3[] = {777, 888, 999};
+
+	print_array(b1);
+	print_array(b2);
+	print_array(b3);
+
+	foo();
+}

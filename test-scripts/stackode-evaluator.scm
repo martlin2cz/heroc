@@ -8,7 +8,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; stack
 
-(define *max-stack-size* 1000000)
+(define *stack-size* 1000000)
 
 (define create-stack
   (lambda ()
@@ -44,8 +44,10 @@
 
 (define at-stack-absolute
   (lambda (stack index)
-    (check-stack stack index)
-    (list-ref stack (- (- (length stack) index) 2))))
+    (check-stack stack (stack-absolute-to-index index))
+    (let* ((real-index (stack-absolute-to-index index))
+           (ref (- (- (length stack) real-index) 2)))
+      (list-ref stack ref))))
 
 ; (at-stack-absolute s 0)
 ; (at-stack-absolute s 1)
@@ -53,11 +55,12 @@
 
 (define set-at-stack-absolute
   (lambda (stack index value)
-    (check-stack stack index)
-    (let* ((substack (cdr stack))
-          (subindex (- (- (length stack) index) 3))
-          (replaced (replace-nth substack subindex value)))
-    (set-cdr! stack replaced))))
+    (check-stack stack (stack-absolute-to-index index))
+    (let* ((real-index (stack-absolute-to-index index))
+           (substack (cdr stack))
+           (subindex (- (- (length stack) real-index) 3))
+           (replaced (replace-nth substack subindex value)))
+      (set-cdr! stack replaced))))
 
 ; (set-at-stack-absolute s 1 42)
 
@@ -88,16 +91,6 @@
 ;(replace-nth '(1 2 3 4 5 6) 99 'x)
 
 
-;deprecated, everything recomputed to absolutes...
-;(define at-stack-relative
-;  
-;  (lambda (stack index)
-;    'XXXX
-;    (list-ref stack (+ index 1))))
-
-; (at-stack-relative s 0)
-; (at-stack-relative s 1)
-
 (define substract
   (lambda (stack offset n)
     (check-stack stack offset)
@@ -113,19 +106,49 @@
 ; (pop-n s 0 0)
 ; (pop-n s 1 2)
 
+(define stack-absolute-to-index
+  (lambda (index)
+    (- *stack-size* (+ index 1))))
+
+(define stack-index-to-absolute
+  (lambda (adress)
+    (- *stack-size* (+ adress 1))))
+
+(define stack-top-adress
+  (lambda (stack)
+    (let* ((stack-size (stack-size stack))
+           (stack-top-index (- stack-size 1))
+           (stack-top-adress (stack-index-to-absolute stack-top-index)))
+      stack-top-adress)))
+                           
+    
+
+;(stack-absolute-to-index 999999)
+;(stack-absolute-to-index 999998)
+;(stack-absolute-to-index 1000000)
+;(stack-absolute-to-index 0)
+
+
+;(stack-index-to-absolute 0)
+;(stack-index-to-absolute 1)
+;(stack-absolute-to-index (stack-index-to-absolute 0))
+;(stack-absolute-to-index (stack-index-to-absolute 999999))
+
+
+
 
 (define check-stack
   (lambda (stack index)
     (if (or (< index 0) (>= index (- (length stack) 2)))
-        (verbose-error "Out of stack" 'index index 'stack stack)
+        (verbose-error "Out of stack" 'index: index 'stack: stack)
         'OK)))
 
 ; (check-stack s 2)
 
 (define check-stack-max-size
   (lambda (stack)
-    (if (>= (stack-size stack) *max-stack-size*)
-        (verbose-error "Stack overflow, max stack size elapsed" 'max-size *max-stack-size* 'stack stack)
+    (if (>= (stack-size stack) *stack-size*)
+        (verbose-error "Stack overflow, max stack size elapsed" 'max-size: *max-stack-size* 'stack: stack)
         'OK)))
 
 ; (check-stack-max-size s)
@@ -219,7 +242,11 @@
 
 (define create-context
   (lambda (program)
-    (list program (create-stack) 0 0 0)))
+    (list 
+     program 
+     (create-stack) 
+     0 
+     *stack-size*)))
 
 (define program
   (lambda (context)
@@ -251,16 +278,18 @@
            (current-frame-addr (frame-pointer context)))
       
       (push stack current-frame-addr)
-      (let ((new-frame-addr (stack-size stack)))        
+      (let* ((stack-top-adress (stack-top-adress stack))
+             (new-frame-addr stack-top-adress))        
         (change-frame-pointer context new-frame-addr)))))
 
 (define pop-frame
   (lambda (context)
     (let* ((stack (stack context))
-           (current-stack-size (stack-size stack))
+           (current-stack-top (stack-top-adress stack))
            (current-frame-addr (frame-pointer context))
-           (previous-frame-addr (at-stack-absolute stack (- current-frame-addr 1)))
-           (remove-count (+ (- current-stack-size current-frame-addr) 1)))
+           (previous-frame-addr (at-stack-absolute stack current-frame-addr))
+           (remove-count (+ (- current-frame-addr current-stack-top) 1)))
+
       (pop-n stack remove-count)
       (change-frame-pointer context previous-frame-addr))))
 
@@ -313,10 +342,9 @@
     ;(display "\t with stack ") (display (stack context)) 
     ;(display "\t and frame pointer ") (display (frame-pointer context)) 
     ;(newline)
-    ;(print-log "evaluating" instruction ;)
-     ;          (stack context) (frame-pointer context))
-  ;  (read)
-    ;
+   ; (print-log "evaluating" instruction ;)
+   ;            (stack context) (frame-pointer context))
+    ;   (read)
     
     (let* ((instr-name (sc-instr-name instruction))
            (instr-proc (sc-find-instr-proc instr-name))
@@ -427,14 +455,18 @@
 (define sci-push-relative-adress
   (lambda (context ofset)
     (let* ((stack (stack context))
-           (frame-addr (frame-pointer context))
-           (addr (+ frame-addr ofset)))
+           (frame-addr (frame-pointer context))        
+           (addr (cond ((> ofset 0) (- frame-addr ofset))
+                       ((< ofset 0) (- frame-addr (+ ofset 1))) ;skip RIP
+                       (else (verbose-error "Unsupported relative adress 0")))))
+      
       (push-value-and-continue stack addr))))
 
 (define sci-push-absolute-adress
-  (lambda (context addres)
-    (let* ((stack (stack context)))
-      (push-value-and-continue stack addres))))
+  (lambda (context adress)
+    (let* ((stack (stack context))
+           (absolute-adress (stack-index-to-absolute adress)))
+      (push-value-and-continue stack absolute-adress))))
 
 
 (define sci-load
@@ -523,7 +555,9 @@
   (lambda (context procedure arity)
     (let* ((stack (stack context))
            (arguments (substract stack 2 arity)))
-      (push stack (apply procedure arguments))
+      ;(push stack 
+      (apply procedure arguments)
+      ;)
       'next-instruction)))
 
 (define sci-unary-operation
@@ -545,7 +579,7 @@
        ((op-+) +)
        ((op--) -)
        ((op-*) *)
-       ((op-/) /)
+       ((op-/) /-of-ints)
        ((op-%) modulo)
        ((op-<) <-of-ints)
        ((op->) >-of-ints)
@@ -558,10 +592,13 @@
        ((op-bit-or) bit-or)
        ((op-bit-and) bit-and)
        ((op-^) bit-xor)
-       ((op-index) +)
+       ((op-index) +);TODO and what about CELL_SIZE
        (else (verbose-error "unknown binary operation" 'operator operator))
        ))))
 
+(define /-of-ints
+  (lambda (x y)
+    (floor (/ x y))))
 
 (define pow
   (lambda (x e)

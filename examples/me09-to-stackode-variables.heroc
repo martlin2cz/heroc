@@ -20,5 +20,5 @@ foo(a, b, c) {
 
 main() {
 	print_long(foo(x, y, 11));
-
+	//should print 3239
 }

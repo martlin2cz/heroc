@@ -1,0 +1,107 @@
+linsearch(array, from, to, x) {	
+	long i;
+	for (i = from; i < to; i++) {
+		if (array[i] == x) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+print_dbg(from, to, x) {
+	print_nl();
+	print_char('<');
+	print_long(from);
+	print_char(',');
+	print_long(x);
+	print_char(',');
+	print_long(to);
+	print_char('>');
+	print_nl();
+}
+	
+
+binsearch1(array, from, to, x) {	
+//	print_dbg(from, to, x);
+
+	if (from >= to) {
+		return -1;
+	}
+
+	long half = from + (to - from) / 2;
+	if (x == array[half]) {
+		return half;
+	}
+	if (x < array[half]) {
+		return binsearch1(array, from, half, x);
+	}
+	if (x > array[half]) {
+		return binsearch1(array, half + 1, to, x);
+	}
+
+	return -2;
+}
+
+
+binsearch2(array, from, to, x) {	
+	while (from < to) {
+//	print_dbg(from, to, x);
+
+
+		long half = from + (to - from) / 2;
+		if (x == array[half]) {
+			return half;
+		}
+		if (x < array[half]) {
+			to = half;
+		}
+		if (x > array[half]) {
+			from = half + 1;
+		}
+	}
+
+	return -1;
+}
+
+test_search(array, size, x) {
+	long found1 = linsearch(array, 0, size - 1, x);
+	print_long(found1);
+	print_char(' ');
+
+	long found2 = binsearch1(array, 0, size - 1, x);
+	print_long(found2);
+	print_char(' ');
+
+	long found3 = binsearch2(array, 0, size - 1, x);
+	print_long(found3);
+	print_char(' ');
+
+	print_nl();
+}
+
+main() {
+	long arr1 = { 11, 22, 33, 44, 55};
+
+	test_search(arr1, 4, 22);
+	test_search(arr1, 4, 23);
+	test_search(arr1, 4, 40);
+	test_search(arr1, 4, 50);
+	test_search(arr1, 4, 9);
+	test_search(arr1, 4, 99);
+	print_nl();
+
+
+	long arr2 = { 10, 23, 32, 48, 55, 63, 71, 83};
+
+	test_search(arr2, 8, 32);
+	test_search(arr2, 8, 60);
+	print_nl();
+
+	long arr3 = { 11, 24, 35, 47, 56, 69, 72, 81, 99, 102, 112, 128, 133, 144, 156, 172, 186, 191, 200};
+
+	test_search(arr3, 20, 32);
+	test_search(arr3, 20, 99);
+
+
+}

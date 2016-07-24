@@ -44,25 +44,6 @@ void export_gas_preamble(FILE* dest) {
 
 	gas_add_comment(dest, "save the stack frame begin");
 	gas_add_instr_2(dest, "movq", gas_reg("sp"), gas_reg("12"));
-
-	/*
-	 * XXX
-	 gas_add_comment(dest, " redeclaring the predefined commands");
-	 gas_add_instr_1(dest, "jmp", gas_label("skip_initial_decls"));
-
-	 gas_add_label(dest, "print_long");
-	 gas_add_instr_2(dest, "movq", gas_reg_ref(CELL_SIZE, "bp"), gas_reg("di"));
-	 gas_add_instr_1(dest, "jmp", "print_long");
-
-	 gas_add_label(dest, "print_char");
-	 gas_add_instr_2(dest, "movq", gas_reg_ref(CELL_SIZE, "bp"), gas_reg("di"));
-	 gas_add_instr_1(dest, "jmp", "print_char");
-
-	 gas_add_label(dest, "print_nl");
-	 gas_add_instr_1(dest, "jmp", "print_nl");
-
-	 gas_add_label(dest, "skip_initial_decls");
-	 */
 }
 
 void export_gas_footer(FILE* dest) {
@@ -185,20 +166,22 @@ void sk_call_to_gas(FILE* dest) {
 void sk_return_to_gas(FILE* dest) {
 	gas_new_instructiction(dest, "return");
 
-	long remove = -2 * CELL_SIZE;
-	gas_add_instr_2(dest, "movq", gas_reg("bp"), gas_reg("ax"));
-	gas_add_instr_2(dest, "addq", gas_num(remove), gas_reg("ax"));
-	gas_add_instr_2(dest, "movq", gas_reg("ax"), gas_reg("sp"));
+	long remove = -1 * CELL_SIZE;
 
 	gas_add_instr_1(dest, "popq", gas_reg("ax"));
+	gas_add_instr_2(dest, "movq", gas_reg("bp"), gas_reg("bx"));
+	gas_add_instr_2(dest, "addq", gas_num(remove), gas_reg("bx"));
+	gas_add_instr_2(dest, "movq", gas_reg("bx"), gas_reg("sp"));
+
 	gas_add_instr_0(dest, "retq");
 }
 
 void sk_cleanup_after_call_to_gas(FILE* dest, long params_count) {
 	gas_new_instructiction(dest, "cleanup after call");
 
+	long remove = -params_count * CELL_SIZE;
 	gas_add_instr_1(dest, "popq", gas_reg("ax"));
-	gas_add_instr_2(dest, "addq", gas_num(-params_count), gas_reg("sp"));
+	gas_add_instr_2(dest, "subq", gas_num(remove), gas_reg("sp"));
 	gas_add_instr_1(dest, "pushq", gas_reg("ax"));
 }
 void sk_jump_on_non_zero_to_gas(FILE* dest, char* label) {
@@ -262,7 +245,7 @@ void sk_push_relative_adress_to_gas(FILE* dest, long adress) {
 	if (adress < 0) {
 		offset = (-adress - 2) * CELL_SIZE;
 	} else {
-		offset = (-adress - 2) * CELL_SIZE;
+		offset = (-adress - 1) * CELL_SIZE;
 	}
 	gas_add_instr_2(dest, "movq", gas_reg("bp"), gas_reg("ax"));
 	gas_add_instr_2(dest, "addq", gas_num(offset), gas_reg("ax"));
@@ -460,7 +443,7 @@ void sk_binary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper) {
 			gas_add_instr_1(dest, "popq", gas_reg("bx"));	//base
 
 			gas_add_instr_2(dest, "imulq", gas_num(CELL_SIZE), gas_reg("ax"));
-			gas_add_instr_1(dest, "negq", gas_reg("ax"));
+			//gas_add_instr_1(dest, "negq", gas_reg("ax"));
 
 			gas_add_instr_2(dest, "addq", gas_reg("bx"), gas_reg("ax"));
 			gas_add_instr_1(dest, "pushq", gas_reg("ax"));

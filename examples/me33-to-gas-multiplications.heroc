@@ -1,0 +1,46 @@
+
+print_padded(num) {
+	if (num < 10) {
+		print_char(' ');
+	}
+	if (num < 100) {
+		print_char(' ');
+	}
+	if (num < 1000) {
+		print_char(' ');
+	}
+
+	print_long(num);
+}
+
+multtable(size) {
+	long i;
+
+	print_char('x');
+	print_char('*');
+	print_char('y');
+	print_char('=');
+	for (i = 0; i <= size; i++) {
+		print_padded(i);
+	}
+	print_nl();
+
+	for (i = 0; i <= size; i++) {
+		print_padded(i);
+		
+		long j;
+		for (j = 0; j <= size; j++) {
+			long mult = i * j;
+			print_padded(mult);
+		}
+		print_nl();
+
+	}
+
+	print_nl();
+}
+
+main() {
+	multtable(15);
+
+}

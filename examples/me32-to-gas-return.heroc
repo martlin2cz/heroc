@@ -1,0 +1,8 @@
+foo(x) {
+	long y = x + 1;
+	return y + 2;
+}
+
+main() {
+	print_long(foo(42));
+}

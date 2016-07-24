@@ -139,7 +139,7 @@ void node_to_stackode_comment(sk_program_t* program, ast_node_t* node) {
 		fprintf(stderr, "ntsc: Cannot allocate memory\n");
 	}
 
-	sprintf(text, "\"Node %d, %s\"", node->uid, to_string(node->type));
+	sprintf(text, "\"node %d, %s\"", node->uid, to_string(node->type));
 
 	sk_instruction_t* instr = create_instruct_with_str(SKI_COMMENT, text);
 	add_instruction(program, instr);
@@ -372,11 +372,14 @@ void variable_to_stackode(sk_program_t * program, ast_node_t * node) {
 void array_to_stackode(sk_program_t * program, ast_node_t * node) {
 	//HACK: the array is stackoded by pushing its address preceded by its items
 
+	long size = node->value.child->value.number;
 	ast_node_t* items_or_meta = node->value.child->next;
+
 	if (items_or_meta && !is_meta(items_or_meta->type)) {
-		list_to_stackode(program, items_or_meta->value.child);
+		ast_node_t* items =  items_or_meta->value.child;
+		ast_node_t* reversed = reverse(items);
+		list_to_stackode(program, reversed);
 	} else {
-		int size = node->value.child->value.number;
 		sk_instruction_t* alloc = create_instruct_with_num(SKI_DECLARE_ARRAY,
 				size);
 		add_instruction(program, alloc);
@@ -392,8 +395,9 @@ void array_to_stackode(sk_program_t * program, ast_node_t * node) {
 		pav_instr_type = SKI_PUSH_RELATIVE_ADRESS;
 	}
 
+	long addr = var_addr.number + size - 1;
 	sk_instruction_t* pav = create_instruct_with_num(pav_instr_type,
-			var_addr.number);
+			addr);
 
 	add_instruction(program, pav);
 }

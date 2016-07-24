@@ -316,7 +316,8 @@ struct ast_node_t* duplicate(struct ast_node_t* node) {
 	return copy;
 }
 
-struct ast_node_t* append_child(struct ast_node_t* node, TOKEN_TYPE_T type, YYSTYPE value) {
+struct ast_node_t* append_child(struct ast_node_t* node, TOKEN_TYPE_T type,
+		YYSTYPE value) {
 	ast_node_t* new = create_new_node(type);
 	new->value = value;
 
@@ -340,8 +341,6 @@ void replace_child(ast_node_t* parent, ast_node_t* old_child,
 	//fprintf(stderr, "qqq %p -> %p, %p  %p -> %p\n", parent, parent->value.child, parent->value.child->next, old_child, new_child);
 	//ast_display_root(stderr, parent);
 
-
-
 	ast_node_t* child = parent->value.child;
 	if (child == old_child) {
 		parent->value.child = new_child;
@@ -361,6 +360,21 @@ void replace_child(ast_node_t* parent, ast_node_t* old_child,
 			return;
 		}
 	}
+}
+
+ast_node_t* reverse(ast_node_t* items) {
+	ast_node_t* node = items;
+	ast_node_t* result = NULL;
+
+	while (node) {
+		ast_node_t* node_copy = duplicate(node);
+		node_copy->next = NULL;
+		result = prepend(node_copy, result);
+
+		node = node->next;
+	}
+
+	return result;
 }
 
 #endif

@@ -1,0 +1,30 @@
+fn(x) {
+	return (x + 1) * (x - 1);
+}
+
+print_item(x) {
+	print_char(' ');
+	print_char('-');
+	print_char(' ');
+	print_long(x);
+	print_nl();
+
+	return 0;
+}
+
+//allowed absolutelly arbitrary expression in global var decl (unlike of C's constant expr)
+long foo = 42 * 3 - 11;
+long bar = fn(foo) * 6;
+
+//the grammar does not allow to perform toplevel statements directly, but:
+long xxx = 
+	print_item(111) +
+	print_item(222) +
+	print_item(333) + 
+	print_item(444);
+
+main() {
+
+}
+
+

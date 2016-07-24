@@ -23,6 +23,7 @@ struct ast_node_t* duplicate(struct ast_node_t* node);
 struct ast_node_t*  append_child(struct ast_node_t* node, TOKEN_TYPE_T type, YYSTYPE value);
 void replace_child(ast_node_t* parent, ast_node_t* old_child,
 		ast_node_t* new_child);
+ast_node_t* reverse(ast_node_t* items);
 
 /* constructors of lists */
 struct ast_node_t* create_with_0_children(TOKEN_TYPE_T type);

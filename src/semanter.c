@@ -538,7 +538,7 @@ void analyze_procedure(ast_node_t* node, ast_node_t* parent,
 	ast_node_t* param = params->value.child;
 	int params_count = lenght_of(param);
 	ast_node_t* prev_param = params;
-	int next_param_at = - FRAME_STUFF_SIZE - params_count + 1;
+	int next_param_at = - (params_count + 1);
 	while (param && !is_meta(param->type)) {
 		analyze_variable_decl(param, node, &prev_param, &next_param_at, 1,
 				errors);
@@ -549,7 +549,7 @@ void analyze_procedure(ast_node_t* node, ast_node_t* parent,
 
 	// body
 	ast_node_t* body = params->next;
-	int next_var_at = 0;
+	int next_var_at = 1;
 
 	ast_node_t* body_prev = prev_param;
 	analyze_one_node(body, node, &body_prev, NULL, &next_var_at, errors);

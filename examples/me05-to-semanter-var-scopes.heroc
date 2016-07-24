@@ -22,7 +22,7 @@ bar(y) {
 	}
 	print_nl();
 
-	long w = 600;
+	long w = 700;
 	return x + y + z + w;
 }
 

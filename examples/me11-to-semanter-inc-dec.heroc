@@ -8,13 +8,32 @@ foo() {
 }
 
 bar() {
+	print_long(x);
+	print_char(' ');
 	print_long(x++);
+	print_char(' ');
+	print_long(x);
 	print_nl();
+	
+	print_long(x);
+	print_char(' ');
 	print_long(++x);
+	print_char(' ');
+	print_long(x);
 	print_nl();
+	
+	print_long(x);
+	print_char(' ');
 	print_long(x--);
+	print_char(' ');
+	print_long(x);
 	print_nl();
+	
+	print_long(x);
+	print_char(' ');
 	print_long(--x);
+	print_char(' ');
+	print_long(x);
 	print_nl();
 }
 
