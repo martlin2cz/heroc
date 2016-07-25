@@ -372,7 +372,7 @@
   (lambda (stack operation)
     (let* ((operand1 (pop stack))
            (operand2 (pop stack))
-           (value (operation operand2 operand1))) ;TODO is order of operands correct?
+           (value (operation operand2 operand1))) 
       (push stack value)
       'next-instruction)))
 
@@ -592,7 +592,7 @@
        ((op-bit-or) bit-or)
        ((op-bit-and) bit-and)
        ((op-^) bit-xor)
-       ((op-index) +);TODO and what about CELL_SIZE
+       ((op-index) +)
        (else (verbose-error "unknown binary operation" 'operator operator))
        ))))
 

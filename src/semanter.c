@@ -527,8 +527,6 @@ void analyze_procedure(ast_node_t* node, ast_node_t* parent,
 		return;
 	}
 
-	//TODO local vs. global. No?
-
 	//params list
 	ast_node_t* params = name->next;
 	YYSTYPE params_prev;

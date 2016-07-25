@@ -7,7 +7,7 @@
 #include "ast-exporter.h"
 #include "stackode.h"
 
-#define CELL_SIZE 8 /* //TODO FIXME replace with sizeof(long) ? */
+#define CELL_SIZE sizeof(long)
 
 #ifdef GAS_VERBOSE
 #define GAS_LOG(...) \

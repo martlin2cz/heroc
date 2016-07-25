@@ -3,7 +3,7 @@ print_string (string, n)
 {
     while (n) {
 	print_char (*string);
-	string++;
+	string+=sizeof(long);
 	n --;
     }
     print_nl ();

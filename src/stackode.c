@@ -389,7 +389,7 @@ void array_to_stackode(sk_program_t * program, ast_node_t * node) {
 	YYSTYPE var_type = find_value_of_meta(node, META_VAR_TYPE);
 
 	sk_instr_type_t pav_instr_type;
-	if (var_type.number == VT_GLOBAL) {	//TODO FIXME code redundancy (with var and maybe lambda?)
+	if (var_type.number == VT_GLOBAL) {
 		pav_instr_type = SKI_PUSH_ABSOLUTE_ADRESS;
 	} else {
 		pav_instr_type = SKI_PUSH_RELATIVE_ADRESS;
@@ -585,9 +585,6 @@ void expression_to_stackode(sk_program_t * program, ast_node_t * node) {
 }
 
 void invoke_external_to_stackode(sk_program_t * program, ast_node_t * node) {
-	sk_instruction_t* comment = create_instruct_with_str(SKI_COMMENT,
-			"\"invoke external procedure\"");
-	add_instruction(program, comment);
 
 	char* name = node->value.child->value.child->value.string;
 	YYSTYPE argc = find_value_of_meta(node, META_ARITY_OF_EXTERNAL);

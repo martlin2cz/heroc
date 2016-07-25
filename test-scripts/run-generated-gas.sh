@@ -7,7 +7,7 @@ TIMEOUT=5
 
 #run specifier (run in gdb, run with timeout, run normally), uncomment one
 #RUN_SPEC=gdbtui
-RUN_SPEC="timeout $TIMEOUT"
+#RUN_SPEC="timeout $TIMEOUT"
 #RUN_SPEC=
 
 

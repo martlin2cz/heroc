@@ -6,11 +6,12 @@
 #include "stackode.h"
 
 void ast_export_root(FILE* dest, struct ast_node_t* root) {
-	//TODO check platform
+#if !(defined(__x86_64__) && __x86_64__)
+	fprintf(stderr, "aer: Warning: The compiler is designed to amd64 platform. Generated assembly should not work to you.\n");
+#endif
 
 	sk_program_t* sk = ast_to_stackode(root);
 	export_stackode_to_gas(dest, sk);
-
 }
 
 void export_stackode_to_gas(FILE* dest, sk_program_t* program) {
@@ -277,9 +278,9 @@ void sk_invoke_external(FILE* dest, char* name, long arity) {
 	gas_new_instructiction(dest, "invoke external");
 
 	switch (arity) {
-	//case 2: move another param into %rsi? or where ...
+	//case 2: move another param into %rsi or where
 	case 1: {
-		long offset = -((-1) * CELL_SIZE);	//TODO FIXME TEST offset
+		long offset = -((-1) * CELL_SIZE);
 		gas_add_instr_2(dest, "movq", gas_reg_ref(offset, "bp"), gas_reg("di"));
 	}
 		/* no break */
@@ -305,24 +306,53 @@ void sk_push_cell_size(FILE* dest) {
 
 void sk_unary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper) {
 	gas_new_instructiction(dest, "unary operation");
+	static long not_lbl_uid = 0;
 
-	char* op;
+	char* op = NULL;
+	TOKEN_TYPE_T op_other = 0;
 	switch (oper) {
 	case OPT_NOT:
-		op = "negq";	//FIXME negation
+		op_other = OPT_NOT;
 		break;
 	case OPT_BITWISE_NOT:
 		op = "notq";
 		break;
 
 	default:
-		fprintf(stderr, "suotg: Unknown unary operator %s\n", to_string(oper));
+		fprintf(stderr, "suotg1: Unknown unary operator %s\n", to_string(oper));
 		return;
 	}
 
-	gas_add_instr_1(dest, "popq", gas_reg("ax"));
-	gas_add_instr_1(dest, op, gas_reg("ax"));
-	gas_add_instr_1(dest, "pushq", gas_reg("ax"));
+	if (op) {
+		gas_add_instr_1(dest, "popq", gas_reg("ax"));
+		gas_add_instr_1(dest, op, gas_reg("ax"));
+		gas_add_instr_1(dest, "pushq", gas_reg("ax"));
+	}
+	if (op_other) {
+		switch (op_other) {
+		case OPT_NOT:
+			gas_add_instr_1(dest, "popq", gas_reg("ax"));
+
+			char* lbl = generate_label("skip", "not", not_lbl_uid);
+
+			gas_add_instr_2(dest, "mov", gas_num(1), gas_reg("bx"));
+
+			gas_add_instr_2(dest, "cmp", gas_num(0), gas_reg("ax"));
+			gas_add_instr_1(dest, "je", gas_label(lbl));
+
+			gas_add_instr_2(dest, "mov", gas_num(0), gas_reg("bx"));
+			gas_add_label(dest, lbl);
+
+			gas_add_instr_1(dest, "pushq", gas_reg("bx"));
+
+			not_lbl_uid++;
+			break;
+		default:
+			fprintf(stderr, "suotg2: Unknown unary operator %s\n",
+					to_string(oper));
+			return;
+		}
+	}
 }
 void sk_binary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper) {
 	static long cmp_lbl_uid = 0;
@@ -473,33 +503,39 @@ void sk_binary_operation_to_gas(FILE* dest, TOKEN_TYPE_T oper) {
 
 char* gas_reg(char* name) {
 	ALLOC_PRINT_RETURN("%%r%s", name);
+	return NULL; //to shut down eclipse warning
 }
 
 char* gas_reg_call(char* name) {
 	ALLOC_PRINT_RETURN("*%%r%s", name);
+	return NULL; //to shut down eclipse warning
 }
 
 char* gas_num(long value) {
 	ALLOC_PRINT_RETURN("$%ld", value);
+	return NULL; //to shut down eclipse warning
 }
 
 char* gas_label(char* name) {
 	ALLOC_PRINT_RETURN("_%s", name);
+	return NULL; //to shut down eclipse warning
 }
 
 char* gas_label_addr(char* name) {
 	ALLOC_PRINT_RETURN("$_%s", name);
+	return NULL; //to shut down eclipse warning
 }
 
 char* gas_reg_ref(int offset, char* reg_name) {
 	ALLOC_PRINT_RETURN("%d(%%r%s)", offset, reg_name);
+	return NULL; //to shut down eclipse warning
 }
 
 void gas_new_instructiction(FILE* dest, char* comment) {
 	fprintf(dest, "\n");
 
-	fprintf(dest, "\t nop # (%s) \n", comment);	//XXX debug!
-	//gas_add_comment(dest, comment);
+	//fprintf(dest, "\t nop # (%s) \n", comment);	//debug
+	gas_add_comment(dest, comment);
 }
 
 void gas_add_instr_0(FILE* dest, char* name) {

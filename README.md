@@ -7,7 +7,7 @@ The components
  - [x] syntactic analyzator
  - [x] semantic analyzator
  - [x] stackode generator
- - [ ] gas generator
+ - [x] gas generator
  
  Also implemented various tools:
   - [x] ast (basic) displayer
@@ -15,4 +15,4 @@ The components
   - [x] stackode exporter to scheme, it's evaluator/interpreter (yeah, really!)
   - [x] scripts for various batch testing
   
-  Take a look at various examples (`examples/*.herocio`) to see how it works and what does my implementation support.
+  Take a look at various examples (`examples/*.heroc`) to see how it works and what does my implementation support.

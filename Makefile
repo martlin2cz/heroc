@@ -1,6 +1,6 @@
 ## heroc
 ## Martin Jasek
-## IV - V 2016
+## IV - VII 2016
 ## KMI UP, inf.upol.cz
 ## vychodil.inf.upol.cz
 
@@ -11,11 +11,16 @@ LEX	 = flex
 YACC = bison
 
 # -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  -D SEMANTER_VERBOSE  -D STACKODE_VERBOSE -D GAS_VERBOSE
-MACROS	?=  
+VERBOSEDS ?= 
+
 # basic|scheme|stackode|gas
-OUTPUTLANG ?= stackode
+OUTPUTLANG ?= gas
+
+MACROS	?= $(VERBOSEDS) -D OUTPUTLANG="\"$(OUTPUTLANG)"\"
+
 #-Wall -d
-CFLAGS	= -ansi -pedantic -std=c11 $(MACROS) --debug ## XXX --debug
+CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
+
 LIBS	= -lfl -lm
 
 

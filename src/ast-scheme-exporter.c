@@ -68,7 +68,7 @@ int print_compozite(FILE* dest, struct ast_node_t* node, int padding, int wrap) 
 
 	ast_node_t* child = node->value.child;
 
-	int new_pad = padding + (wrap ? 1 : 1);	//TODO lol, wtf?
+	int new_pad = padding + (wrap ? 1 : 1);	//lol, wtf?
 
 	switch (node->type) {
 	//absolutelly syntactically specifically printed
