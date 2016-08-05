@@ -7,7 +7,7 @@
 
 void ast_export_root(FILE* dest, struct ast_node_t* root) {
 #if !(defined(__x86_64__) && __x86_64__)
-	fprintf(stderr, "aer: Warning: The compiler is designed to amd64 platform. Generated assembly should not work to you.\n");
+	fprintf(stderr, "aer: Warning: The compiler is designed to x86_64 platform. Generated assembly should not work to you.\n");
 #endif
 
 	sk_program_t* sk = ast_to_stackode(root);

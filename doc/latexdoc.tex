@@ -1,0 +1,220 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+
+\usepackage{listings}
+
+%opening
+\title{Implementace překladače jazyka heroc}
+\author{Martin Jašek}
+\date{5. srpna 2016}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Tento text slouží jako zevrubná dokumentace k~mé implementaci překladače programovacího jazyka heroc.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Úvod}
+Překladač jazyka heroc je jednoduchá implementace překladače jazyka na bázi jazyka C. Kód v~jazyce heroc překládá do GNU assembleru (\uv{GAS}).
+
+\section{Popis jazyka a překladače}
+
+\subsection{Specifikace jazyka heroc}
+Jazyk nemá oficiální specifikaci, pro popis jazyka slouží adresář s~ukázkovými \verb|*.heroc| soubory.
+
+Z~požadavků však vyplývá, že jazyk heroc je podmnožina jazyka C. Jazyk heroc však má podporovat pouze datový typ \verb|long|, standardní řídící konstrukce (kromě příkazu \verb|switch|) a operátory, procedury a pole. Také jazyk musel obstojně zvládat práci s~ukazateli.
+
+\subsection{Mé vlastnosti navíc}
+Má implementace oproti doporučení obsahuje několik vlastností navíc. Ze základních k~nim patří podpora jednořádkových komentářů a znakových konstant. Z~pokročilejších pak možnost inicializovat globální proměnné hodnotou libovolného (ne nutně konstantního) výrazu nebo podpora jednoduchých lambda-výrazů.
+
+Ukázky jejich použití jsou v~adresáři s~příklady.
+
+\subsection{Požadavky na sestavení}
+Překladač byl naprogramován v~jazyce C (standart C11) za použití standartních nástrojů lex (flex) a yacc (bison). Poždavky pro sestavení (systém, na kterém byl překaldač vyvíjen a je odladěn) jsou následující:
+\begin{itemize}
+ \item platforma GNU/Linux, architektura x86\_64
+ \item GCC verze 4.9.2
+ \item flex verze 2.5.39
+ \item bison verze 3.0
+ \item make verze 4.0
+\end{itemize}
+Kromě starších verzí bisonu (verzi 2.5 už použít nelze) by měl jít překladač sestavit i s~jinými verzemi nástrojů. Při sestavování na jiné platformě je nutné počítat s~tím, že generovaný assembler je vždy generován pro procesor x86\_64.
+
+\subsection{Sestavení a spuštění}
+Sestavení překladače se provádí standartně pomocí make:
+\begin{lstlisting}
+ $ make
+\end{lstlisting}
+
+Sestavit je možné jen testovací programy pomocí cíle \verb|tests|, nebo naopak jen samotný překladač (bez testů, cíl \verb|compiler|):
+\begin{lstlisting}
+ $ make tests
+ $ make compiler
+\end{lstlisting}
+V Makefile je také možné upravit chování překladače (aktivovat ladící logy nebo změnit výstupní jazyk).
+
+Make vytvoří adresář \verb|bin| a v~něm binární soubor překladače \verb|compiler|. Po spuštění příkazem: 
+\begin{lstlisting}
+ $ ./bin/compiler
+\end{lstlisting}
+očekává na standartním vstupu kód v jazyce heroc a na standartní výstup vypíše vygenerovaný assembler. Případná informativní, chybová nebo varovná hlášení jsou vypisována na standardní chybový výstup. Překladač je také možné spustit s explicitním uvedením vstupního a výstupního souboru:
+\begin{lstlisting}
+ $ ./bin/compiler input.heroc output.s
+\end{lstlisting}
+
+\subsection{Adresářová struktura}
+Překladač je tvořen následujícími adresáři:
+\begin{itemize}
+ \item \verb|src| -- zdrojové kódy (hlavičkové a \verb|*.C| soubory, soubor lexéru a gramatiky)
+ \item \verb|test| -- zdrojové kódy testovacích programů
+ \item \verb|examples| -- ukázkové \verb|*.heroc| soubory
+ \item \verb|lib| -- dvojice souborů s~knihovnou herocio (\verb|herocio.c| a \verb|herocio.scm|)
+ \item \verb|test-scripts| -- sada shellových skriptů především pro (dávkové) testování
+\end{itemize}
+Při sestavení dále vzniknou následující adresáře:
+\begin{itemize}
+ \item \verb|gen| -- vygenerované soubory lexéru a syntaxéru
+ \item \verb|obj| -- zkompilované objektové soubory
+ \item \verb|bin| -- adresář s~binárním souborem překladače
+ \item \verb|test-bin| -- adresář s~binárními soubory testovacích programů
+ \item \verb|tmp| -- pomocný adresář pro pozdější použití (pro samotný překlad nepotřebný)
+\end{itemize}
+
+\section{Komponenty překladače}
+\subsection{Tokeny}
+Základním stavebním kamenem mé implementace jsou tokeny. Kromě toho, že slouží pro předávání informací mezi lexérem a sytaxérem a dohromady tvoří ast (abstraktní syntaktický strom), jsou použity také k~uchovávání metainformací generovaných při sémantické analýze. 
+
+Tokenů je využito několik druhů, všechny (bez ohledu na to, kde a jak jsou využívány) jsou deklarovány na jednom místě, v~deklarační části syntaxéru. Každý token má prefix názvu udávající jeho druh. V~programu tak lze nalést tokeny s~prefixy:
+\begin{itemize}
+ \item \verb|JLT| (just lexical token), tokeny generované lexérem a zpracovávané syntaxérem. Dále již nejsou využívány, patří sem tedy pouze tokeny ryze lexikální, tedy závorky, oddělovače (a další speciální znaky čárka, dvojtečka a otazník) a tzv. multi-used tokeny. To jsou tokeny, reprezentující tytéž lexémy avšak gramatika je interpretuje různě. To jsou tokeny plus, mínus, hvězdička, inkrementace a dekrementace.
+ \item \verb|ATT| (atomic token), atomické tokeny. Sem patří číslo a textový řetězec (od syntaxéru dále použit pouze pro název identifikátoru). 
+ \item \verb|STK| (special token), pro lexér tokeny klíčových slov, dále pak uzly odpovídajících řídících struktur (např. if, for, lambda, continue, return).
+ \item \verb|JST| (just semantic token), tokeny, které jsou naopak od JLT používány až od syntaxéru. Jedná se o~tokeny, které zaštiťují složitejší syntaktické konstrukce (jako proměnná, pole, deklarace procedury, volání procedury a podob.).
+ \item \verb|CNT| (container token), tokeny, jejiž potomky bývají seznamy dalších tokenů. Jedná se o~tokeny: \uv{příkazy}, \uv{čísla} (nepoužívá se), \uv{výrazy} a \uv{seznam parametrů procedury}. 
+ \item \verb|META| (metatokeny), tokeny, které obsahují dodatečné informace ohledně ast (např. odkaz na deklaraci proměnné, cyklus k~ukončení).
+  \item \verb|OPT| (operator token), token popisující operátor/operaci.
+\end{itemize}
+
+\subsection{Databáze tokenů}
+Každý token, pokud nereprezentuje přímo konkrétní lexém (u~těch je to zjevné) má přiřazenu textovou reprezentaci. Tabulka (resp. funkce pro převod) všech tokenů na jejich textové reprezentace (a u~některých i zpět) se nachází v~souboru \verb|tokens.c|.
+
+\subsection{Lexér}
+Lexikální analyzátor neboli lexér je generován pomocí programu flex. Z~důvodu úspory kódu lexéru jsou lexémy rozpoznávány po skupinách a následně (je-li to nutné) pomocí databáze tokenů převáděny na konkrétní tokeny. Mezi tyto skupiny patří: klíčová slova, čísla, identifikátory, přiřazovací operátory, operátory, závorky, ostatní symboly. Dodatečný C kód je vytlačen do souborů \verb|lexer-headers.h| a \verb|lexer-headers.c|.
+
+V~případě lexikální chyby je vypsána varovný hláška a lexér se daný chybný token pokusí přeskočit.
+
+\subsection{Konstruktor ast}
+Soubor \verb|ast.c| obsahuje konstruktory pro uzly ast (abstraktního syntaktického stromu). Každý vygenerovaný uzel má kromě typu svého tokenu a jeho hodnoty (kterou může být číslo, řetězec, operátor nebo seznam dalších uzlů) také jednoznačný identifikátor (a vzhledem k~tomu, že sám může být součástí nějakého seznamu uzlů, tak ukazatel na následníka).
+
+Jednoznačný identifikátor uzlů slouží jednak k~přehlednější práci se stromem a navíc také pro generování labelů u~assembleru. Je implementován pomocí statické proměnné.
+
+Seznam uzlů je standartní jednosměrný lineární seznam zakončený ukazatelem na \verb|NULL| následníka. Může být prázdný.
+
+\subsection{Syntaxér}
+Syntaxér, neboli syntaktický analyzátor, definuje samotnou gramatiku jazyka. Sémantické akce každého pravidla bývají obvykle jen volání některého z~konstruktorů ast. Kde to má smysl tak je také změněna hodnota naposledy zpracovaného uzlu na právě zpracovaný, takže při syntaktické chybě uživatel dostane alespoň skromnou informaci o~tom, kde mohlo dojít k~chybě. Podobně jako lexér má syntaxér dodatečný C kód přesunut do souborů \verb|syntaxer-headers.h| a \verb|syntaxer-headers.c|.
+
+\subsection{Zobrazování ast}
+Pro vyobrazení struktury ast byl vytvořen soubor \verb|ast-displayer.c|, obsahující funkce pro vypsání stromu na zadaný proud. Rekurzívně prochází strom a na řádky vypisuje jednotlivé potomky, u~každého uzlu vypíše jeho adresu, jednoznačný identifikátor a textovou reprezentaci tokenu.
+
+\subsection{Výstup ast do ...}
+Pro lepší ladění byl zaveden koncept \uv{výstupu ast do ...}. Na počátku, ve fázi vývoje syntaxéru bylo nutné sledovat pouze hrubě vygenerovaný ast. Proto vznikla komponenta výstupu ast v~základním formátu (\verb|ast-basic-exporter.c|). Spolu s~ním byla také snaha vyobrazovat ast v~syntaxi jazyka Scheme a vznikl proto \verb|ast-scheme-exporter.c|. Pro účely testování generátoru zásobníkového kódu poté vznikla komponenta \verb|ast-stackode-exporter.c|, která vypisuje stackode program syntaxí jazyka Scheme. Na závěr byl pochopitelně zkonstruován také \verb|ast-gas-exporter.c|, tedy komponenta, která ast převádí na assembler. 
+
+Jaký \uv{výstupní jazyk} má být při překladu použit se specifikuje přilinkováním adekvátního objektového souboru a specifikuje se to makrem v~Makefile.
+
+\subsection{Sémantér}
+Sémantér, neboli sémantický analyzátor, má za úkol projít hrubý ast a doplnit (nebo modifikovat) informace v~něm, aby následný generátor kódu měl co nejméně práce. Sémantér má tedy na starosti:
+\begin{itemize}
+ \item přidává do ast umělé deklarace předdefinovaných procedur (\verb|print_long|, \verb|print_char| a \verb|print_nl|)
+ \item přidává explicitní volání funkce \verb|main|
+ \item u~každé proměnné doplní odkaz na její definici
+ \item při každé definici proměnné dodá odkaz na předchozí definici a adresu proměnné na zásobníku
+ \item tam, kde je použita hodnota proměnné namísto její reference, ji obaluje dereferencí
+ \item inkrementační a dekrementační operátory a operátor indexace expanduje na odpovídající výrazy
+ \item u~klíčových slov \verb|break| a \verb|continue| přidává metainformaci s~odkazem na cyklus, ke kterému se vztahují
+ \item u~volání procedur (pokud to jde) kontroluje cíl volání a aritu
+ \item u~deklarace procedury předpočítává adresy parametrů
+ \item řeší alokaci polí na zásobníku
+\end{itemize}
+
+\subsection{Generátor zásobníkového kódu}
+Generátor zásobníkového kódu, neboli stackode, převádí ast na zásobníkový assembler. Pro účely testování je možné jej převést do textové podoby v~syntaxi jazyka Scheme. Zásobníkový kód obsahuje následující instrukce:
+\begin{itemize}
+	\item \verb|SKI_COMMENT| \textit{komentář}, vloží komentář
+	\item \verb|SKI_LABEL| \textit{label}, vloží label
+
+	\item \verb|SKI_CALL|, provede zavolání funkce na vrcholu zásobníku
+	\item \verb|SKI_RETURN|, provede návrat z~volání, na vrcholu zásobníku očekává návratovou hodnotu 
+	\item \verb|SKI_CLEANUP_AFTER_CALL| \textit{počet}, odklidí ze zásobníku argumenty volání
+	\item \verb|SKI_JUMP_ON_ZERO| \textit{label}, skočí, pokud je na vrcholu zásobníku $0$ 
+	\item \verb|SKI_JUMP_ON_NON_ZERO| \textit{label}, skočí, pokud není na vrcholu zásobníku $0$
+	\item \verb|SKI_JUMP_TO| \textit{label}, skočí na uvedený label 
+
+	\item \verb|SKI_LOAD|, provede načtení hodnoty z~adresy na vrcholu zásobníku
+	\item \verb|SKI_ASSIGN|, uloží hodnotu pod vrcholem zásobníku na adresu na vrcholu zásobníku
+	\item \verb|SKI_DECLARE_ATOMIC|, vloží na zásobník jednu buňku s~nedefinovanou hodnotou 
+	\item \verb|SKI_DECLARE_ARRAY| \textit{počet}, vloží na zásbník zadaný počet buněk s~nedefinovanými hodnotami 
+
+	\item \verb|SKI_PUSH_CELL_SIZE|, vloží na zásobník velikost jedné buňky
+	\item \verb|SKI_PUSH_CONSTANT| \textit{číslo}, vloží na zásobník číselnou konstantu 
+	\item \verb|SKI_PUSH_LABEL_ADRESS| \textit{label}, vloží na zásobník adresu labelu 
+	\item \verb|SKI_PUSH_RELATIVE_ADRESS| \textit{adresa}, vloží na zásobník relativní (vzhledem k~rámci) adresu 
+	\item \verb|SKI_PUSH_ABSOLUTE_ADRESS| \textit{adresa}, vloží na zásobník absolutní (od dna zásobníku) adresu
+
+	\item \verb|SKI_POP|, odebere a zahodí hodnotu na vrcholu zásobníku 
+	\item \verb|SKI_DUPLICATE|, zduplikuje hodnotu na vrcholu zásobníku 
+
+	\item \verb|SKI_UNARY_OPERATION|| \textit{operace}, s~hodnotou na vrcholu zásobníku provede operaci
+	\item \verb|SKI_BINARY_OPERATION| \textit{operace}, s~dvěmi hodnotami na vrcholu zásobníku provede operaci
+
+	\item \verb|SKI_INVOKE_EXTERNAL| \textit{název}, \textit{arita}, zavolá externí funkci s~uvedeným počtem parametrů na zásobníku
+	\item \verb|SKI_END|, signalizuje (úspěšné) ukončení programu
+\end{itemize}
+
+\subsection{Generátor assembleru}
+Generátor assembleru, neboli komponenta \verb|ast-gas-exporter.c| překládá program ve stackode do GAS assembleru. Kód nebyl nijak optimalizován a je proto silně neoptimální. Do generovaného assembleru jsou vkládány komentáře -- jednak popis stackode instrukce ale také text komentářů z~instrukcí \verb|SKI_COMMENT|. Assembler je generován přímo (jako text), bez jakékoliv další interní formy. 
+
+\section{Testování a ladění}
+
+\subsection{Ladící logy}
+Při sestavování překladače je možné zapnout funkci ladících logů pro jednotlivé komponenty (lexér, syntaxér, sémantér, stackode, gas). Logování se zapíná deklarací příslušného makra v Makefile překladače. Logy jsou vypisovány na standartní výstup.
+
+\subsection{Testovací \ttfamily{*.heroc} soubory}
+Základním kamenem testování překladače jsou testovací soubory. Všechny jsou umístěny v~adresáři \verb|examples|. Podle prefixu názvu souboru je lze rozdělit do následujích skupin:
+\begin{itemize}
+ \item \verb|vychodil*.heroc|, původní testovací soubory od doc. Vychodila
+ \item \verb|me*.heroc|, mé vlastní testovací soubory (většinou testující konkrétní implementovanou dílčí funkci)
+ \item \verb|x-*.heroc|, soubory protipříkladů, tedy soubory obsahující záměrně chyby
+ \item \verb|f-vychodil*.heroc|, modifikované zdrojové kódy doc. Vychodila tak, aby fungovaly v~mé implementaci
+\end{itemize}
+
+\subsection{Testovací programy a skripty, testování ve schemu}
+Prakticky každá komponenta překladače získala pro své ladění vlastní samostatně spustitelný program jehož drojový kód se nachází v~adresáři \verb|test-src|. Pro automatizaci testování, především pro spouštění testování nad více soubory v~dávce, nebo pro rychlou detekci chyb a pádů vznikly v~adresáři \verb|test-scripts| různé testovací skripty. 
+
+Lze také automatizovaně spouštět přeložený kód. První variantou je spouštění přímo vygenerovaného scheme kódu. Tato technika však není doporučována vzhledem k~tomu, že \uv{běhová knihovna} \verb|eval-generated.scm| není důsledně odladěna a nejsou v~ní zaneseny poslední změny v~překladači.
+
+Druhou (doporučenou) variantou je spouštění přeloženého stackode. Tato technika (implementována skriptem \verb|run-generated-stackode.sh| za pomoci běhovné knihovny \verb|stackode-evaluator.scm|) byla hlavním nástrojem pro vývoj a ladění překladače a může sloužit jako plnohodnotný výstup. Značnou nevýhodou, se kterou je často potřeba počítat je (oproti běhu kompilovaného assembleru) rapidní pokles rychlosti běhu.
+
+Posledním nástrojem je tedy pochopitelně překlad do assembleru a jeho následný překlad a spouštění. Tuto funkcionalitu obstarává skript \verb|run-generated-gas.sh|.
+
+\section{Další vývoj}
+Mezi další úkoly, které by bylo vhodné vyřešit patří:
+\begin{itemize}
+ \item vyřešit konflikty v~gramatice syntaxéru
+ \item zrefactorovat ast za účelem kompletního zapouzdření uzlů (nejen konstruktory, ale i selektory)
+ \item vylepšit reportování chyb
+ \item přidat podporu pro více platforem (vč. generování assembleru v~Intel syntaxi)
+  \item doimplementovat optimalizace
+ \item řádně otestovat
+\end{itemize}
+
+\section{Závěr}
+Výsledkem je funkční překladač jednoduchého programovacího jazyka. 
+
+Nicméně oproti konkurenčnímu jazyku C má spíše nevýhody (značně méně funkcí, optimalita, absence vývojových a vývojářských nástrojů, ne $100\%$ odladěnost), takže se nedá předpokládat jeho nějaké zásadní používání.
+\end{document}

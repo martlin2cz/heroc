@@ -3,18 +3,21 @@
 ## IV - VII 2016
 ## KMI UP, inf.upol.cz
 ## vychodil.inf.upol.cz
-
-
+###########################################################
 ## programs and params
 CC	 = gcc
 LEX	 = flex
 YACC = bison
 
+## verbocity of compiler components
 # -D LEXER_VERBOSE -D SYNTAXER_VERBOSE  -D SEMANTER_VERBOSE  -D STACKODE_VERBOSE -D GAS_VERBOSE
-VERBOSEDS ?= 
+VERBOSEDS ?=
 
+## output language, one of following:
 # basic|scheme|stackode|gas
 OUTPUTLANG ?= gas
+
+###########################################################
 
 MACROS	?= $(VERBOSEDS) -D OUTPUTLANG="\"$(OUTPUTLANG)"\"
 
@@ -23,8 +26,7 @@ CFLAGS	= -ansi -pedantic -std=c11 $(MACROS)
 
 LIBS	= -lfl -lm
 
-
-
+###########################################################
 ## files specification
 
 GRAMMAR	= src/syntaxer.y
@@ -41,28 +43,12 @@ TESTSRC = test/test-lexer.c test/test-syntaxer.c test/test-semanter.c test/test-
 TESTOBJ =  obj/test-lexer.o  obj/test-syntaxer.o obj/test-semanter.o  obj/test-ast.o  obj/test-stackode-exporter.o obj/test-gas-exporter.o     obj/test-compile-to.o
 TESTTGT	=  test-bin/test-lexer test-bin/text-syntaxer test-bin/text-semanter test-bin/test-ast test-bin/test-stackode-exporter test-bin/test-compile-to
   
-
-####### vzory
-#
-#.SUFFIXES: .y
-#.y.c:
-#	$(YACC) $(YFLAGS) -o $@ $<
-#
-#.SUFFIXES: .l
-#.l.c:
-#	$(LEX) -o$@ $<
-#
-#.SUFFIXES: .c
-#.c.o:
-#	$(CC) -c $(CFLAGS) $<
-#
-
-###########################
+###########################################################
 all: compiler tests
 
 compiler: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(OBJECTS) $(CMPSRC) $(CMPOBJ)
 	$(CC) -o $(CMPTGT) $(OBJECTS) $(CMPOBJ) $(LIBS)
-	#strip $(TARGET)
+	strip $(TARGET)
 
 tests: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(OBJECTS) $(TESTSRC) $(TESTOBJ)
 	$(CC) $(CFLAGS) -o test-bin/test-ast  obj/test-ast.o $(OBJECTS)
@@ -73,17 +59,25 @@ tests: prepare $(LEXER) $(GRAMMAR) $(SOURCE) $(OBJECTS) $(TESTSRC) $(TESTOBJ)
 	$(CC) $(CFLAGS) -o test-bin/test-gas-exporter  obj/test-gas-exporter.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o test-bin/test-compile-to  obj/test-compile-to.o $(OBJECTS)
 	
-syntaxgraph: prepare gen/syntaxer.dot
-	dot -Tpng gen/syntaxer.dot -o gen/syntaxer.png
 
 prepare:
 	mkdir -p gen obj bin test-bin tmp
 
 clean:
-	@rm -rf gen obj bin test-bin tmp
+	@rm -rf gen obj test-bin tmp
 
 	
-###########################
+
+###########################################################
+
+syntaxgraph: prepare gen/syntaxer.dot
+	dot -Tpng gen/syntaxer.dot -o gen/syntaxer.png
+
+doc:
+	cd doc
+	make
+	
+###########################################################
 gen/lexer.c: src/lexer.l
 	$(LEX) -o$@ $<
 	@rm -f src/lexer.c src/lexer.h #lexer dumps code in src folder as well, bug or feature?
@@ -93,7 +87,8 @@ gen/syntaxer.c: src/syntaxer.y
 
 gen/syntaxer.dot: src/syntaxer.y
 	$(YACC) -Wall --graph -v $<
-###########################
+	
+###########################################################
 ### compile libs
 obj/syntaxer.o: gen/syntaxer.c
 	${CC} -c ${CFLAGS} -o $@ -c $<
@@ -143,8 +138,7 @@ obj/misc.o: src/misc.c
 obj/compiler-main.o: src/compiler-main.c
 	${CC} -c ${CFLAGS} -o $@ -c $<
 		
-#obj/main.o: src/main.c
-#	${CC} -c ${CFLAGS} -o $@ -c $<
+###########################################################
 ### compile tests
 	
 obj/test-lexer.o: test/test-lexer.c

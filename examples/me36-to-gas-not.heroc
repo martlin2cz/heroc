@@ -1,0 +1,14 @@
+main() {
+	print_long(!1);
+	print_char(' ');
+
+	print_long(!1111);
+	print_char(' ');
+
+	print_long(!0);
+	print_char(' ');
+
+	print_long(!-1);
+	print_char(' ');
+
+}

@@ -1,0 +1,51 @@
+find_proc(char) {
+	if (char == '+') {
+		return lambda(x, y) { return x + y; };
+	}
+	if (char == '-') {
+		return lambda(x, y) { return x - y; };
+	}
+	if (char == '*') {
+		return lambda(x, y) { return x * y; };
+	}
+	if (char == '/') {
+		return lambda(x, y) { return x / y; };
+	}
+	if (char == '%') {
+		return lambda(x, y) { return x % y; };
+	}
+
+	print_char('X');
+	print_char('X');
+	print_char('X');
+	print_char(':');
+	print_char(char);
+	print_nl();
+
+	return 0;
+}
+
+evaluate(x, op, y) {
+	long fn = find_proc(op);
+	return fn(x, y);
+}
+
+eval_and_print(x, op, y) {
+	long rslt = evaluate(x, op, y);
+
+	print_long(x);
+	print_char(op);
+	print_long(y);
+	print_char('=');
+	print_long(rslt);
+	print_nl();
+}
+
+
+main() {
+	eval_and_print(42, '-', 2);
+	eval_and_print(5, '*', 111);
+	eval_and_print(1000, '/', 8);
+	eval_and_print(99, '+', 1);
+
+}

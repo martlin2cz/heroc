@@ -161,7 +161,7 @@ void analyze_nodes(ast_node_t* deprecated_nodes, ast_node_t* parent,
 
 	ast_node_t* real_nodes = parent->value.child;
 	if (deprecated_nodes != real_nodes) {
-		fprintf(stderr, "an: Child mismatch in parent (%d) \n", parent->uid);
+		//FIXME fprintf(stderr, "an: Child mismatch in parent (%d) \n", parent->uid);
 	}
 
 	if (real_nodes) {
